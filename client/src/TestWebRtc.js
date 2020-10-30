@@ -1,15 +1,22 @@
 import React, { Component } from 'react';
+import WebRTC from './WebRTC';
 class TestWebRtc extends Component {
     constructor(props){
         super(props);
+        this.webRTC=new this.webRTC();
         this.localMedia=React.createRef();
         this.remoteMedia=React.createRef();
+
+        this.msgLogger=(msg)=>{
+            console.log(msg);
+        }
         this.updateSrc=()=>{
             
         }
     }
     componentDidMount(){
         document.getElementById("root").classList.add("p-1");
+        this.webRTC.setMsgLogger(this.msgLogger);
         this.updateSrc();
     }
     componentWillUnmount(){
