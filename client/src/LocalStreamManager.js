@@ -11,7 +11,14 @@ class LocalStreamManager{
 								height:{ min:"480", ideal:"720", max:"1080"}
 							}
 					}; 
-        this.getMediaStream=async (shareVideo,shareAudio)=>{
+		this.closeMedia=async(stream)=>{
+			if (stream){
+				stream.getTracks().forEach(async track=>{
+					await track.stop();
+				})
+			}
+		}
+		this.getMediaStream=async (shareVideo,shareAudio)=>{
 			//var constraints={"audio":shareAudio,"video":shareVideo};
 			var constraints={};
 			if (shareVideo){

@@ -1,23 +1,73 @@
-import React, { Component } from 'react';
+import $ from 'jquery';
+import React,{Component } from 'react';
+import LocalStreamManager from './LocalStreamManager';
 import WebRTC from './WebRTC';
+import './TestWebRtc.css';
 class TestWebRtc extends Component {
     constructor(props){
         super(props);
-        this.webRTC=new this.webRTC();
+       
         this.localMedia=React.createRef();
+        this.localStreamManager=new LocalStreamManager();
         this.remoteMedia=React.createRef();
+        this.shareAudio=React.createRef();
+        this.shareVideo=React.createRef();
 
+        this.call=async()=>{
+            await this.webRTC.call();
+        }
+        this.connectionClosehandler=()=>{
+            console.log("connection closed");
+        }
+        this.dataChannelOpenHandler=()=>{
+            console.log("Data Channel Opened");
+        }
+        this.initWebRTC=()=>{
+            this.webRTC=new WebRTC();
+            this.webRTC.setTrackEventHandler(this.trackEventHandler);
+            this.webRTC.setConnectionCloseHandlder(this.connectionClosehandler);
+            this.webRTC.setDataChannelOpenHandler(this.dataChannelOpenHandler);
+            this.webRTC.setResetRemoteStreamHandler(this.resetRemoteStreamHandler);
+            this.webRTC.setMsgLogger(this.msgLogger);
+            this.webRTC.init();
+            this.updateSrc();
+        }
         this.msgLogger=(msg)=>{
             console.log(msg);
         }
-        this.updateSrc=()=>{
-            
+        this.resetRemoteStreamHandler=()=>{
+            console.log("Receive reset remote stream event");
+        };
+        this.trackEventHandler=(event)=>{
+            console.log("Remote Track rececived.");
+            if (this.remoteMedia.current.srcObject===null){
+                this.remoteMedia.current.srcObject=new MediaStream();
+            }
+            this.remoteMedia.current.srcObject.addTrack(event.track);
+        }
+        this.updateSrc=async()=>{
+            var shareAudio=(($(this.shareAudio.current).val()==="yes")?true:false);
+            var shareVideo=(($(this.shareVideo.current).val()==="yes")?true:false);
+            await this.localStreamManager.getMediaStream(shareVideo,shareAudio) 
+            .then(stream=>{
+                this.localMedia.current.srcObject=stream;
+            })
+            .catch(async error=>{
+                console.log(error.message);
+                await this.localStreamManager.closeMedia(this.localMedia.current.srcObject)
+                .then(()=>{
+                    this.localMedia.current.srcObject=null;
+                })
+            })
+            .finally(()=>{
+                console.log(this.localMedia.current.srcObject);
+                this.webRTC.updateStream(this.localMedia.current.srcObject);
+            })
         }
     }
     componentDidMount(){
         document.getElementById("root").classList.add("p-1");
-        this.webRTC.setMsgLogger(this.msgLogger);
-        this.updateSrc();
+        this.initWebRTC();
     }
     componentWillUnmount(){
         document.getElementById("root").classList.remove("p-1");
@@ -34,18 +84,20 @@ class TestWebRtc extends Component {
         </div>	
         <div className="row">
             <div className="border-left border-bottom border-primary 
-                        col-6 p-1"
+                        d-flex flex-grow-1 col-6 p-1 position-relative"
                         style={{"height":"25vh"}}>
                 <video 
                     autoPlay
+                    controls
                     ref={this.localMedia}
                     muted/>
             </div>
             <div className="border-left border-bottom border-primary 
-                    border-right col-6 p-1"
+                    d-flex flex-grow-1 col-6 p-1 position-relative"
                     style={{"height":"25vh"}}>
                 <video 
                     autoPlay
+                    controls
                     ref={this.remoteMedia}
                     muted/>    
             </div>
