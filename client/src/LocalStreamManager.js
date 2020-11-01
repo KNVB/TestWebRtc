@@ -16,6 +16,7 @@ class LocalStreamManager{
 				stream.getTracks().forEach(async track=>{
 					await track.stop();
 				})
+				stream=null;
 			}
 		}
 		this.getMediaStream=async (shareVideo,shareAudio)=>{

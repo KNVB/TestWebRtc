@@ -9,6 +9,7 @@ class WebRTC{
         var connectionCloseHandlder=null;    
         var dataChannel=null;
         var dataChannelOpenHandler=null;
+        var isConnected=false;
         var isHangUpByUser=false,eventMsgLogger=null;
         var peerConnection=null;
         var resetRemoteStreamHandler=null;
@@ -64,7 +65,7 @@ class WebRTC{
                 if (senders.length<1){
                     stream.getTracks().forEach((track)=>{
 						eventMsgLogger("0 add "+track.kind+" track");
-						peerConnection.addTrack(track,stream);
+						peerConnection.addTrack(track);
 					});
                 } else {
                     stream.getTracks().forEach((track)=>{
@@ -78,18 +79,27 @@ class WebRTC{
 							eventMsgLogger("1 add "+track.kind+" track");
 							peerConnection.addTrack(track,stream);
 						} else {
-							eventMsgLogger("Replace "+track.kind+" track");
-							sender.replaceTrack(track);
-						}
-					});
+                            eventMsgLogger("Replace "+track.kind+" track");
+							sender.replaceTrack(track,stream);
+                        }                        
+                    });
+                    console.log("isConnected="+isConnected);
+                    if (isConnected){
+                        this.call();
+                    }
                 }
             }
         }
 /*========================================================================================================*/				
 /*        private method                                                                                  */ 
 /*========================================================================================================*/			
+        /**
+		* The connectionStateChange event work on chrome only;
+		* firefox does not support RTCPeerConnection.connectionState attribute 
+		**/
         function connectionStateChangeHandler(event){
-
+            eventMsgLogger("Connection State Change");
+            eventMsgLogger("peerConnection.connectionState="+peerConnection.connectionState+",isHangUpByUser="+isHangUpByUser);
         }
         function dataChannelClose() {
             console.log(`Connection close is request by user=${isHangUpByUser}`);
@@ -100,9 +110,21 @@ class WebRTC{
                 dataChannel.onclose = null;
                 dataChannel.onerror = null;
                 dataChannel=null;
+
+                peerConnection.ontrack= null;
+                peerConnection.onconnectionstatechange = null;
+                peerConnection.ondatachannel = null;           
+                peerConnection.onicecandidate= null;
+                peerConnection.oniceconnectionstatechange= null;
+                peerConnection.onicegatheringstatechange= null;
+                peerConnection.onnegotiationneeded= null;
+                peerConnection.onsignalingstatechange= null;
+
+                peerConnection= null;
                 isHangUpByUser=false;
                 socket.disconnect();
                 connectionCloseHandlder();
+                isConnected=false;
             }		
         }
         function dataChannelError(event) {
@@ -113,7 +135,10 @@ class WebRTC{
 		}
         function dataEventMsgLogger(event){
             eventMsgLogger('Data channel Object is created!');
-			event.channel.onopen = dataChannelOpenHandler;
+			event.channel.onopen =()=>{
+                isConnected=true;
+                dataChannelOpenHandler();
+            }
 			event.channel.onmessage = dataChannelMessage;
 			event.channel.onclose = dataChannelClose;
 			event.channel.onerror = dataChannelError;
@@ -127,16 +152,16 @@ class WebRTC{
 			}
         }
         function iceConnectionStateChangeHandler(event){
-
+            eventMsgLogger("ice connection state: " + peerConnection.iceConnectionState+",pc.iceGatheringState="+peerConnection.iceGatheringState);
         }
         function iceGatheringStateChangeHandler(event){
-
+            eventMsgLogger("ICE Gathering State ="+peerConnection.iceGatheringState+",pc.iceConnectionState="+peerConnection.iceConnectionState);
         }
         function negotiationEventHandler(event){
-
+            eventMsgLogger("peerConnection.signalingState="+peerConnection.signalingState);
         }
         function signalingStateChangeHandler(event){
-
+            eventMsgLogger("peerConnection.signalingState="+peerConnection.signalingState);
         }
         function hangUp(){
             isHangUpByUser=true;

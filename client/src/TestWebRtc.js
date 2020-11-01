@@ -18,6 +18,11 @@ class TestWebRtc extends Component {
         }
         this.connectionClosehandler=()=>{
             console.log("connection closed");
+            this.shareAudio.current.selectedIndex=0;
+            this.shareVideo.current.selectedIndex=0;
+
+            this.localStreamManager.closeMedia(this.localMedia.current.srcObject);
+            this.localStreamManager.closeMedia(this.remoteMedia.current.srcObject);
             this.webRTC=null;
             this.initWebRTC();
         }
@@ -45,6 +50,7 @@ class TestWebRtc extends Component {
         };
         this.trackEventHandler=(event)=>{
             console.log("Remote Track rececived.");
+            console.log(event.track);
             if (this.remoteMedia.current.srcObject===null){
                 this.remoteMedia.current.srcObject=new MediaStream();
             }
