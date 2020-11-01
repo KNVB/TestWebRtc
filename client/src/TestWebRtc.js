@@ -18,9 +18,14 @@ class TestWebRtc extends Component {
         }
         this.connectionClosehandler=()=>{
             console.log("connection closed");
+            this.webRTC=null;
+            this.initWebRTC();
         }
         this.dataChannelOpenHandler=()=>{
             console.log("Data Channel Opened");
+        }
+        this.hangUp=()=>{
+            this.webRTC.hangUp();
         }
         this.initWebRTC=()=>{
             this.webRTC=new WebRTC();

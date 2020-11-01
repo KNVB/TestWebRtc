@@ -14,6 +14,10 @@ httpServer.listen(httpServerPort, function() {
 io.on('connection', (socket) => {
 	//meetingManager.setSocket(io,socket);
 	console.log("Connection established");
+	socket.on("hangUp",()=>{
+		console.log("Receive hang up request");
+		socket.broadcast.emit('hangUp');
+	});
 	socket.on("sendICECandidate",iceCandidate=>{
 		console.log("Receive an iceCandidate");
 		socket.broadcast.emit('receiveICECandidate',iceCandidate);

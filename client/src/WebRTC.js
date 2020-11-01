@@ -33,6 +33,9 @@ class WebRTC{
                 throw new Error(reason);
             })
         }
+        this.hangUp=()=>{
+            hangUp();
+        }
         this.init=()=>{
             initObject();
         }
@@ -97,6 +100,7 @@ class WebRTC{
                 dataChannel.onclose = null;
                 dataChannel.onerror = null;
                 dataChannel=null;
+                isHangUpByUser=false;
                 socket.disconnect();
                 connectionCloseHandlder();
             }		
@@ -134,6 +138,10 @@ class WebRTC{
         function signalingStateChangeHandler(event){
 
         }
+        function hangUp(){
+            isHangUpByUser=true;
+            socket.emit("hangUp");
+        }
         function initObject(){
             peerConnection=new RTCPeerConnection(configuration);
             peerConnection.ontrack=trackEventHandler;
@@ -151,6 +159,10 @@ class WebRTC{
 /*===================================================================================================*/
 /*       Socket related function                                                                     */
 /*===================================================================================================*/
+        socket.on("hangUp",()=>{
+            isHangUpByUser=true;
+            peerConnection.close();
+        })
         socket.on('receiveAnswer',answer=>{
             eventMsgLogger("Receive an answer"); 
             if (peerConnection.remoteDescription===null){
