@@ -53,29 +53,34 @@ class WebRTC{
         }
         this.updateStream=(stream)=>{
             var senders=peerConnection.getSenders();
-            if (senders.length>0){
-                senders.forEach((sender)=>{
-                    if (sender.track)
-                        sender.track.stop();
-                });
-            }
+            senders.forEach((sender)=>{
+                if (sender.track)
+                    sender.track.stop();
+            });
             if (stream){
-                stream.getTracks().forEach((track)=>{
-                    var sender = peerConnection.getSenders().find(function(s) {
-                        if (s.track)
-                            return s.track.kind === track.kind;
-                        else 
-                            return null;
-                    });
-                    if (sender===undefined) {
-                        eventMsgLogger("1 add "+track.kind+" track");
-                        peerConnection.addTrack(track,stream);
-                    } else {
-                        eventMsgLogger("Replace "+track.kind+" track");
-                        sender.replaceTrack(track);
-                    }
-                });
-            }    
+                if (senders.length<1){
+                    stream.getTracks().forEach((track)=>{
+						eventMsgLogger("0 add "+track.kind+" track");
+						peerConnection.addTrack(track,stream);
+					});
+                } else {
+                    stream.getTracks().forEach((track)=>{
+						var sender = peerConnection.getSenders().find(function(s) {
+							if (s.track)
+								return s.track.kind === track.kind;
+							else 
+								return null;
+						});
+						if (sender===undefined) {
+							eventMsgLogger("1 add "+track.kind+" track");
+							peerConnection.addTrack(track,stream);
+						} else {
+							eventMsgLogger("Replace "+track.kind+" track");
+							sender.replaceTrack(track);
+						}
+					});
+                }
+            }
         }
 /*========================================================================================================*/				
 /*        private method                                                                                  */ 
@@ -131,16 +136,15 @@ class WebRTC{
         }
         function initObject(){
             peerConnection=new RTCPeerConnection(configuration);
+            peerConnection.ontrack=trackEventHandler;
             peerConnection.onconnectionstatechange = connectionStateChangeHandler;
-            peerConnection.ondatachannel = dataEventMsgLogger;
+            peerConnection.ondatachannel = dataEventMsgLogger;           
             peerConnection.onicecandidate=iceCandidateEventHandler;
             peerConnection.oniceconnectionstatechange = iceConnectionStateChangeHandler;
             peerConnection.onicegatheringstatechange =iceGatheringStateChangeHandler;
             peerConnection.onnegotiationneeded=negotiationEventHandler;
             peerConnection.onsignalingstatechange=signalingStateChangeHandler;
-            peerConnection.ontrack=trackEventHandler;
-
-            console.log(peerConnection.ontrack);
+            
             dataChannel= peerConnection.createDataChannel('chat');
             eventMsgLogger("Connection object created");
         }
