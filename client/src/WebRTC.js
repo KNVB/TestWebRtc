@@ -6,33 +6,21 @@ class WebRTC{
              {urls: "stun:stun.l.google.com:19302"},
              {urls: "turn:numb.viagenie.ca", credential: "turnserver", username: "sj0016092@gmail.com"}		
             ]};
-        var connectionCloseHandlder=null;    
-        var dataChannel=null;
-        var dataChannelOpenHandler=null;
-        var isConnected=false;
-        var isHangUpByUser=false,eventMsgLogger=null;
-        var peerConnection=null;
-        var resetRemoteStreamHandler=null;
+        var connectionCloseHandler;
+        var dataChannel;
+        var dataChannelOpenHandler;
+        var isConnected=false,iceCandidateList=[];
+        var ignoreOffer = false,isHangUpByUser=false;
+        var peerConnection=null, makingOffer = false;
+        var msgLogger,myRollDiceResult;
+        var polite=false,resetRemoteStreamHandler;
         var socket=io.connect("http://localhost:9000");
-        var trackEventHandler=null;
-        
+        var trackEventHandler;
+/*========================================================================================================*/				
+/*        public method                                                                                  */ 
+/*========================================================================================================*/	
         this.call=async()=>{
-            await peerConnection.createOffer({
-                offerToReceiveAudio: true,
-                offerToReceiveVideo: true,
-              })
-            .then (async offer=>{
-                await peerConnection.setLocalDescription(offer)
-                .then(()=>{
-                    socket.emit("sendOffer",offer);
-                })
-                .catch (error=>{
-                    throw error;
-                })
-            })
-            .catch (reason=>{
-                throw new Error(reason);
-            })
+            call();
         }
         this.hangUp=()=>{
             hangUp();
@@ -40,71 +28,95 @@ class WebRTC{
         this.init=()=>{
             initObject();
         }
-        this.setConnectionCloseHandlder=(handler)=>{
-            connectionCloseHandlder=handler;
+        this.setConnectionCloseHandler=(handler)=>{
+            connectionCloseHandler=handler;
         }
         this.setDataChannelOpenHandler=(handler)=>{
             dataChannelOpenHandler=handler;
         }
-        this.setMsgLogger=logger=>{
-            eventMsgLogger=logger;
+        this.setMsgLogger=(logger)=>{
+            msgLogger=logger;
         }
         this.setResetRemoteStreamHandler=(handler)=>{
             resetRemoteStreamHandler=handler;
         }
-        this.setTrackEventHandler=handler=>{
+        this.setTrackEventHandler=(handler)=>{
             trackEventHandler=handler;
         }
         this.updateStream=(stream)=>{
-            var senders=peerConnection.getSenders();
-            senders.forEach((sender)=>{
-                if (sender.track)
-                    sender.track.stop();
-            });
-            if (stream){
-                if (senders.length<1){
-                    stream.getTracks().forEach((track)=>{
-						eventMsgLogger("0 add "+track.kind+" track");
-						peerConnection.addTrack(track);
-					});
-                } else {
-                    stream.getTracks().forEach((track)=>{
-						var sender = peerConnection.getSenders().find(function(s) {
-							if (s.track)
-								return s.track.kind === track.kind;
-							else 
-								return null;
-						});
-						if (sender===undefined) {
-							eventMsgLogger("1 add "+track.kind+" track");
-							peerConnection.addTrack(track,stream);
-						} else {
-                            eventMsgLogger("Replace "+track.kind+" track");
-							sender.replaceTrack(track,stream);
-                        }                        
-                    });
-                    console.log("isConnected="+isConnected);
-                    if (isConnected){
-                        this.call();
+            if (peerConnection){
+                var senders=peerConnection.getSenders();
+                senders.forEach((sender)=>{
+                    if (sender.track)
+                        sender.track.stop();
+                });
+                if (stream){
+                    if (senders.length<1){
+                        stream.getTracks().forEach((track)=>{
+                            msgLogger("0 add "+track.kind+" track");
+                            peerConnection.addTrack(track,stream);
+                        });
+                    } else {
+                        stream.getTracks().forEach((track)=>{
+                            var sender = peerConnection.getSenders().find(function(s) {
+                                if (s.track)
+                                    return s.track.kind === track.kind;
+                                else 
+                                    return null;
+                            });
+                            if (sender===undefined) {
+                                msgLogger("1 add "+track.kind+" track");
+                                peerConnection.addTrack(track,stream);
+                            } else {
+                                msgLogger("Replace "+track.kind+" track");
+                                sender.replaceTrack(track,stream);
+                            }                        
+                        });
+                        msgLogger("isConnected="+isConnected);
+                        if (isConnected){
+                            this.call();
+                        }
                     }
                 }
             }
         }
 /*========================================================================================================*/				
 /*        private method                                                                                  */ 
-/*========================================================================================================*/			
-        /**
-		* The connectionStateChange event work on chrome only;
-		* firefox does not support RTCPeerConnection.connectionState attribute 
-		**/
-        function connectionStateChangeHandler(event){
-            eventMsgLogger("Connection State Change");
-            eventMsgLogger("peerConnection.connectionState="+peerConnection.connectionState+",isHangUpByUser="+isHangUpByUser);
+/*========================================================================================================*/	        
+        
+        function call(){
+            myRollDiceResult=getRandomNum();
+			socket.emit("requestRollDice",myRollDiceResult);
         }
-        function dataChannelClose() {
-            console.log(`Connection close is request by user=${isHangUpByUser}`);
+        function getRandomNum(){
+			return (Math.round(Math.random() * 1000));
+        }
+        function hangUp(){
+            if (isConnected){
+                isHangUpByUser=true;
+                socket.emit("hangUp");
+            }
+        }
+        function setPolite(peerRollDiceResult) {
+            msgLogger("Set Polite");
+			if (myRollDiceResult===peerRollDiceResult) {
+				msgLogger("Because myRollDiceResult=peerRollDiceResult execute Call function again");
+				call();
+			} else{
+				if (myRollDiceResult>peerRollDiceResult) {
+					polite=false;
+				} else {
+					polite=true;
+				}
+                msgLogger("myRollDiceResult="+myRollDiceResult+",peerRollDiceResult="+peerRollDiceResult+",polite="+polite);
+                initObject();
+			}				
+		}		
+//=============================================================================================================        
+        function dataChannelClose(event){
+            msgLogger(`Connection close is request by user=${isHangUpByUser}`);
             if (isHangUpByUser){
-                eventMsgLogger('Data channel closed');
+                msgLogger('Data channel closed');
                 dataChannel.onopen = null;
                 dataChannel.onmessage = null;
                 dataChannel.onclose = null;
@@ -123,55 +135,88 @@ class WebRTC{
                 peerConnection= null;
                 isHangUpByUser=false;
                 socket.disconnect();
-                connectionCloseHandlder();
+                connectionCloseHandler();
                 isConnected=false;
-            }		
-        }
-        function dataChannelError(event) {
-			eventMsgLogger('Data channel error:'+event.message);
-        }
-        function dataChannelMessage(message) {
-			eventMsgLogger('Received Message from Data Channel:'+message.data);
-		}
-        function dataEventMsgLogger(event){
-            eventMsgLogger('Data channel Object is created!');
-			event.channel.onopen =()=>{
-                isConnected=true;
-                dataChannelOpenHandler();
+            } else {
+                call();
             }
+        }
+        function dataChannelError(event){
+            msgLogger('Data channel error:'+event.message);
+        }
+        function dataChannelEventHandler(event){
+            msgLogger('Data channel is created!');
+			event.channel.onopen = dataChannelOpen;
 			event.channel.onmessage = dataChannelMessage;
-			event.channel.onclose = dataChannelClose;
+			event.channel.onclose =  dataChannelClose;
 			event.channel.onerror = dataChannelError;
         }
+        function dataChannelMessage(message){
+            msgLogger('Received Message from Data Channel:'+message.data);
+        }
+        function dataChannelOpen(event){
+            isConnected=true;
+            dataChannelOpenHandler();
+        }
+//=============================================================================================================
+        async function addAllICECandidate(){
+            for (var i=0;i<iceCandidateList.length;i++){
+                await peerConnection.addIceCandidate(iceCandidateList[i]);
+            }
+            iceCandidateList=[];
+        }
+        /**
+		* The connectionStateChange event work on chrome only;
+		* firefox does not support RTCPeerConnection.connectionState attribute 
+		**/
+        function connectionStateChangeHandler(event){
+            msgLogger("Connection State Change");
+            msgLogger("peerConnection.connectionState="+peerConnection.connectionState+",isHangUpByUser="+isHangUpByUser);
+        }
         function iceCandidateEventHandler(event){
-            if (event.candidate===null){
-                eventMsgLogger("All ICE Candidates are sent");
+            if (event.candidate==null){
+				msgLogger("All ICE Candidates are sent");
 			} else {
-                eventMsgLogger("Send an ICE Candidate");
-                socket.emit("sendICECandidate", event.candidate);				
+				msgLogger("Send an ICE Candidate");
+				socket.emit("sendICECandidate",event.candidate);
 			}
         }
         function iceConnectionStateChangeHandler(event){
-            eventMsgLogger("ice connection state: " + peerConnection.iceConnectionState+",pc.iceGatheringState="+peerConnection.iceGatheringState);
+            msgLogger("ICE Connection State Changed to:"+peerConnection.iceConnectionState)
         }
         function iceGatheringStateChangeHandler(event){
-            eventMsgLogger("ICE Gathering State ="+peerConnection.iceGatheringState+",pc.iceConnectionState="+peerConnection.iceConnectionState);
+            msgLogger("ICE Gathering State Changed to:"+peerConnection.iceGatheringState)
         }
-        function negotiationEventHandler(event){
-            eventMsgLogger("peerConnection.signalingState="+peerConnection.signalingState);
+        async function negotiationEventHandler(event){
+            msgLogger('Handle Negotiation');
+            try {
+				makingOffer = true;
+				await peerConnection.setLocalDescription();
+				
+				if (peerConnection.localDescription){
+					msgLogger("0:ignoreOffer="+ignoreOffer+"<br>makingOffer="+makingOffer+"<br>peerConnection.iceConnectionState="+peerConnection.iceConnectionState+",peerConnection.signalingState="+peerConnection.signalingState+",polite="+polite);
+					socket.emit("sendSDP",peerConnection.localDescription);
+				}
+			} catch(err) {
+				msgLogger(err);
+			} finally {
+				makingOffer = false;
+			}
         }
         function signalingStateChangeHandler(event){
-            eventMsgLogger("peerConnection.signalingState="+peerConnection.signalingState);
-        }
-        function hangUp(){
-            isHangUpByUser=true;
-            socket.emit("hangUp");
+            switch (peerConnection.signalingState){
+				case "stable":
+					msgLogger("ICE negotiation complete");
+                    break;
+                default:
+                    msgLogger("Signaling State change to"+peerConnection.signalingState);    
+			}
         }
         function initObject(){
             peerConnection=new RTCPeerConnection(configuration);
             peerConnection.ontrack=trackEventHandler;
             peerConnection.onconnectionstatechange = connectionStateChangeHandler;
-            peerConnection.ondatachannel = dataEventMsgLogger;           
+            peerConnection.ondatachannel = dataChannelEventHandler;
             peerConnection.onicecandidate=iceCandidateEventHandler;
             peerConnection.oniceconnectionstatechange = iceConnectionStateChangeHandler;
             peerConnection.onicegatheringstatechange =iceGatheringStateChangeHandler;
@@ -179,8 +224,10 @@ class WebRTC{
             peerConnection.onsignalingstatechange=signalingStateChangeHandler;
             
             dataChannel= peerConnection.createDataChannel('chat');
-            eventMsgLogger("Connection object created");
+            msgLogger("Connection object created");
         }
+
+
 /*===================================================================================================*/
 /*       Socket related function                                                                     */
 /*===================================================================================================*/
@@ -188,39 +235,63 @@ class WebRTC{
             isHangUpByUser=true;
             peerConnection.close();
         })
-        socket.on('receiveAnswer',answer=>{
-            eventMsgLogger("Receive an answer"); 
-            if (peerConnection.remoteDescription===null){
-                peerConnection.setRemoteDescription(answer);
+        socket.on("receiveICECandidate",async (iceCandidate)=>{
+            try {
+                msgLogger("Received an ICE Candidate:"+(peerConnection.currentRemoteDescription==null))
+                if (peerConnection.currentRemoteDescription){
+                    await peerConnection.addIceCandidate(iceCandidate);
+                    addAllICECandidate();
+                } else {
+                    iceCandidateList.push(iceCandidate);
+                }
+            } catch(err) {
+                if (!ignoreOffer) {
+                throw err;
+                }
             }
         });
-        socket.on('receiveICECandidate',iceCandidate=>{
-            eventMsgLogger("Receive an ICE Candidate");
-            peerConnection.addIceCandidate(iceCandidate);
+        socket.on("requestRollDice",(peerRollDiceResult=>{
+            msgLogger("receive roll Dice");
+            myRollDiceResult=getRandomNum();
+            socket.emit("sendRollDiceResult",myRollDiceResult);
+            setPolite(peerRollDiceResult);
+        }));
+        socket.on("receiveRollDiceResult",(peerRollDiceResult)=>{
+            msgLogger("receiveRollDiceResult");
+            setPolite(peerRollDiceResult);
         });
-        socket.on('receiveOffer',async (offer)=>{
-            eventMsgLogger("Receive an offer");
-            await peerConnection.setRemoteDescription(offer)
-            .then(async()=>{
-                await peerConnection.createAnswer()
-                .then(async answer=>{
-                    await peerConnection.setLocalDescription(answer)
-                    .then(()=>{
-                        socket.emit("sendAnswer",answer);
-                        eventMsgLogger("Send an answer");
-                    })
-                    .catch (error=>{
-                        throw error;
-                    })
-                })
-                .catch(error=>{
-                    throw error;
-                })
-            })
-            .catch(error=>{
-                throw error
-            })
+        socket.on("receiveSDP",async (sdp)=>{
+            msgLogger("receive SDP");
+            ignoreOffer = false;
+            const offerCollision = (sdp.type === "offer") &&
+                             (makingOffer || peerConnection.signalingState !== "stable");
+            
+
+            ignoreOffer = !polite && offerCollision;
+            if (peerConnection){
+                msgLogger("1:ignoreOffer="+ignoreOffer+",makingOffer="+makingOffer+",offerCollision="+offerCollision+"<br>peerConnection.iceConnectionState="+peerConnection.iceConnectionState+",peerConnection.signalingState="+peerConnection.signalingState+",polite="+polite+",sdp.type="+sdp.type);
+            }else{ 
+                msgLogger("peerConnection=null");
+            }
+            if (ignoreOffer) {
+                return;
+            }
+            try{
+                await peerConnection.setRemoteDescription(sdp);
+                addAllICECandidate();
+            }catch (error){
+                msgLogger("Failed to setRemoteDescription :"+error+","+JSON.stringify(sdp));
+            }
+            if (sdp.type ==="offer") {
+                try{
+                    await peerConnection.setLocalDescription();
+                    socket.emit("sendSDP",peerConnection.localDescription);
+                    msgLogger("1 sendSDP "+(peerConnection.localDescription==null));
+                }catch(error){
+                    msgLogger("Failed to setLocalDescription :"+error);
+                }
+            }
         });
     }
 }
-export default WebRTC;
+export default WebRTC;           

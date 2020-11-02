@@ -14,7 +14,7 @@ class TestWebRtc extends Component {
         this.shareVideo=React.createRef();
 
         this.call=async()=>{
-            await this.webRTC.call();
+            await this.webRTC.call()
         }
         this.connectionClosehandler=()=>{
             console.log("connection closed");
@@ -23,11 +23,14 @@ class TestWebRtc extends Component {
 
             this.localStreamManager.closeMedia(this.localMedia.current.srcObject);
             this.localStreamManager.closeMedia(this.remoteMedia.current.srcObject);
+            this.localMedia.current.srcObject=null;
+            this.remoteMedia.current.srcObject=null;
             this.webRTC=null;
             this.initWebRTC();
         }
         this.dataChannelOpenHandler=()=>{
             console.log("Data Channel Opened");
+            this.updateSrc();
         }
         this.hangUp=()=>{
             this.webRTC.hangUp();
@@ -35,12 +38,10 @@ class TestWebRtc extends Component {
         this.initWebRTC=()=>{
             this.webRTC=new WebRTC();
             this.webRTC.setTrackEventHandler(this.trackEventHandler);
-            this.webRTC.setConnectionCloseHandlder(this.connectionClosehandler);
+            this.webRTC.setConnectionCloseHandler(this.connectionClosehandler);
             this.webRTC.setDataChannelOpenHandler(this.dataChannelOpenHandler);
             this.webRTC.setResetRemoteStreamHandler(this.resetRemoteStreamHandler);
             this.webRTC.setMsgLogger(this.msgLogger);
-            this.webRTC.init();
-            this.updateSrc();
         }
         this.msgLogger=(msg)=>{
             console.log(msg);
@@ -50,7 +51,8 @@ class TestWebRtc extends Component {
         };
         this.trackEventHandler=(event)=>{
             console.log("Remote Track rececived.");
-            console.log(event.track);
+            console.log("This is "+event.track.kind+" track");
+            console.log(`this.remoteMedia.current.srcObject is ${(this.remoteMedia.current.srcObject===null)?"":"not"} null`);
             if (this.remoteMedia.current.srcObject===null){
                 this.remoteMedia.current.srcObject=new MediaStream();
             }
@@ -71,7 +73,7 @@ class TestWebRtc extends Component {
                 })
             })
             .finally(()=>{
-                console.log(this.localMedia.current.srcObject);
+                console.log("this.localMedia="+(this.localMedia.current.srcObject===null));
                 this.webRTC.updateStream(this.localMedia.current.srcObject);
             })
         }
@@ -98,7 +100,7 @@ class TestWebRtc extends Component {
                         d-flex flex-grow-1 col-6 p-1 position-relative"
                         style={{"height":"25vh"}}>
                 <video 
-                    autoPlay
+                    autoPlay={true}
                     controls
                     ref={this.localMedia}
                     muted/>
@@ -107,7 +109,7 @@ class TestWebRtc extends Component {
                     d-flex flex-grow-1 col-6 p-1 position-relative"
                     style={{"height":"25vh"}}>
                 <video 
-                    autoPlay
+                    autoPlay={true}
                     controls
                     ref={this.remoteMedia}
                     muted/>    
