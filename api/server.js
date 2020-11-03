@@ -16,6 +16,19 @@ app.use(cors());
 io.on('connection', (socket) => {
 	//meetingManager.setSocket(io,socket);
 	console.log("Connection established");
+	socket.on('disconnect', function () {
+		console.log("Disconnected");
+	});
+	socket.on("newPeer",()=>{
+		socket.broadcast.emit("newPeer", {});
+	});
+	socket.on("receiveRemoteStream",()=>{
+		socket.broadcast.emit("receiveRemoteStream",{});
+	});
+	socket.on("signalData",(data)=>{
+		socket.broadcast.emit("signalData",data);
+	});
+	/*
 	socket.on("closeConnection",()=>{
 		console.log("Close connection request received@"+getTimeString());
 		socket.broadcast.emit("closeConnection", {});
@@ -33,12 +46,12 @@ io.on('connection', (socket) => {
 	});
 	socket.on("requestRollDice",(rollDiceResult)=>{
 		socket.broadcast.emit("requestRollDice",rollDiceResult);
-	});
-	
+	});	
 	socket.on("hangUp",()=>{
 		console.log("Receive hang up request");
 		socket.broadcast.emit('hangUp');
 	});
+	*/
 	/*
 	socket.on("sendAnswer",answer=>{
 		console.log("Receive an answer event");
