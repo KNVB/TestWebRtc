@@ -39,6 +39,7 @@ class Peer{
                     peer.removeStream(localStream);
                     localStream.getTracks().forEach(track=>{
                         track.stop();
+                        console.log(track.kind+" track is stopped.");
                     })
                 }
                 localStream=stream;
@@ -72,8 +73,11 @@ class Peer{
             })
             peer.on('stream', stream => {
                 console.log("rececive remote stream");
-                console.log(`This remote stream ${stream.getTracks().length} track`);
                 receiveRemoteStreamHandler(stream);
+            })
+            peer.on('track', (track, stream) => {
+                console.log("receive remote track");
+                console.log("This is a "+track.kind+" track");
             })
         }
         function hangUp(){
@@ -84,7 +88,6 @@ class Peer{
                 socket.destroy();
                 socket=null;
             }
-            
         }
 /*===================================================================================================*/
 /*       Socket related function                                                                     */

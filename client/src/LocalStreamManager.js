@@ -11,12 +11,15 @@ class LocalStreamManager{
 								height:{ min:"480", ideal:"720", max:"1080"}
 							}
 					}; 
-		this.closeMedia=async(stream)=>{
+		this.closeMedia=(stream)=>{
+			console.log("LocalStreamManager.closeMedia");
+			console.log(stream);
 			if (stream){
-				stream.getTracks().forEach(async track=>{
-					await track.stop();
+				console.log(stream.getTracks().length);
+				stream.getTracks().forEach(track=>{
+					track.stop()					
+					console.log(track.kind+" track is stopped.");					
 				})
-				stream=null;
 			}
 		}
 		this.getMediaStream=async (shareVideo,shareAudio)=>{

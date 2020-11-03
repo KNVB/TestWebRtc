@@ -17,35 +17,47 @@ class TestSimplePeer extends Component {
         this.call=async()=>{
             this.peer.call();
         }
-        this.connectionCloseHandler=async()=>{
+        this.connectionCloseHandler=()=>{
             console.log("Connection closed");
             this.peer=null;
-            await this.localStreamManager.closeMedia(this.localMedia.current.srcObject)
-            .then(()=>{
-                this.localMedia.current.srcObject=null;
-            });
-            await this.localStreamManager.closeMedia(this.remoteMedia.current.srcObject)
-            .then(()=>{
-                this.remoteMedia.current.srcObject=null;
-            });            
+            this.localStreamManager.closeMedia(this.localMedia.current.srcObject);
+          
+            this.localMedia.current.srcObject=null;
+            this.localStreamManager.closeMedia(this.remoteMedia.current.srcObject);
+            this.remoteMedia.current.srcObject=null;            
             this.shareAudio.current.selectedIndex=0;
             this.shareVideo.current.selectedIndex=0;  
             this.initPeer();          
         }
         this.receiveRemoteStreamHandler=(stream)=>{
             console.log("Remote Stream received.");
-            this.localStreamManager.closeMedia(this.remoteMedia.current.srcObject)
-            .then(()=>{
-                this.remoteMedia.current.srcObject=null;
-                this.remoteMedia.current.srcObject=stream;
-            });
+            console.log(`This remote stream has ${stream.getTracks().length} track`);
+            console.log(this.remoteMedia.current.srcObject);
+            this.remoteMedia.current.srcObject=stream;
+            /*
+            if (this.remoteMedia.current.srcObject===null){
+                this.remoteMedia.current.srcObject=new MediaStream();  
+                stream.getTracks().forEach(track=>{
+                    this.remoteMedia.current.srcObject.addTrack(track);
+                    console.log(track.kind+",enable="+track.enabled);
+                    console.log(track.kind+" track is added.");
+                })
+            }else {
+                if (stream.getAudidoTracks().length>0){
+                    if (this.remoteMedia.current.srcObject.getAudidoTracks().length>0){
+                        var oldAudioTrack=this.remoteMedia.current.srcObject.getAudidoTracks()[0];
+                        
+                    } else {
+                        this.remoteMedia.current.srcObject.addTrack(stream.getAudidoTracks()[0]);
+                    }
+                }
+            }
+            */
         }
         this.resetRemoteStreamHandler=()=>{
             console.log("Receive reset remote stream event");
-            this.localStreamManager.closeMedia(this.remoteMedia.current.srcObject)
-            .then(()=>{
-                this.remoteMedia.current.srcObject=null;
-            });
+            this.localStreamManager.closeMedia(this.remoteMedia.current.srcObject);
+            this.remoteMedia.current.srcObject=null;
         };
         this.hangUp=()=>{
             this.peer.hangUp();
@@ -63,13 +75,10 @@ class TestSimplePeer extends Component {
             .then(stream=>{
                 this.localMedia.current.srcObject=stream;
             })
-            .catch(async error=>{
+            .catch(error=>{
                 console.log(error.message);
-                await this.localStreamManager.closeMedia(this.localMedia.current.srcObject)
-                .then(()=>{
-                    this.localMedia.current.srcObject=null;
-                    console.log("I am here.");
-                })
+                this.localStreamManager.closeMedia(this.localMedia.current.srcObject);                
+                this.localMedia.current.srcObject=null;                
             })
             .finally(()=>{
                 console.log("this.localMedia is "+((this.localMedia.current.srcObject===null)?"":"not")+" null.");
