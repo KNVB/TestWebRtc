@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import React, { Component } from 'react';
+import TestReactPlayer from './TestReactPlayer';
 import TestSimplePeer from './TestSimplePeer';
 import TestWebRtc from './TestWebRtc';
 class App extends Component {
@@ -9,6 +10,7 @@ class App extends Component {
         <Switch>
         {/*
           <Route exact path='/' component={TestWebRtc} />
+          <Route exact path='/' component={TestReactPlayer}/>
         */}  
           <Route exact path='/' component={TestSimplePeer}/>
         </Switch>

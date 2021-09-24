@@ -1,0 +1,89 @@
+<html>
+	<head>
+		<script>
+			var video=null;
+			async function updateSrc(){
+				var media=document.getElementById("media");
+				var shareAudio=document.getElementById("audioSrc");
+				var shareVideo=document.getElementById("videoSrc");
+				
+				shareAudio=shareAudio.options[shareAudio.selectedIndex].value;
+				shareVideo=shareVideo.options[shareVideo.selectedIndex].value;
+				if (video){
+					video.srcObject.getTracks().forEach(track=>{
+						track.stop();
+					});
+					media.removeChild(video);
+				}
+				await getStream(shareVideo,shareAudio)
+				.then(stream=>{
+					video=document.createElement("video");
+					video.autoplay=true;
+					video.muted=true;
+					video.controls=true;
+					video.srcObject=stream;
+					media.appendChild(video);
+				})
+				.catch(err=>{
+					
+					console.log(err);
+				});
+			}
+			function getStream(shareVideo,shareAudio) {
+				templateConstraint = {
+					"video": {
+					  "width": {
+						"min": "640",
+						"ideal": "1280",
+						"max": "1920"
+					  },
+					  "height": {
+						"min": "480",
+						"ideal": "720",
+						"max": "1080"
+					  }
+					},
+					"audio":{
+								channelCount: 2,
+								echoCancellation:true,
+								sampleSize: 16
+							}
+				}
+				var constraints={};
+				if (shareVideo=="yes"){
+					constraints.video=templateConstraint.video;
+				}
+				if (shareAudio=="yes"){
+					constraints.audio=templateConstraint.audio;
+				}
+				return navigator.mediaDevices.getUserMedia(constraints);
+			}
+		</script>
+	</head>
+	<body>
+		<div style="display:flex;
+					flex-direction:column; 
+					justify-content:space-around">
+			<div id="media">			
+			</div>
+			<div style="display:flex;
+						flex-direction:row; 
+						justify-content:space-around">
+			  <div>
+				Share Video
+				<select id="videoSrc" onchange="updateSrc()">
+				  <option value="no">No</option>
+				  <option value="yes">Yes</option>
+				</select>
+			  </div>
+			  <div>
+				Share Audio
+				<select id="audioSrc" onchange="updateSrc()" autocomplete="off">
+				  <option value="no">No</option>
+				  <option value="yes">Yes</option>
+				</select>
+			  </div>
+			</div>
+		</div>	
+	</body>
+</html>
