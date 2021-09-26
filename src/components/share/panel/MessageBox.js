@@ -1,4 +1,3 @@
-import { Col,Row } from "react-bootstrap";
 import {forwardRef,useImperativeHandle,useState} from "react";
 const MessageBox=forwardRef((props,ref)=>{
     const [messagesList,setMessagesList]=useState([]);
@@ -18,12 +17,9 @@ const MessageBox=forwardRef((props,ref)=>{
     }
     //console.log(messagesList); 
     return (
-            <Row className="position-relative vh-25">
-                <Col className="border-bottom border-left border-primary border-right  
-                                col-12 d-flex flex-column h-100 overflow-auto position-absolute p-0">
-                    {msgList}
-                </Col>
-            </Row>
+        <div className="h-100 w-100 position-absolute overflow-auto">
+            {msgList}
+        </div>    
     )
-  });
-  export default MessageBox;
+});
+export default MessageBox;

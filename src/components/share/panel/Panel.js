@@ -1,8 +1,18 @@
 import {Button, Col, Container,Row } from "react-bootstrap";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import MessageBox from "./MessageBox";
+import MediaPlayer from "./MediaPlayer";
 export default function Panel(props) {
   const messageBox = useRef();
+  const localMedia = useRef(),remoteMedia = useRef();
+  /*
+  useEffect(()=>{
+    setInterval(()=>{
+      let now=new Date();
+      messageBox.current.addMsg(now.getHours()+":"+now.getMinutes()+":"+now.getSeconds());
+    },1000);
+  },[]);
+  */
   return (
     <Container
       className="border border-primary d-flex flex-column p-0 m-0"
@@ -18,16 +28,10 @@ export default function Panel(props) {
       </Row>
       <Row className="me-1 ms-1 p-0">
         <Col className="border-primary border-start border-top col-6 h4 p-1 mb-0">
-            <video 
-                autoPlay={true}
-                controls
-                muted/>
+          <MediaPlayer ref={localMedia}/>
         </Col>
         <Col className="border border-bottom-0 border-primary col-6 h4 p-1 mb-0">
-            <video 
-                autoPlay={true}
-                controls
-                muted/>
+          <MediaPlayer ref={remoteMedia}/>
         </Col>
       </Row>
       <Row className="me-1 ms-1 p-0">
@@ -49,13 +53,13 @@ export default function Panel(props) {
             </label>
         </Col>
         <Col className="border border-bottom-0 border-primary col-6 p-1 mb-0">
-        <label className="btn-sm btn btn-lg btn-success">
-                Share Audio
-                <select name="videoSrc" className="bg-success text-white">
-                    <option value="no" >No</option>
-                    <option value="yes">Yes</option>
-                </select>
-            </label>
+          <label className="btn-sm btn btn-lg btn-success">
+              Share Audio
+              <select name="videoSrc" className="bg-success text-white">
+                  <option value="no" >No</option>
+                  <option value="yes">Yes</option>
+              </select>
+          </label>
         </Col>
       </Row>
       <Row className="me-1 ms-1 p-0">
@@ -65,42 +69,9 @@ export default function Panel(props) {
             <Button variant="danger">Connection status:&nbsp;<span>closed</span></Button>
         </Col>
       </Row>
-      <Row className="d-flex flex-grow-1 mb-1 me-1 ms-1 p-0 position-relative vh-25">
-        <Col className="border-primary border col-12 m-0 p-0">
-            <div className="h-100 positon-absolute overflow-scroll">
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-                sdsdsd<br/>
-            </div>
+      <Row className="mb-1 me-1 ms-1" style={{ "height": "20vh" }}>
+        <Col className="border-primary border col-12 m-0 p-0 position-relative">
+          <MessageBox ref={messageBox}/>
         </Col>
       </Row>
     </Container>
