@@ -7,6 +7,9 @@ const MessageBox=forwardRef((props,ref)=>{
     useImperativeHandle(ref, () => ({
         addMsg:(msg)=>{
             addMsg(msg);
+        },
+        clear:()=>{
+            setMessagesList([]);
         }
     }));
     let msgList=[];
@@ -17,8 +20,10 @@ const MessageBox=forwardRef((props,ref)=>{
     }
     //console.log(messagesList); 
     return (
-        <div className="h-100 w-100 position-absolute overflow-auto">
-            {msgList}
+        <div className="d-flex flex-grow-1 position-relative">
+            <div className="h-100 w-100 position-absolute overflow-auto">
+                {msgList}
+            </div>
         </div>    
     )
 });
