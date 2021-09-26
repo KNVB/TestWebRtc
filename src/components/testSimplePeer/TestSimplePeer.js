@@ -2,6 +2,8 @@ import { useState } from "react";
 import Panel from "../share/panel/Panel";
 export default function TestSimplePeer() {
     let [connectionState,setConnectionState]= useState("Close");
+    let [isShareAudio,updateShareAudio]=useState(false);
+    let [isShareVideo,updateShareVideo]=useState(false);
     let call = () => {
         console.log("Make A Call");
     };
@@ -19,8 +21,6 @@ export default function TestSimplePeer() {
     };
     let controls = { call, hangUp, setShareAudio, setShareVideo };
     return(
-        <div> 
-            <Panel controls={controls} connectionState={connectionState}/>
-        </div>
+        <Panel controls={controls} connectionState={connectionState}/>
     );  
 }
