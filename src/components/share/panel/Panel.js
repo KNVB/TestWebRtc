@@ -38,9 +38,11 @@ const Panel = forwardRef((props, ref) => {
       localStream =await localStreamManager.getMediaStream(shareMedia.isShareVideo,shareMedia.isShareAudio);
     }catch (error){
       messageBox.current.addMsg("Get Media Stream failure:"+error.message);
-      await localStreamManager.closeStream(localMedia.current.srcObject);
       localStream =null;
     }finally{
+      if ( localStream === null) {
+        await localStreamManager.closeStream(localMedia.current.srcObject);
+      }  
       localMedia.current.setStream(localStream);
       controls.updateLocalStream(localStream);     
     }  
