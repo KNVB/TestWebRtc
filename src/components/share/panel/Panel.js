@@ -25,6 +25,12 @@ const Panel = forwardRef((props, ref) => {
     addMsg:(msg)=>{
       messageBox.current.addMsg(msg);
     },
+    getLocalStream:()=>{
+      return localMedia.current.getStream();
+    },
+    getRemoteStream:()=>{
+      return remoteMedia.current.getStream();
+    },
     setRemoteStream: (stream) => {
       remoteMedia.current.setStream(stream);
     },
@@ -41,10 +47,9 @@ const Panel = forwardRef((props, ref) => {
       localStream =null;
     }finally{
       if ( localStream === null) {
-        await localStreamManager.closeStream(localMedia.current.srcObject);
+        await localStreamManager.closeStream(localMedia.current.getStream());
       }  
-      localMedia.current.setStream(localStream);
-      controls.updateLocalStream(localStream);     
+      localMedia.current.setStream(localStream);   
     }  
   }
   return (

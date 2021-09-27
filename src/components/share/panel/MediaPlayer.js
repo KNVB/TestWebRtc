@@ -3,6 +3,9 @@ import "./MediaPlayer.css";
 const MediaPlayer=forwardRef((props,ref)=>{
     const media = useRef();
     useImperativeHandle(ref, () => ({
+        getStream:()=>{
+            return  media.current.srcObject;
+        },
         setStream:(stream)=>{
             media.current.srcObject=stream;
         },

@@ -4,6 +4,10 @@ class SignalServer{
     constructor(){
         let socket;
         socket = io.connect("http://localhost:" + process.env.REACT_APP_SOCKET_PORT+"/testSimplePeer", { transports: ['websocket'] });
+        this.newPeer=()=>{
+            socket.emit("newPeer");
+        }
+        
     }
 }
 export default SignalServer;
