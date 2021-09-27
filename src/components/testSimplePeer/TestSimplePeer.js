@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
 import Panel from "../share/panel/Panel";
+import SignalServer from "./SignalServer";
 export default function TestSimplePeer() {
     let [connectionState,setConnectionState]= useState("Close");
     const panel=useRef();
+    let signalServer=new SignalServer();
     let call = () => {
         console.log("Make A Call");
     };
