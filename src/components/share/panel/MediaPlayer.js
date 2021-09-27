@@ -1,10 +1,13 @@
-import {forwardRef,useImperativeHandle,useRef,useState} from "react";
+import {forwardRef,useImperativeHandle,useRef} from "react";
 import "./MediaPlayer.css";
 const MediaPlayer=forwardRef((props,ref)=>{
     const media = useRef();
     useImperativeHandle(ref, () => ({
         setStream:(stream)=>{
             media.current.srcObject=stream;
+        },
+        stop:()=>{
+            media.current.pause();
         }
     }));
     return(

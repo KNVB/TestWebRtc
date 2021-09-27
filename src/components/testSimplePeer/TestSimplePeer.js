@@ -1,26 +1,27 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Panel from "../share/panel/Panel";
 export default function TestSimplePeer() {
     let [connectionState,setConnectionState]= useState("Close");
-    let [isShareAudio,updateShareAudio]=useState(false);
-    let [isShareVideo,updateShareVideo]=useState(false);
+    const panel=useRef();
     let call = () => {
         console.log("Make A Call");
     };
     let hangUp = () => {
         console.log("Hang Up");
     };
+    /*
     let updateConnectionStatus=()=>{
         setConnectionState("Open");
+    }*/
+    let updateLocalStream=(stream)=>{
+        //console.log("Update Local Stream="+stream);
+        panel.current.addMsg("Local Stream Updated="+stream);
     }
-    let setShareAudio = (value) => {
-        console.log("setShareAudio=" + value);
-    };
-    let setShareVideo = (value) => {
-        console.log("setShareVideo=" + value);
-    };
-    let controls = { call, hangUp, setShareAudio, setShareVideo };
+    let controls = { call, hangUp, updateLocalStream };
     return(
-        <Panel controls={controls} connectionState={connectionState}/>
+        <Panel
+            connectionState={connectionState} 
+            controls={controls}
+            ref={panel}/>
     );  
 }
