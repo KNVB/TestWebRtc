@@ -1,26 +1,17 @@
 import { Button, Col, Container, Row } from "react-bootstrap";
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import "./Panel.css";
 import LocalStreamManager from "../../../util/LocalStreamManager";
 import MessageBox from "./MessageBox";
 import MediaPlayer from "./MediaPlayer";
 const Panel = forwardRef((props, ref) => {
   let controls = props.controls;
-  let connectionStatusCSS = "danger";
   let localStreamManager=new LocalStreamManager();
+  let [connectionState,setConnectionState]= useState("Close");
+  let [connectionStatusCSS,setConnectionStatusCSS]=useState("danger");
   const localMedia = useRef(), messageBox = useRef(), remoteMedia = useRef();
   let shareMedia={isShareAudio:false,isShareVideo:false};
- 
-  switch (props.connectionState) {
-    case "Open":
-      connectionStatusCSS = "success";
-      break;
-    case "Close":
-    default:
-      connectionStatusCSS = "danger";
-      break;
-  }
-
+  
   useImperativeHandle(ref, () => ({
     addMsg:(msg)=>{
       messageBox.current.addMsg(msg);
@@ -30,6 +21,18 @@ const Panel = forwardRef((props, ref) => {
     },
     getRemoteStream:()=>{
       return remoteMedia.current.getStream();
+    },
+    updateConnectionState:(connectionState)=>{
+      setConnectionState(connectionState);
+      switch (connectionState) {
+        case "Open":
+          setConnectionStatusCSS("success");
+          break;
+        case "Close":
+        default:
+          setConnectionStatusCSS("danger");
+          break;
+      }
     },
     setRemoteStream: (stream) => {
       remoteMedia.current.setStream(stream);
@@ -117,7 +120,7 @@ const Panel = forwardRef((props, ref) => {
           &nbsp;
           <Button variant="success">Copy log to clipboard</Button>&nbsp;
           <Button variant={connectionStatusCSS}>
-            Connection status:&nbsp;<span>{props.connectionState}</span>
+            Connection status:&nbsp;<span>{connectionState}</span>
           </Button>
         </Col>
       </Row>

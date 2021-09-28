@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
+import { useRef} from "react";
 import Panel from "../share/panel/Panel";
 import SimplePeer from 'simple-peer';
 import io from 'socket.io-client';
 export default function TestSimplePeer() {
-    let [connectionState,setConnectionState]= useState("Close");
+    
     const configuration = {iceServers: 
         [{urls: "stun:stun.stunprotocol.org"},
          {urls: "stun:stun.l.google.com:19302"},
@@ -39,10 +39,11 @@ export default function TestSimplePeer() {
         });
         peer.on('close', () => {
             console.log("Peer"+num+" Connection closed.");
-            setConnectionState("Close");
+            panel.current.updateConnectionState("Close");
         })
         peer.on('connect', () => {
-            console.log("Peer"+num+" Connection established.");            
+            console.log("Peer"+num+" Connection established.");
+            panel.current.updateConnectionState("Open");
         });
         peer.on('error', (err) => {
             console.log("Peer"+num+" Error occur:"+err);
@@ -68,8 +69,7 @@ export default function TestSimplePeer() {
    
     let controls = { call, hangUp};
     return(
-        <Panel
-            connectionState={connectionState} 
+        <Panel            
             controls={controls}
             ref={panel}/>
     );  

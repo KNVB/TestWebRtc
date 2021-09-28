@@ -1,14 +1,15 @@
 class TestSimplePeer{
     constructor(socket){
-        console.log("Connection established");
+        console.log("TestSimplePeer:Connection established");
         socket.on('disconnect', function () {
-            console.log("Disconnected");
+            console.log("TestSimplePeer:Disconnected");
         });
         socket.on("newPeer",()=>{
-            console.log("newPeer event received.")
+            console.log("TestSimplePeer:newPeer event received.")
             socket.broadcast.emit("newPeer", {});
         });
         socket.on("signalData",(data)=>{
+            console.log("TestSimplePeer:signalData received.")
             socket.broadcast.emit("signalData",data);
         });
     }

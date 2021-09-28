@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import './App.css';
+import TestPureWebRTC from './components/testPureWebRTC/TestPureWebRTC';
 import TestSimplePeer from './components/testSimplePeer/TestSimplePeer';
 import Panel from "./components/share/panel/Panel";
 function App() {
@@ -8,6 +9,7 @@ function App() {
         <Switch>
           <Route exact path='/' component={Panel}/>
           <Route exact path='/testSimplePeer' component={TestSimplePeer}/>
+          <Route exact path='/testPureWebRTC' component={TestPureWebRTC}/>
         </Switch>
       </Router>
   );
