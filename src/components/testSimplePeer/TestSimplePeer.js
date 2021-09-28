@@ -7,59 +7,59 @@ export default function TestSimplePeer() {
     const configuration = {iceServers: 
         [{urls: "stun:stun.stunprotocol.org"},
          {urls: "stun:stun.l.google.com:19302"},
-         {urls: "turn:numb.viagenie.ca", credential: "turnserver", username: "sj0016092@gmail.com"}		
+         {urls: "turn:numb.viagenie.ca", credential: "turnserver", username: "sj0016092@gmail.com"},
         ]};
     const panel=useRef();
     let peer1,peer2;
 
-    let socket1 = io.connect("http://localhost:" + process.env.REACT_APP_SOCKET_PORT+"/testSimplePeer", { transports: ['websocket'] });
-    let socket2 = io.connect("http://localhost:" + process.env.REACT_APP_SOCKET_PORT+"/testSimplePeer", { transports: ['websocket'] });
+    let socket1 = io.connect(process.env.REACT_APP_SOCKET_HOST+":" + process.env.REACT_APP_SOCKET_PORT+"/testSimplePeer", { transports: ['websocket'] });
+    let socket2 = io.connect(process.env.REACT_APP_SOCKET_HOST+":" + process.env.REACT_APP_SOCKET_PORT+"/testSimplePeer", { transports: ['websocket'] });
 
     let call = () => {
         console.log("Make A Call");
         let localStream=panel.current.getLocalStream();
         peer1=new SimplePeer({config:configuration,initiator:true,stream:localStream});
+        peer2=new SimplePeer({config:configuration});
 
         socket1.emit("newPeer");
-        handle(peer1,socket1);
-        socket2.on("newPeer",()=>{
-            //panel.current.addMsg("Socket2 receive newPeer event");
-            peer2=new SimplePeer({config:configuration});
-            handle(peer2,socket2);
-        });
+        handle(socket1,peer1,1);
+        handle(socket2,peer2,2);
     };
-    let handle=(peer,socket)=>{
+    let handle=(socket,peer,num)=>{
+        socket.on("newPeer",()=>{
+            console.log("Peer"+num+" Receive newPeer event");           
+        });
+        socket.on("signalData",data=>{
+            console.log("Peer"+num+" Receive Signal Data");
+            try{
+                peer.signal(data);
+            }catch (error){
+                console.log(error);
+            }
+        });
+        peer.on('close', () => {
+            console.log("Peer"+num+" Connection closed.");
+            setConnectionState("Close");
+        })
         peer.on('connect', () => {
-            console.log("Connection established.");
+            console.log("Peer"+num+" Connection established.");            
         });
         peer.on('error', (err) => {
-            console.log(err);
+            console.log("Peer"+num+" Error occur:"+err);
         })
         peer.on('signal',data=>{
-            //console.log("signal Event="+JSON.stringify(data));
+            console.log("Peer"+num+" receive signal event.");
             socket.emit("signalData",data);
-        })
-        peer.on('stream', stream => {
-            console.log("rececive remote stream");
+        });
+        peer.on('stream',stream=>{
             panel.current.setRemoteStream(stream);
         })
-        peer.on('track', (track, stream) => {
-            console.log("receive remote track");
-            console.log("This is a "+track.kind+" track");
-        })
-        socket.on("signalData",data=>{
-            console.log("Receive Signal Data");
-            peer.signal(data);
-        });
     }
     let hangUp = () => {
         console.log("Hang Up");
         //(panel.current.getLocalStream());
         peer1.destroy();
-        peer2.destroy();
-
-        peer1=null;
-        peer2=null;
+        peer2.destroy();        
     };
     /*
     let updateConnectionStatus=()=>{
