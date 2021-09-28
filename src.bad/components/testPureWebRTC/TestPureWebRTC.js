@@ -12,8 +12,7 @@ export default function TestPureWebRTC(){
     }    
     useEffect(()=>{
         localPeer.setMsgLogger(panel.current.addMsg);
-        localPeer.setDataChannelOpenHandler(dataChannelOpen);
-        localPeer.init();
+        //localPeer.setDataChannelOpenHandler(dataChannelOpen);
     },[])
     let dataChannelOpen=(msg)=>{
         console.log(msg);
