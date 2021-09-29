@@ -13,15 +13,25 @@ export default function A(){
     }
     useEffect(()=>{
         let temp=new WebRTC(peerName);
-        temp.setMsgLogger(panel.current.addMsg);
+        //temp.setMsgLogger(panel.current.addMsg);
+        temp.setMsgLogger(console.log);
+        temp.setDataChannelCloseHandler(dataChannelCloseHandler);
+        temp.setDataChannelOpenHandler(dataChannelOpenHandler);
         setWebRTC(temp);
     },[])
     let call=()=>{
         //panel.current.addMsg("Make A Call");
         webRTC.call();
     }
+    let dataChannelCloseHandler=()=>{
+        panel.current.updateConnectionState("Close");
+    }
+
+    let dataChannelOpenHandler=()=>{
+        panel.current.updateConnectionState("Open");
+    }
     let hangUp = () => {
-        //panel.current.addMsg("Hang Up");
+        panel.current.addMsg("Hang Up");
         webRTC.hangUp();
     }
     let controls = { call, hangUp};
