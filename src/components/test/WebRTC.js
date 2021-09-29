@@ -12,14 +12,10 @@ class WebRTC {
         },
       ],
     };
-    let dataChannel = null,
-      dataChannelCloseHandler = null;
-    let dataChannelOpenHandler = null,
-      ignoreOffer = false;
-    let makingOffer = false,
-      msgLogger;
-    let peerConnection = null,
-      polite = false;
+    let dataChannel = null, dataChannelCloseHandler = null;
+    let dataChannelOpenHandler = null, ignoreOffer = false;
+    let makingOffer = false, msgLogger;
+    let peerConnection = null, polite = false;
     let socket = io.connect(process.env.REACT_APP_SOCKET_URL + "test", {
       transports: ["websocket"],
     });
@@ -88,7 +84,9 @@ class WebRTC {
         );
         peerConnection = null;
       }
-
+      ignoreOffer = false;
+      makingOffer = false;
+      polite=false;      
       /*
             if (dataChannel){
                 dataChannel.onopen = null;
@@ -127,15 +125,15 @@ class WebRTC {
         msgLogger(peerName + " Handle Negotiation");
         makingOffer = true;
         await peerConnection.setLocalDescription();
+        msgLogger(peerName + " Send Local Description");
         socket.emit("sendLocalDescription", peerConnection.localDescription);
       } catch (err) {
-        console.error(err);
-        msgLogger(err);
+        msgLogger("Failed to send Local Description:"+err);
       } finally {
         makingOffer = false;
       }
     }
-    function hangUp() {
+    function hangUp() {      
       /*
             if (dataChannel){
                 msgLogger(peerName+" close data channel.");
@@ -148,8 +146,7 @@ class WebRTC {
             peerConnection.onnegotiationneeded = null;
             peerConnection.oniceconnectionstatechange = null;
             peerConnection.onsignalingstatechange=null;
-            */
-
+            */            
       peerConnection.close();
       //peerConnection=null;
     }
@@ -204,6 +201,10 @@ class WebRTC {
       }
     }
     async function init() {
+      msgLogger(
+        "peerConnection is" + (peerConnection ? " not " : " ") + "null"
+      );
+      msgLogger("polite="+polite);
       peerConnection = new RTCPeerConnection(configuration);
       peerConnection.ondatachannel = dataChannelEventHandler;
       peerConnection.onicecandidate = iceCandidateEventHandler;
@@ -231,10 +232,17 @@ class WebRTC {
             if (ignoreOffer) {
               return;
             }
-
-            await peerConnection.setRemoteDescription(remoteDescription);
+            msgLogger(
+              peerName +
+                " ICE Connection State Changed to:" +
+                peerConnection.iceConnectionState
+            );
+            //if (peerConnection.signalingState !== "stable"){
+              await peerConnection.setRemoteDescription(remoteDescription);
+            //}
             if (remoteDescription.type === "offer") {
               await peerConnection.setLocalDescription();
+              msgLogger(peerName + " Send Local Description");
               socket.emit(
                 "sendLocalDescription",
                 peerConnection.localDescription
@@ -242,6 +250,11 @@ class WebRTC {
             }
           } catch (error) {
             msgLogger("Failed to set remot description:" + error.message);
+            msgLogger(
+              peerName +
+                " ICE Connection State Changed to:" +
+                peerConnection.iceConnectionState
+            );
           }
         }
       });
