@@ -12,8 +12,8 @@ export default function TestSimplePeer() {
     const panel=useRef();
     let peer1,peer2;
 
-    let socket1 = io.connect(process.env.REACT_APP_SOCKET_HOST+":" + process.env.REACT_APP_SOCKET_PORT+"/testSimplePeer", { transports: ['websocket'] });
-    let socket2 = io.connect(process.env.REACT_APP_SOCKET_HOST+":" + process.env.REACT_APP_SOCKET_PORT+"/testSimplePeer", { transports: ['websocket'] });
+    let socket1 = io.connect(process.env.REACT_APP_SOCKET_URL+"testSimplePeer", { transports: ['websocket'] });
+    let socket2 = io.connect(process.env.REACT_APP_SOCKET_URL+"testSimplePeer", { transports: ['websocket'] });
 
     let call = () => {
         console.log("Make A Call");

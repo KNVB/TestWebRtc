@@ -1,4 +1,4 @@
-import WebRTC from './WebRTC';
+import WebRTC from './WebRTC_old';
 class Peer {
     constructor(peerName) {
         let mslogger;

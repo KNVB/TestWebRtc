@@ -68,6 +68,7 @@ const Panel = forwardRef((props, ref) => {
           Remote View
         </Col>
       </Row>
+
       <Row className="me-1 ms-1 p-0">
         <Col className="border-primary border-start border-top col-6 h4 p-1 mb-0 vh25">
           <MediaPlayer ref={localMedia} />
@@ -76,6 +77,7 @@ const Panel = forwardRef((props, ref) => {
           <MediaPlayer ref={remoteMedia} />
         </Col>
       </Row>
+
       <Row className="me-1 ms-1 p-0">
         <Col className="border-primary border-start border-top col-6 d-flex justify-content-end p-1 mb-0">
           <Button variant="success" onClick={() => controls.call()}>
