@@ -13,11 +13,20 @@ export default class MyPeer{
           };
         let dataChannel = null, dataHandler=null;
         let dataChannelOpenHandler = null,dataChannelCloseHandler = null;
-        let ignoreOffer = false,isDebug=false,makingOffer = false;        
+        let ignoreOffer = false,isDebug=false;
+        let localStream=null,makingOffer = false;                
         let peerConnection = null, polite = false;
-        let signalEventHandler=null;
+        let rtpSender =null,signalEventHandler=null;
+        let trackHandler=null;
+        this.addStream=(stream)=>{
+          if (peerConnection){
+            addStream(stream);            
+          }else{
+            localStream=stream;
+          }
+        }
         this.call=()=>{
-          polite = true;
+          polite = true;                 
           dataChannel = peerConnection.createDataChannel("chat");
           dataChannel.onopen = dataChannelOpen;
           dataChannel.onmessage = dataChannelMessage;
@@ -37,6 +46,11 @@ export default class MyPeer{
           peerConnection.onnegotiationneeded = handleNegotiation;
           peerConnection.oniceconnectionstatechange = iceConnectionStateChangeHandler;
           peerConnection.onsignalingstatechange = signalingStateChangeHandler;
+          peerConnection.ontrack =trackEventHandler;
+          if (localStream){
+            msgLogger(peerName+" add local stream.");            
+            addStream(localStream);
+          }            
         }
         this.on=(eventType,param)=>{
           switch (eventType){
@@ -52,6 +66,9 @@ export default class MyPeer{
             case "signal":
               signalEventHandler=param;
               break;
+            case "track":
+              trackHandler=param;
+              break; 
             default:break;  
           }
         }  
@@ -62,6 +79,11 @@ export default class MyPeer{
           await processSignalData(signalData);
         }
 //======================================================================
+        let addStream=(stream)=>{
+          for (const track of stream.getTracks()) {
+            rtpSender =peerConnection.addTrack(track);
+          }
+        }
         let dataChannelEventHandler=(event)=>{
           msgLogger(peerName + " Data channel is created!");
           event.channel.onopen = dataChannelOpen;
@@ -185,6 +207,16 @@ export default class MyPeer{
           msgLogger(
             peerName + " Signaling State change to " + peerConnection.signalingState
           );
+        }
+        let trackEventHandler=event=>{
+          msgLogger(
+            peerName + " recive a track event"
+          );
+          msgLogger(event);
+          
+          if (trackHandler){
+            trackHandler(event.streams[0]);
+          }
         }        
     }
 }

@@ -2,9 +2,9 @@ import { useEffect,useRef} from 'react';
 import io from 'socket.io-client';
 import MyPeer from './MyPeer';
 import Panel from "../share/panel/Panel";
-export default function B(){
+export default function TestPureWebRTC(){
     let myPeer,panel=useRef(),peerName;
-    let signalSocket=io.connect(process.env.REACT_APP_SOCKET_URL+"test", { transports: ['websocket'] });
+    let signalSocket=io.connect(process.env.REACT_APP_SOCKET_URL+"testPureWebRTC", { transports: ['websocket'] });
     let sUsrAg = navigator.userAgent;
    
     if (sUsrAg.indexOf("Chrome")>-1){
@@ -13,7 +13,7 @@ export default function B(){
         peerName="Firefox";
     }
     myPeer=new MyPeer(peerName);
-    //myPeer.setDebug(true); 
+    myPeer.setDebug(true); 
     useEffect(()=>{
         signalSocket.on("requestConnect",(remotePeerName)=>{
             console.log('Received request connect event from '+remotePeerName);
@@ -42,17 +42,26 @@ export default function B(){
             panel.current.addMsg(peerName+" Connection closed.");
             panel.current.updateConnectionState("Close");
         })
-        
+        myPeer.on("track",(track)=>{
+            let stream=new MediaStream();
+            stream.addTrack(track);
+            panel.current.setRemoteStream(stream);
+        })
     },[myPeer,peerName,signalSocket]);
     let call=()=>{
         signalSocket.emit('askConnect',peerName);
         myPeer.init();
         myPeer.call();
     }
+    let getLocalStream=(localStream)=>{
+        if (localStream){
+            myPeer.addStream(localStream);
+        }
+    }
     let hangUp = () => {
         myPeer.hangUp();
     }
-    let controls = { call, hangUp};
+    let controls = { call,getLocalStream, hangUp};
     return(
         <Panel            
         controls={controls}

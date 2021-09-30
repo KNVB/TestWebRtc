@@ -52,7 +52,8 @@ const Panel = forwardRef((props, ref) => {
       if ( localStream === null) {
         await localStreamManager.closeStream(localMedia.current.getStream());
       }  
-      localMedia.current.setStream(localStream);   
+      localMedia.current.setStream(localStream);
+      controls.getLocalStream(localStream);   
     }  
   }
   return (
