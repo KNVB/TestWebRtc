@@ -247,6 +247,7 @@ class WebRTC {
             }
             if ((isLocalDescOk === false) && (remoteDescription.type === "offer")) {
               await peerConnection.setLocalDescription();
+              isLocalDescOk =true;
               msgLogger(peerName + " Send Local Description");
               socket.emit(
                 "sendLocalDescription",
