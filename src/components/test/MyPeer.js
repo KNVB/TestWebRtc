@@ -31,7 +31,6 @@ export default class MyPeer{
           msgLogger(
             "peerConnection is" + (peerConnection ? " not " : " ") + "null"
           );
-          msgLogger("polite="+polite);
           peerConnection = new RTCPeerConnection(configuration);
           peerConnection.ondatachannel = dataChannelEventHandler;
           peerConnection.onicecandidate = iceCandidateEventHandler;
@@ -156,14 +155,13 @@ export default class MyPeer{
           }
         }
         let processSignalData=async (signalData)=>{
-          //console.log(signalData);
-
           if (signalData.type){
-            if (signalData.type === "offer"){
               msgLogger(peerName+" receive Remote Description");
               const offerCollision = (signalData.type === "offer") &&
                             (makingOffer || peerConnection.signalingState !== "stable");
+              
               ignoreOffer = !polite && offerCollision;
+              msgLogger("ignoreOffer = "+ignoreOffer+",offerCollision="+offerCollision+",polite="+polite);
               if (ignoreOffer) {
                 msgLogger(peerName+" ignore offer");
                 return;
@@ -171,13 +169,11 @@ export default class MyPeer{
               await peerConnection.setRemoteDescription(signalData);
               msgLogger(peerName + " Set Remote Description");
 
-              await peerConnection.setLocalDescription();
-              signalEventHandler(peerConnection.localDescription);
-              msgLogger(peerName + " Sent local Description");
-            } else {
-              await peerConnection.setRemoteDescription(signalData);
-              msgLogger(peerName + " Set Remote Description");
-            }
+              if (signalData.type === "offer") {
+                await peerConnection.setLocalDescription();
+                signalEventHandler(peerConnection.localDescription);
+                msgLogger(peerName + " Sent local Description");
+              }
           }else {
             if (signalData.candidate){
               msgLogger(peerName+" receive ICE Candidate");
