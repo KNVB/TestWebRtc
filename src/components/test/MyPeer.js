@@ -79,7 +79,6 @@ export default class MyPeer{
           }
 
           msgLogger("peerConnection is " + (peerConnection ? "not" : "") + " null");
-
           if (peerConnection) {
             peerConnection.close();
             msgLogger(
@@ -100,11 +99,7 @@ export default class MyPeer{
         let dataChannelMessage=(message)=>{
           if (dataHandler){
             dataHandler(message.data);
-          }
-          /*
-          msgLogger(
-            peerName + " Received Message from Data Channel:" + message.data
-          );*/
+          }         
         }
         let dataChannelOpen=(event)=>{
           if (dataChannelOpenHandler) {
@@ -125,8 +120,11 @@ export default class MyPeer{
             makingOffer = false;
           }
         }
-        let hangUp=()=>{ 
-          peerConnection.close();
+        let hangUp=()=>{
+          if (dataChannel) {
+            dataChannel.close();
+          }
+          //peerConnection.close();
         }
         let iceCandidateEventHandler=(event)=>{
           if (event.candidate == null) {
@@ -162,12 +160,12 @@ export default class MyPeer{
 
           if (signalData.type){
             if (signalData.type === "offer"){
-              console.log(peerName+" receive Remote Description");
+              msgLogger(peerName+" receive Remote Description");
               const offerCollision = (signalData.type === "offer") &&
                             (makingOffer || peerConnection.signalingState !== "stable");
               ignoreOffer = !polite && offerCollision;
               if (ignoreOffer) {
-                console.log(peerName+" ignore offer");
+                msgLogger(peerName+" ignore offer");
                 return;
               }
               await peerConnection.setRemoteDescription(signalData);
@@ -182,7 +180,7 @@ export default class MyPeer{
             }
           }else {
             if (signalData.candidate){
-              console.log(peerName+" receive ICE Candidate");
+              msgLogger(peerName+" receive ICE Candidate");
               await peerConnection.addIceCandidate(signalData);
             }
           }

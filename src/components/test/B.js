@@ -4,7 +4,7 @@ import MyPeer from './MyPeer';
 import Panel from "../share/panel/Panel";
 export default function B(){
     let myPeer,panel=useRef(),peerName;
-    let signalSocket;
+    let signalSocket=io.connect(process.env.REACT_APP_SOCKET_URL+"test", { transports: ['websocket'] });
     let sUsrAg = navigator.userAgent;
    
     if (sUsrAg.indexOf("Chrome")>-1){
@@ -13,9 +13,8 @@ export default function B(){
         peerName="Firefox";
     }
     myPeer=new MyPeer(peerName);
-    myPeer.setDebug(true); 
+    //myPeer.setDebug(true); 
     useEffect(()=>{
-        signalSocket=io.connect(process.env.REACT_APP_SOCKET_URL+"test", { transports: ['websocket'] });
         signalSocket.on("requestConnect",(remotePeerName)=>{
             console.log('Received request connect event from '+remotePeerName);
             myPeer.init();
@@ -25,11 +24,12 @@ export default function B(){
             try{
                 await myPeer.signal(data);
             }catch (error){
-                console.log(error);
+                panel.current.addMsg(error);
             }
         });
         myPeer.on("connect",()=>{
             panel.current.addMsg(peerName+" Connection established.");
+            panel.current.updateConnectionState("Open");
         });
         myPeer.on("data",(data)=>{
             panel.current.addMsg(peerName+" receive data");
@@ -40,9 +40,10 @@ export default function B(){
         });
         myPeer.on("close",()=>{
             panel.current.addMsg(peerName+" Connection closed.");
+            panel.current.updateConnectionState("Close");
         })
         
-    },[])
+    },[myPeer,peerName,signalSocket]);
     let call=()=>{
         signalSocket.emit('askConnect',peerName);
         myPeer.init();

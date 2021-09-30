@@ -18,7 +18,7 @@ export default function A(){
         temp.setDataChannelCloseHandler(dataChannelCloseHandler);
         temp.setDataChannelOpenHandler(dataChannelOpenHandler);
         setWebRTC(temp);
-    },[])
+    },[peerName])
     let call=()=>{
         //panel.current.addMsg("Make A Call");
         webRTC.call();
