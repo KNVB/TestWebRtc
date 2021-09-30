@@ -107,7 +107,6 @@ export default class MyPeer{
           );*/
         }
         let dataChannelOpen=(event)=>{
-          msgLogger(peerName + " Data Channel Open");
           if (dataChannelOpenHandler) {
             dataChannelOpenHandler();
           }
