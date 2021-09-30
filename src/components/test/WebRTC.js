@@ -14,6 +14,7 @@ class WebRTC {
     };
     let dataChannel = null, dataChannelCloseHandler = null;
     let dataChannelOpenHandler = null, ignoreOffer = false;
+    let isLocalDescOk=false,isRemoteDescOk=false;
     let makingOffer = false, msgLogger;
     let peerConnection = null, polite = false;
     let socket = io.connect(process.env.REACT_APP_SOCKET_URL + "test", {
@@ -85,6 +86,8 @@ class WebRTC {
         peerConnection = null;
       }
       ignoreOffer = false;
+      isLocalDescOk=false;
+      isRemoteDescOk=false;
       makingOffer = false;
       polite=false;      
       /*
@@ -125,6 +128,7 @@ class WebRTC {
         msgLogger(peerName + " Handle Negotiation");
         makingOffer = true;
         await peerConnection.setLocalDescription();
+        isLocalDescOk =true;
         msgLogger(peerName + " Send Local Description");
         socket.emit("sendLocalDescription", peerConnection.localDescription);
       } catch (err) {
@@ -237,10 +241,11 @@ class WebRTC {
                 " ICE Connection State Changed to:" +
                 peerConnection.iceConnectionState
             );
-            //if (peerConnection.signalingState !== "stable"){
+            if (isRemoteDescOk === false){
               await peerConnection.setRemoteDescription(remoteDescription);
-            //}
-            if (remoteDescription.type === "offer") {
+              isRemoteDescOk=true;
+            }
+            if ((isLocalDescOk === false) && (remoteDescription.type === "offer")) {
               await peerConnection.setLocalDescription();
               msgLogger(peerName + " Send Local Description");
               socket.emit(
