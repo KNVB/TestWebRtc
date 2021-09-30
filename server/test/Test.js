@@ -19,6 +19,10 @@ class Test{
             console.log("Test: receive local description");
             socket.broadcast.emit("receiveRemoteDescription",data);
         });
+        socket.on("signalData",(data)=>{
+            console.log("TestSimplePeer:signalData received.")
+            socket.broadcast.emit("signalData",data);
+        });
     }    
 }
 module.exports=Test;
