@@ -1,9 +1,9 @@
 import { useEffect,useRef} from 'react';
 import io from 'socket.io-client';
 import MyPeer from './MyPeer';
+import Panel from "../share/panel/Panel";
 export default function B(){
-    
-    let myPeer,peerName;
+    let myPeer,panel=useRef(),peerName;
     let signalSocket;
     let sUsrAg = navigator.userAgent;
    
@@ -29,12 +29,15 @@ export default function B(){
             }
         });
         myPeer.on("connect",()=>{
-            console.log(peerName+" Connection established.");
+            panel.current.addMsg(peerName+" Connection established.");
         });
         myPeer.on('signal',data=>{
             //console.log(peerName+" send signal event.");
             signalSocket.emit("signalData",data);
         });
+        myPeer.on("close",()=>{
+            panel.current.addMsg(peerName+" Connection closed.");
+        })
         
     },[])
     let call=()=>{
@@ -45,10 +48,10 @@ export default function B(){
     let hangUp = () => {
         myPeer.hangUp();
     }
+    let controls = { call, hangUp};
     return(
-        <div>
-            <button onClick={call}>Call</button>
-            <button onClick={hangUp}>Hang Up</button>
-        </div>
+        <Panel            
+        controls={controls}
+        ref={panel}/>
     ); 
 }

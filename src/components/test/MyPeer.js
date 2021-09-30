@@ -41,6 +41,9 @@ export default class MyPeer{
         }
         this.on=(eventType,param)=>{
           switch (eventType){
+            case "close":
+              dataChannelCloseHandler = param;
+              break;
             case "connect":
               dataChannelOpenHandler =param;
               break;
