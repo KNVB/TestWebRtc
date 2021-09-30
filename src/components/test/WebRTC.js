@@ -126,11 +126,13 @@ class WebRTC {
     async function handleNegotiation() {
       try {
         msgLogger(peerName + " Handle Negotiation");
-        makingOffer = true;
-        await peerConnection.setLocalDescription();
-        isLocalDescOk =true;
-        msgLogger(peerName + " Send Local Description");
-        socket.emit("sendLocalDescription", peerConnection.localDescription);
+        if (isLocalDescOk === false){
+          makingOffer = true;
+          await peerConnection.setLocalDescription();
+          isLocalDescOk =true;
+          msgLogger(peerName + " Send Local Description");
+          socket.emit("sendLocalDescription", peerConnection.localDescription);
+        }
       } catch (err) {
         msgLogger("Failed to send Local Description:"+err);
       } finally {
@@ -198,6 +200,10 @@ class WebRTC {
           break;
         case "failed":
           msgLogger(peerName + " restart ICE");
+          ignoreOffer = false;
+          isLocalDescOk=false;
+          isRemoteDescOk=false;
+          makingOffer = false;
           peerConnection.restartIce();
           break;
         default:
@@ -255,7 +261,7 @@ class WebRTC {
               );
             }
           } catch (error) {
-            msgLogger("Failed to set remot description:" + error.message);
+            msgLogger("Failed to set remot description:" + error);
             msgLogger(
               peerName +
                 " ICE Connection State Changed to:" +
