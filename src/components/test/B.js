@@ -31,6 +31,9 @@ export default function B(){
         myPeer.on("connect",()=>{
             panel.current.addMsg(peerName+" Connection established.");
         });
+        myPeer.on("data",(data)=>{
+            panel.current.addMsg(peerName+" receive data");
+        })
         myPeer.on('signal',data=>{
             //console.log(peerName+" send signal event.");
             signalSocket.emit("signalData",data);

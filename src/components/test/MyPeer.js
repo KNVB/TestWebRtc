@@ -11,9 +11,9 @@ export default class MyPeer{
               },
             ],
           };
-        let dataChannel = null, dataChannelCloseHandler = null;
-        let dataChannelOpenHandler = null,ignoreOffer = false;
-        let isDebug=false,makingOffer = false;        
+        let dataChannel = null, dataHandler=null;
+        let dataChannelOpenHandler = null,dataChannelCloseHandler = null;
+        let ignoreOffer = false,isDebug=false,makingOffer = false;        
         let peerConnection = null, polite = false;
         let signalEventHandler=null;
         this.call=()=>{
@@ -47,6 +47,9 @@ export default class MyPeer{
             case "connect":
               dataChannelOpenHandler =param;
               break;
+            case "data":  
+              dataHandler =param;
+              break; 
             case "signal":
               signalEventHandler=param;
               break;
@@ -69,7 +72,6 @@ export default class MyPeer{
           dataChannel = event.channel;
         }
         let dataChannelClose=(event)=>{
-          msgLogger(peerName + " Data Connection close");
           msgLogger("dataChannel is " + (dataChannel ? "not" : "") + " null");
           if (dataChannel) {
             msgLogger("dataChannel.readyState=" + dataChannel.readyState);
@@ -96,9 +98,13 @@ export default class MyPeer{
           msgLogger(peerName + " Data channel error:" + event.error.message);
         }
         let dataChannelMessage=(message)=>{
+          if (dataHandler){
+            dataHandler(message.data);
+          }
+          /*
           msgLogger(
             peerName + " Received Message from Data Channel:" + message.data
-          );
+          );*/
         }
         let dataChannelOpen=(event)=>{
           msgLogger(peerName + " Data Channel Open");
