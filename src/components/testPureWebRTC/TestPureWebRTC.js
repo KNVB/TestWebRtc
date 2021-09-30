@@ -42,9 +42,7 @@ export default function TestPureWebRTC(){
             panel.current.addMsg(peerName+" Connection closed.");
             panel.current.updateConnectionState("Close");
         })
-        myPeer.on("track",(track)=>{
-            let stream=new MediaStream();
-            stream.addTrack(track);
+        myPeer.on("stream",(stream)=>{
             panel.current.setRemoteStream(stream);
         })
     },[myPeer,peerName,signalSocket]);

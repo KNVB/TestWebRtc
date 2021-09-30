@@ -66,7 +66,7 @@ export default class MyPeer{
             case "signal":
               signalEventHandler=param;
               break;
-            case "track":
+            case "stream":
               trackHandler=param;
               break; 
             default:break;  
@@ -81,7 +81,7 @@ export default class MyPeer{
 //======================================================================
         let addStream=(stream)=>{
           for (const track of stream.getTracks()) {
-            rtpSender =peerConnection.addTrack(track);
+            rtpSender =peerConnection.addTrack(track,stream);
           }
         }
         let dataChannelEventHandler=(event)=>{
