@@ -123,9 +123,10 @@ class WebRTC {
       }
     }
     //=======================================================================================================
-    async function handleNegotiation() {
+    async function handleNegotiation(event) {
       try {
         msgLogger(peerName + " Handle Negotiation");
+        //msgLogger(event);
         if (isLocalDescOk === false){
           makingOffer = true;
           await peerConnection.setLocalDescription();
@@ -247,13 +248,17 @@ class WebRTC {
                 " ICE Connection State Changed to:" +
                 peerConnection.iceConnectionState
             );
+            msgLogger(peerName + " peerConnection.remoteDescription is"+(peerConnection.remoteDescription?" not ":" ")+"null");
             if (isRemoteDescOk === false){
               await peerConnection.setRemoteDescription(remoteDescription);
+              msgLogger(peerName + " Set Remote Description");              
               isRemoteDescOk=true;
+              msgLogger(peerName + " Set isRemoteDescOk=true");
             }
             if ((isLocalDescOk === false) && (remoteDescription.type === "offer")) {
               await peerConnection.setLocalDescription();
               isLocalDescOk =true;
+              msgLogger(peerName + " Set isLocalDescOk=true");
               msgLogger(peerName + " Send Local Description");
               socket.emit(
                 "sendLocalDescription",
