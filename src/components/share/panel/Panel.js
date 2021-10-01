@@ -22,7 +22,7 @@ const Panel = forwardRef((props, ref) => {
     getRemoteStream:()=>{
       return remoteMedia.current.getStream();
     },
-    updateConnectionState:(connectionState)=>{
+    updateConnectionState:async(connectionState)=>{
       setConnectionState(connectionState);
       switch (connectionState) {
         case "Open":
@@ -36,7 +36,7 @@ const Panel = forwardRef((props, ref) => {
     },
     setRemoteStream: (stream) => {
       remoteMedia.current.setStream(stream);
-    },
+    }
   }));
   let updateShareMedia=async (param)=>{
     let localStream=null;

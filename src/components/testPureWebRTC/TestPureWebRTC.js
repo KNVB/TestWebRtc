@@ -52,9 +52,7 @@ export default function TestPureWebRTC(){
         myPeer.call();
     }
     let getLocalStream=(localStream)=>{
-        if (localStream){
-            myPeer.addStream(localStream);
-        }
+        myPeer.setStream(localStream);        
     }
     let hangUp = () => {
         myPeer.hangUp();

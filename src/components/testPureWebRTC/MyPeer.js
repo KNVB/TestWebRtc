@@ -16,11 +16,10 @@ export default class MyPeer{
         let ignoreOffer = false,isDebug=false;
         let localStream=null,makingOffer = false;                
         let peerConnection = null, polite = false;
-        let rtpSender =null,signalEventHandler=null;
-        let trackHandler=null;
-        this.addStream=(stream)=>{
+        let signalEventHandler=null,trackHandler=null;
+        this.setStream=(stream)=>{
           if (peerConnection){
-            addStream(stream);            
+            setStream(stream);            
           }else{
             localStream=stream;
           }
@@ -49,7 +48,7 @@ export default class MyPeer{
           peerConnection.ontrack =trackEventHandler;
           if (localStream){
             msgLogger(peerName+" add local stream.");            
-            addStream(localStream);
+            setStream(localStream);
           }            
         }
         this.on=(eventType,param)=>{
@@ -79,9 +78,15 @@ export default class MyPeer{
           await processSignalData(signalData);
         }
 //======================================================================
-        let addStream=(stream)=>{
-          for (const track of stream.getTracks()) {
-            rtpSender =peerConnection.addTrack(track,stream);
+        let setStream=(stream)=>{
+          let senders = peerConnection.getSenders();
+          senders.forEach(sender=>{
+            peerConnection.removeTrack(sender);
+          })
+          if (stream){
+            for (const track of stream.getTracks()) {
+              peerConnection.addTrack(track,stream);
+            }
           }
         }
         let dataChannelEventHandler=(event)=>{
@@ -142,6 +147,9 @@ export default class MyPeer{
           }
         }
         let hangUp=()=>{
+          peerConnection.getSenders().forEach(sender=>{
+            peerConnection.removeTrack(sender);
+          })
           if (dataChannel) {
             dataChannel.close();
           }
@@ -212,7 +220,7 @@ export default class MyPeer{
           msgLogger(
             peerName + " recive a track event"
           );
-          msgLogger(event);
+          //msgLogger(event);
           
           if (trackHandler){
             trackHandler(event.streams[0]);
