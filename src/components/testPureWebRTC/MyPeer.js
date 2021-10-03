@@ -45,11 +45,7 @@ export default class MyPeer{
           peerConnection.onnegotiationneeded = handleNegotiation;
           peerConnection.oniceconnectionstatechange = iceConnectionStateChangeHandler;
           peerConnection.onsignalingstatechange = signalingStateChangeHandler;
-          peerConnection.ontrack =trackEventHandler;
-          if (localStream){
-            msgLogger(peerName+" add local stream.");            
-            setStream(localStream);
-          }            
+          peerConnection.ontrack =trackEventHandler;                  
         }
         this.on=(eventType,param)=>{
           switch (eventType){
@@ -79,14 +75,18 @@ export default class MyPeer{
         }
 //======================================================================
         let setStream=(stream)=>{
-          let senders = peerConnection.getSenders();
-          senders.forEach(sender=>{
-            peerConnection.removeTrack(sender);
-          })
-          if (stream){
-            for (const track of stream.getTracks()) {
-              peerConnection.addTrack(track,stream);
+          if (peerConnection){
+            let senders = peerConnection.getSenders();
+            senders.forEach(sender=>{
+              peerConnection.removeTrack(sender);
+            })
+            if (stream){
+              for (const track of stream.getTracks()) {
+                peerConnection.addTrack(track,stream);
+              }
             }
+          } else {
+            localStream=stream;
           }
         }
         let dataChannelEventHandler=(event)=>{
@@ -128,6 +128,10 @@ export default class MyPeer{
           }         
         }
         let dataChannelOpen=(event)=>{
+          if (localStream){
+            msgLogger(peerName+" add local stream.");            
+            setStream(localStream);
+          }   
           if (dataChannelOpenHandler) {
             dataChannelOpenHandler();
           }
