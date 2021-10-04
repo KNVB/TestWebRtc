@@ -32,7 +32,7 @@ export default function TestPureWebRTC(){
             panel.current.updateConnectionState("Open");
         });
         myPeer.on("data",(data)=>{
-            panel.current.addMsg(peerName+" receive data");
+            panel.current.addMsg(peerName+" receive data:"+data);
         })
         myPeer.on('signal',data=>{
             //console.log(peerName+" send signal event.");

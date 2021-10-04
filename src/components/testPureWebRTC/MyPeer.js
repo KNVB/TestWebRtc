@@ -17,13 +17,9 @@ export default class MyPeer{
         let localStream=null,makingOffer = false;                
         let peerConnection = null, polite = false;
         let signalEventHandler=null,trackHandler=null;
-        this.setStream=(stream)=>{
-          if (peerConnection){
-            setStream(stream);            
-          }else{
-            localStream=stream;
-          }
-        }
+/*=====================================================================*/
+/*        To set up a connection                                       */
+/*=====================================================================*/
         this.call=()=>{
           polite = true;                 
           dataChannel = peerConnection.createDataChannel("chat");
@@ -32,9 +28,15 @@ export default class MyPeer{
           dataChannel.onclose = dataChannelClose;
           dataChannel.onerror = dataChannelError;
         }
+/*=====================================================================*/
+/*        To hangup the connection                                     */
+/*=====================================================================*/
         this.hangUp=()=>{
           hangUp();
         }
+/*=====================================================================*/
+/*        To initialize the RTCPeerConnection object                   */
+/*=====================================================================*/
         this.init=()=>{
           msgLogger(
             "peerConnection is" + (peerConnection ? " not " : " ") + "null"
@@ -42,11 +44,16 @@ export default class MyPeer{
           peerConnection = new RTCPeerConnection(configuration);
           peerConnection.ondatachannel = dataChannelEventHandler;
           peerConnection.onicecandidate = iceCandidateEventHandler;
-          peerConnection.onnegotiationneeded = handleNegotiation;
           peerConnection.oniceconnectionstatechange = iceConnectionStateChangeHandler;
+          peerConnection.onicegatheringstatechange = iceGatheringStateChangeHandler;
+          peerConnection.onnegotiationneeded = handleNegotiation;
+          
           peerConnection.onsignalingstatechange = signalingStateChangeHandler;
           peerConnection.ontrack =trackEventHandler;                  
         }
+/*=====================================================================*/
+/*        To configure handler for varies event                        */
+/*=====================================================================*/
         this.on=(eventType,param)=>{
           switch (eventType){
             case "close":
@@ -66,35 +73,45 @@ export default class MyPeer{
               break; 
             default:break;  
           }
-        }  
+        }
+/*=====================================================================*/
+/*        To control if message error is shown                         */
+/*=====================================================================*/
         this.setDebug=(debug)=>{
           isDebug=debug;
         }
-        this.signal=async (signalData)=>{
-          await processSignalData(signalData);
-        }
-//======================================================================
-        let setStream=(stream)=>{
+/*=====================================================================*/
+/*       The local stream setter                                       */
+/*=====================================================================*/
+        this.setStream=(stream)=>{
           if (peerConnection){
-            let senders = peerConnection.getSenders();
-            senders.forEach(sender=>{
-              peerConnection.removeTrack(sender);
-            })
-            if (stream){
-              for (const track of stream.getTracks()) {
-                peerConnection.addTrack(track,stream);
-              }
-            }
-          } else {
+            setStream(stream);            
+          }else{
             localStream=stream;
           }
         }
+        this.send=(data)=>{
+          if (dataChannel){
+            dataChannel.send(data);
+          }else {
+            throw new Error("The Data Channel is not available.");
+          }
+        }
+/*=====================================================================*/
+/*       Send Signal data to remote peer via signaling server          */
+/*=====================================================================*/
+        this.signal=async (signalData)=>{
+          await processSignalData(signalData);
+        }
+/*=====================================================================*/
+/*        Data Channel related event handler                           */
+/*=====================================================================*/
         let dataChannelEventHandler=(event)=>{
           msgLogger(peerName + " Data channel is created!");
-          event.channel.onopen = dataChannelOpen;
-          event.channel.onmessage = dataChannelMessage;
           event.channel.onclose = dataChannelClose;
           event.channel.onerror = dataChannelError;
+          event.channel.onmessage = dataChannelMessage;
+          event.channel.onopen = dataChannelOpen;          
           dataChannel = event.channel;
         }
         let dataChannelClose=(event)=>{
@@ -134,9 +151,11 @@ export default class MyPeer{
           }   
           if (dataChannelOpenHandler) {
             dataChannelOpenHandler();
-          }
-        }                
-//======================================================================
+          }          
+        }          
+/*=====================================================================*/
+/*        Handle Negotiation                                           */
+/*=====================================================================*/
         let handleNegotiation=async (event)=>{
           try {
             msgLogger(peerName + " Handle Negotiation");
@@ -150,15 +169,23 @@ export default class MyPeer{
             makingOffer = false;
           }
         }
+/*=====================================================================*/
+/*        Hang Up                                                      */
+/*=====================================================================*/
         let hangUp=()=>{
-          peerConnection.getSenders().forEach(sender=>{
-            peerConnection.removeTrack(sender);
-          })
-          if (dataChannel) {
-            dataChannel.close();
+          if (peerConnection){
+            peerConnection.getSenders().forEach(sender=>{
+              peerConnection.removeTrack(sender);
+            })
+            if (dataChannel) {
+              dataChannel.close();
+            }
           }
           //peerConnection.close();
         }
+/*=====================================================================*/
+/*        ICE related event handler                                    */
+/*=====================================================================*/
         let iceCandidateEventHandler=(event)=>{
           if (event.candidate == null) {
             msgLogger(peerName + " All ICE candidates are sent");
@@ -182,12 +209,25 @@ export default class MyPeer{
             default:
               break;
           }        
-        }  
+        }
+        let iceGatheringStateChangeHandler=(event)=>{
+          msgLogger(
+            peerName +
+              " ICE Garthering State Changed to:" +
+              peerConnection.iceGatheringState
+          );
+        }
+/*=====================================================================*/
+/*        Message Logger                                               */
+/*=====================================================================*/
         let msgLogger=(msg)=>{
           if (isDebug){
             console.log(msg);
           }
         }
+/*=====================================================================*/
+/*        Send the signal data to signal server                        */
+/*=====================================================================*/
         let processSignalData=async (signalData)=>{
           if (signalData.type){
               msgLogger(peerName+" receive Remote Description");
@@ -215,11 +255,35 @@ export default class MyPeer{
             }
           }
         }
+/*=====================================================================*/
+/*        Set a stream to a RTCPeerConnection                          */
+/*=====================================================================*/
+        let setStream=(stream)=>{
+          if (peerConnection){
+            let senders = peerConnection.getSenders();
+            senders.forEach(sender=>{
+              peerConnection.removeTrack(sender);
+            })
+            if (stream){
+              for (const track of stream.getTracks()) {
+                peerConnection.addTrack(track,stream);
+              }
+            }
+          } else {
+            localStream=stream;
+          }
+        }
+/*=====================================================================*/
+/*        Signaling State change event handler                         */
+/*=====================================================================*/        
         let signalingStateChangeHandler=(event)=>{
           msgLogger(
             peerName + " Signaling State change to " + peerConnection.signalingState
           );
         }
+/*=====================================================================*/
+/*        Track event handler                                          */
+/*=====================================================================*/        
         let trackEventHandler=event=>{
           msgLogger(
             peerName + " recive a track event"
