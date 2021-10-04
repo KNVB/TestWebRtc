@@ -90,6 +90,9 @@ export default class MyPeer{
             localStream=stream;
           }
         }
+/*=====================================================================*/
+/*       Send data to remote peer                                      */
+/*=====================================================================*/
         this.send=(data)=>{
           if (dataChannel){
             dataChannel.send(data);
