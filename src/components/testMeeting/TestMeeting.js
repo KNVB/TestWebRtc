@@ -4,7 +4,8 @@ import Peer from './Peer';
 export default function TestMeeting(){
     let peerName;
     const [peerList,setPeerList]=useState({});
-    let signalSocket=io.connect(process.env.REACT_APP_SOCKET_URL+"testMeeting", { transports: ['websocket'] });
+    const [signalSocket,setSignalSocket]=useState(io.connect(process.env.REACT_APP_SOCKET_URL+"testMeeting", { transports: ['websocket'] }));
+
     let sUsrAg = navigator.userAgent;
     if (sUsrAg.indexOf("Edg")>-1){
         peerName="Edge";
@@ -21,35 +22,41 @@ export default function TestMeeting(){
             }
         }
     }
+  
     useEffect(()=>{
         signalSocket.on("greeting",greeting=>{
-            console.log(peerList);
+            let peer=new Peer(greeting.from,greeting.socketId);        
             let temp={...peerList};
-            let peer=new Peer(greeting.from,greeting.socketId);
-            
             temp[greeting.socketId]=peer;
             setPeerList(temp);
-            //console.log("Receive Greeting from "+greeting.from);
-            //console.log(peerList);
         })
         signalSocket.on("newPeer",(remotePeer)=>{
             //console.log(remotePeer);
             let peer=new Peer(remotePeer.from,remotePeer.socketId);
             peerList[remotePeer.socketId]=peer;
-            //console.log(peerList[remotePeer.socketId].peerName());
+            let temp={...peerList};
+            temp[remotePeer.socketId]=peer;
+            setPeerList(temp);
             signalSocket.emit("sayHi",{socketId:remotePeer.socketId,"peerName":peerName});
-        });
-    },[signalSocket,peerList]);
+        });    
+    },[signalSocket,peerList,peerName])
     let connect=()=>{
         signalSocket.emit("newPeer",peerName);
     }
-    console.log(peerList);
+    //console.log(peerList);
     return(
         <div>
             <button onClick={connect}>Connect</button>
             <div>
-                
+              {
+                  Object.keys(peerList).map((key,index) => (
+                      <div key={index}>
+                          {peerList[key].peerName()}
+                      </div>
+                  ))
+              }  
             </div>
         </div>
     );
+   
 }
