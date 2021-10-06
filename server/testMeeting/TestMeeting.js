@@ -3,26 +3,17 @@ class TestMeeting{
         let peerList={};
         this.addPeer=(socket)=>{
             socket.on('disconnect', function () {
+                delete peerList[socket.id]
                 console.log("TestSimplePeer:Disconnected");
+                console.log(peerList);
             });
-            socket.on("newPeer",peerName=>{
-                peerList[socket.id]={from:peerName,socketId:socket.id};
-                socket.broadcast.emit("newPeerAdded", {from:peerName,socketId:socket.id});
-            });
-            /*
-            socket.on("newPeer",(peerName,callBack)=>{
-                console.log("TestMeeting:newPeer event received.")
-                console.log("before="+JSON.stringify(peerList));
-                peerList[socket.id]={from:peerName,socketId:socket.id};
-                //socket.broadcast.emit("newPeerAdded", {from:peerName,socketId:socket.id});
-                console.log("after="+JSON.stringify(peerList));
-                callBack({"peerList":peerList});
-            });
-            */
-            socket.on("sayHi",(sayHi)=>{
-                console.log("sayHi to "+sayHi.peerName);
-                socket.to(sayHi.socketId).emit("greeting",{from:sayHi.peerName,socketId:socket.id});
-            });
+            socket.on("hi",(peerName,calllBack)=>{
+                peerList[socket.id]={name:peerName,socketId:socket.id};
+                console.log("Received say hi from "+peerName+".");
+                socket.broadcast.emit("newPeer",peerList[socket.id]);
+                console.log("Broadcast newPeer to other peer.");
+                calllBack({"peerList":peerList})
+            })
         }
     }
 }
