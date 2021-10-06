@@ -10,8 +10,9 @@ let TestSimplePeer=require('./testSimplePeer/TestSimplePeer');
 httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
   console.log('Express server is running on localhost:'+process.env.REACT_APP_SOCKET_PORT);
 });
+let testMeeting=new TestMeeting();
 io.of("/testMeeting").on("connection",socket=>{
-	let testMeeting=new TestMeeting(socket);
+	testMeeting.addPeer(socket);
 });
 io.of("/testPureWebRTC").on("connection",(socket)=>{
 	let testPureWebRTC=new TestPureWebRTC(socket);
