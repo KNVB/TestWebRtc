@@ -2,6 +2,17 @@ class TestMeeting{
     constructor(){
         let peerList={};
         this.addPeer=(socket)=>{
+            socket.on("askConnect",(param)=>{
+                console.log("Received ask Connect event");                
+                console.log("==================peer list===============");
+                console.log(peerList);
+                let source=peerList[param.from];
+                let destination=peerList[param.to];
+                if ((source) && (destination)){
+                    console.log(source.name+" request to make connection with "+destination.name);
+                    socket.broadcast.to(param.to).emit('requestConnect', param.from );
+                }
+            });
             socket.on('disconnect', function () {
                 let peer=peerList[socket.id];
                 console.log("TestSimplePeer:Disconnected");
