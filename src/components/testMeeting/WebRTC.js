@@ -74,7 +74,6 @@ export default class WebRTC{
             default:break;  
           }
         }
-        this.peerName=peerName;
 /*=====================================================================*/
 /*        To control if message error is shown                         */
 /*=====================================================================*/
@@ -185,7 +184,6 @@ export default class WebRTC{
               dataChannel.close();
             }
           }
-          //peerConnection.close();
         }
 /*=====================================================================*/
 /*        ICE related event handler                                    */

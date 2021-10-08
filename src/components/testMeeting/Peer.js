@@ -5,12 +5,19 @@ export default class Peer{
         let socketId=remoteSocketId;
         let webRTC=new WebRTC(peerName);
         this.name=peerName;
+        this.call=()=>{
+            msgLogger("Make Call to "+peerName);
+            webRTC.call();
+        }
+        this.hangUp=()=>{
+            webRTC.hangUp();
+        }
         this.init=()=>{
             webRTC.on("connect",()=>{
                 msgLogger("Connection to "+peerName+" is established.");
             })
             webRTC.on('signal',data=>{
-                //console.log(peerName+" send signal event.");
+                msgLogger(peerName+" send signal event.");
                 socket.emit("signalData",{to:socketId,signalData:data});
             });
             webRTC.on("data",(data)=>{
@@ -33,8 +40,14 @@ export default class Peer{
                 case "stream":
                     handleStreamEvent=handler;
                     break;
+                default:
+                    break;    
             }
         }
+        this.signal=(signalData)=>{
+            webRTC.signal(signalData);
+        }
+//========================================================================================        
         let msgLogger=(msg)=>{
             console.log(msg);
         }

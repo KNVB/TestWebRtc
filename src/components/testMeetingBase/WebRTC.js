@@ -74,6 +74,7 @@ export default class WebRTC{
             default:break;  
           }
         }
+        this.peerName=peerName;
 /*=====================================================================*/
 /*        To control if message error is shown                         */
 /*=====================================================================*/

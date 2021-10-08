@@ -1,5 +1,5 @@
 import io from "socket.io-client";
-import Peer from './Peer';
+import WebRTC from './WebRTC';
 export default class Meeting{
     constructor(){
         let dataEventHandler;
@@ -8,32 +8,32 @@ export default class Meeting{
         let socket = io.connect(process.env.REACT_APP_SOCKET_URL + "testMeeting", {
             transports: ["websocket"],
         });
-        socket.on("newPeer", peer => {
-            msgLogger("new peer event received.");
+
+        socket.on("newPeer", (peer) => {
+            console.log("new peer event received.");
             socket.emit("askConnect",{from:socket.id,to:peer.socketId});
-            let newPeer=initPeer(peer);            
-            peerList[peer.socketId]=newPeer;
-            newPeer.call();
+            let webRTC=initWebRTC(peer);
+            webRTC.call();
+            peerList[peer.socketId]=webRTC;
             if (newPeerEventHandler){
                 newPeerEventHandler(peer);
             }
         });
         socket.on("removePeer", (socketId) => {
             console.log("remove peer event received.");
-            peerList[socketId].hangUp();
             delete peerList[socketId];
             if (removePeerEventHandler){
                 removePeerEventHandler(socketId);
-            }
+            }            
         });
         socket.on('requestConnect',(remotePeer)=>{
-            msgLogger("Received connect request from "+remotePeer.name+".");
-            let newPeer=initPeer(remotePeer);            
-            peerList[remotePeer.socketId]=newPeer;            
+            console.log("Received connect request from "+remotePeer.name+".");
+            let webRTC=initWebRTC(remotePeer);
+            peerList[remotePeer.socketId]=webRTC;
         });
         socket.on("signalData",async (param)=>{
-            msgLogger("Rececived signal Data from "+peerList[param.from].name);
-            peerList[param.from].signal(param.signalData);
+            console.log("Rececived signal Data:"+ peerList[param.from].peerName);
+            await peerList[param.from].signal(param.signalData);
         });
         this.init=(peerName)=>{  
             socket.emit("hi", peerName, (response) => {
@@ -61,22 +61,39 @@ export default class Meeting{
                     streamEventHandler=handler;
                     break;
                 default:
-                    break    
+                    break;    
             }
         }
-//==============================================================================================================
-        let initPeer=(peer)=>{
-            let newPeer=new Peer(peer.name,peer.socketId,socket);
-            newPeer.on("data",param=>{
-                if (dataEventHandler){
-                    dataEventHandler(param);
-                }
-            });
-            newPeer.on("stream",param=>{
-                streamEventHandler(param);
+//===========================================================================================================
+        let handleDataEvent=(data,peer)=>{
+            console.log("Rececived data event from "+peer.name);
+            if (dataEventHandler){
+                dataEventHandler(data,peer);
+            }
+        }
+        let handleStreamEvent=(stream,peer)=>{
+            console.log("Rececived stream event from "+peer.name);
+            if (streamEventHandler){
+                streamEventHandler(stream,peer);
+            }
+        }
+        let initWebRTC=(peer)=>{
+            let webRTC=new WebRTC(peer.name);
+            webRTC.on("connect",()=>{
+                msgLogger("Connection to "+peer.name+" is established.");
             })
-            newPeer.init();
-            return newPeer;
+            webRTC.on('signal',data=>{
+                //console.log(peerName+" send signal event.");
+                socket.emit("signalData",{to:peer.socketId,signalData:data});
+            });
+            webRTC.on("data",(data)=>{
+                handleDataEvent(data,peer);
+            });
+            webRTC.on("stream",(stream)=>{
+                handleStreamEvent(stream,peer);
+            })
+            webRTC.init();
+            return webRTC
         }
         let msgLogger=(msg)=>{
             console.log(msg);
