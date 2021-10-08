@@ -10,7 +10,7 @@ class TestMeeting{
                 let destination=peerList[param.to];
                 if ((source) && (destination)){
                     console.log(source.name+" request to make connection with "+destination.name);
-                    socket.broadcast.to(param.to).emit('requestConnect', param.from );
+                    socket.broadcast.to(param.to).emit('requestConnect', peerList[param.from] );
                 }
             });
             socket.on('disconnect', function () {
@@ -31,6 +31,14 @@ class TestMeeting{
                 console.log("Broadcast newPeer ("+peerName+") to other peer.");
                 calllBack({"peerList":peerList})
             })
+            socket.on("signalData",param=>{
+                let source=peerList[socket.id];
+                let destination=peerList[param.to];
+                if ((source) && (destination)){
+                    console.log(source.name+" sent signal data to "+destination.name);
+                    socket.broadcast.to(param.to).emit('signalData', {from:socket.id,signalData:param.signalData});
+                }
+            });
         }
     }
 }
