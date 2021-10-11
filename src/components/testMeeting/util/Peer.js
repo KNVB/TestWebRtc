@@ -4,7 +4,7 @@ export default class Peer{
         let handleDataEvent, handleStreamEvent;
         this.socketId=remoteSocketId;
         let webRTC=new WebRTC(peerName);
-        webRTC.setDebug(true);
+        //webRTC.setDebug(true);
         this.name=peerName;
         this.call=()=>{
             msgLogger("Make Call to "+peerName);

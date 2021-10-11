@@ -4,8 +4,7 @@ import Meeting from "./util/Meeting";
 import PeerList from "./PeerList";
 export default function TestMeeting(){
     let localStreamManager=new LocalStreamManager();
-    const [meeting,setMeeting]=useState();
-    const [peerList,setPeerList]=useState({});
+    let peerList={};
     let peerName;    
     let sUsrAg = navigator.userAgent;
     if (sUsrAg.indexOf("Edg") > -1) {
@@ -23,29 +22,29 @@ export default function TestMeeting(){
         }
       }
     }
-    useEffect(() => {
-        let temp=new Meeting();
-        temp.on("data",(data,peer)=>{
-            console.log("Rececived data ("+data+") from "+peer.name);
-        });
-        temp.on("initialPeerList", (newPeerList) => { 
-            setPeerList(newPeerList); 
-          });
-        temp.on("newPeer", (peer) => {
-          let newPeerList={...peerList,[peer.socketId]:peer};  
-          setPeerList(newPeerList); 
-        });
-        temp.on("removePeer", (socketId) => {
-            peerList.current.removePeer(socketId);
-        })
-        temp.on("stream",(param)=>{
-          //console.log(param);
-          //temp.setRemoteStream(param.peer.socketId,param.stream)
-          peerList.current.setStream(param.stream,param.peer);
-        });
-        temp.init(peerName);
-        setMeeting(temp);
-    },[]);
+    /*
+    let meeting=new Meeting();
+    meeting.on("data",(data,peer)=>{
+        console.log("Rececived data ("+data+") from "+peer.name);
+    });
+    meeting.on("initialPeerList", (newPeerList) => { 
+        peerList=newPeerList; 
+      });
+    meeting.on("newPeer", (peer) => {
+      console.log("NEW Peer received.");
+      console.log(peerList);
+      peerList[peer.socketId]=peer;  
+    });
+    meeting.on("removePeer", (socketId) => {
+        //peerList.current.removePeer(socketId);
+    })
+    meeting.on("stream",(param)=>{
+      //console.log(param);
+      //temp.setRemoteStream(param.peer.socketId,param.stream)
+      //peerList.current.setStream(param.stream,param.peer);
+    });
+    meeting.init(peerName);
+    */  
     let go=async()=>{
       let localStream;
       try{
