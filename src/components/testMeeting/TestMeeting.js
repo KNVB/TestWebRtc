@@ -1,9 +1,12 @@
-import { useEffect, useRef } from "react";
-import Meeting from "./Meeting";
+import { useEffect, useRef,useState } from "react";
+import LocalStreamManager from "../../util/LocalStreamManager";
+import Meeting from "./util/Meeting";
 import PeerList from "./PeerList";
 export default function TestMeeting(){
-    let peerName;
-    const peerList = useRef();
+    let localStreamManager=new LocalStreamManager();
+    const [meeting,setMeeting]=useState();
+    const [peerList,setPeerList]=useState({});
+    let peerName;    
     let sUsrAg = navigator.userAgent;
     if (sUsrAg.indexOf("Edg") > -1) {
       peerName = "Edge";
@@ -21,23 +24,43 @@ export default function TestMeeting(){
       }
     }
     useEffect(() => {
-        let meeting = new Meeting();
-        meeting.on("data",(data,peer)=>{
+        let temp=new Meeting();
+        temp.on("data",(data,peer)=>{
             console.log("Rececived data ("+data+") from "+peer.name);
         });
-        meeting.on("initialPeerList", (newPeerList) => { 
-            peerList.current.setPeerList(newPeerList); 
+        temp.on("initialPeerList", (newPeerList) => { 
+            setPeerList(newPeerList); 
           });
-        meeting.on("newPeer", (peer) => {
-            peerList.current.addPeer(peer);
+        temp.on("newPeer", (peer) => {
+          let newPeerList={...peerList,[peer.socketId]:peer};  
+          setPeerList(newPeerList); 
         });
-        meeting.on("removePeer", (socketId) => {
+        temp.on("removePeer", (socketId) => {
             peerList.current.removePeer(socketId);
         })
-        meeting.on("stream",()=>{
-      
+        temp.on("stream",(param)=>{
+          //console.log(param);
+          //temp.setRemoteStream(param.peer.socketId,param.stream)
+          peerList.current.setStream(param.stream,param.peer);
         });
-        meeting.init(peerName);
-    },[peerName]);
-    return <PeerList ref={peerList} />;
+        temp.init(peerName);
+        setMeeting(temp);
+    },[]);
+    let go=async()=>{
+      let localStream;
+      try{
+        localStream =await localStreamManager.getMediaStream(true,true);
+      }catch (error){
+        console.log("Getting local media failure:"+error.message);
+        localStream =null;
+      }finally{
+        meeting.setStream(localStream);
+      }  
+    }
+    return(
+      <>
+        <PeerList peerList={peerList} />
+        <button onClick={go}>Share Video</button>
+      </>
+    )
 }

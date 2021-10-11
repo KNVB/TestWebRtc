@@ -1,55 +1,19 @@
-import WebRTC from "./WebRTC";
-export default class Peer{
-    constructor(peerName,remoteSocketId,socket){
-        let handleDataEvent, handleStreamEvent;
-        let socketId=remoteSocketId;
-        let webRTC=new WebRTC(peerName);
-        this.name=peerName;
-        this.call=()=>{
-            msgLogger("Make Call to "+peerName);
-            webRTC.call();
-        }
-        this.hangUp=()=>{
-            webRTC.hangUp();
-        }
-        this.init=()=>{
-            webRTC.on("connect",()=>{
-                msgLogger("Connection to "+peerName+" is established.");
-            })
-            webRTC.on('signal',data=>{
-                msgLogger(peerName+" send signal event.");
-                socket.emit("signalData",{to:socketId,signalData:data});
-            });
-            webRTC.on("data",(data)=>{
-                if (handleDataEvent){
-                    handleDataEvent(data,socket.id);
-                }
-            });
-            webRTC.on("stream",(stream)=>{
-                if (handleStreamEvent) {
-                    handleStreamEvent(stream,socket.id);
-                }
-            });
-            webRTC.init();
-        }
-        this.on=(eventType,handler)=>{
-            switch (eventType){
-                case "data":
-                    handleDataEvent=handler;
-                    break;
-                case "stream":
-                    handleStreamEvent=handler;
-                    break;
-                default:
-                    break;    
-            }
-        }
-        this.signal=(signalData)=>{
-            webRTC.signal(signalData);
-        }
-//========================================================================================        
-        let msgLogger=(msg)=>{
-            console.log(msg);
-        }
-    }
-}
+import { forwardRef, useImperativeHandle, useRef } from "react";
+import './Peer.css';
+const Peer = forwardRef(({peerObj}, ref) => {
+    let media=useRef();
+    useImperativeHandle(ref, () => ({
+        setStream:(stream)=>{media.current.srcObj=stream;}
+    }));
+    return (
+        <div className="border border-info d-flex flex-row flex-grow-1 peer" key={peerObj.socketId}>
+            <div className="w-50">
+                <video controls ref={media}/>
+            </div>
+            <div className="w-50">
+                {peerObj.name}
+            </div>
+        </div>
+    )
+});
+export default Peer;

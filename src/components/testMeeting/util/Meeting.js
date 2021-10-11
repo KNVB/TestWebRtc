@@ -20,8 +20,10 @@ export default class Meeting{
         });
         socket.on("removePeer", (socketId) => {
             console.log("remove peer event received.");
-            peerList[socketId].hangUp();
-            delete peerList[socketId];
+            if (peerList[socketId]){
+                peerList[socketId].hangUp();
+                delete peerList[socketId];
+            }
             if (removePeerEventHandler){
                 removePeerEventHandler(socketId);
             }
@@ -63,6 +65,13 @@ export default class Meeting{
                 default:
                     break    
             }
+        }       
+        this.setStream=(localStream)=>{
+            Object.keys(peerList).forEach(key=>{
+                msgLogger("Setting stream to "+peerList[key].name);
+                peerList[key].setStream(localStream);
+                //console.log(peerList[key]);
+            })
         }
 //==============================================================================================================
         let initPeer=(peer)=>{
@@ -73,6 +82,7 @@ export default class Meeting{
                 }
             });
             newPeer.on("stream",param=>{
+                msgLogger("Recevived Stream event from "+peer.name);
                 streamEventHandler(param);
             })
             newPeer.init();

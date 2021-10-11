@@ -84,6 +84,7 @@ export default class WebRTC{
 /*       The local stream setter                                       */
 /*=====================================================================*/
         this.setStream=(stream)=>{
+          msgLogger("peerConnection is " + (peerConnection ? "not" : "") + " null");
           if (peerConnection){
             setStream(stream);            
           }else{
