@@ -1,10 +1,13 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { useEffect, useRef } from "react";
 import './Peer.css';
-const Peer = forwardRef(({peerObj}, ref) => {
+export default function Peer({peerObj}) {
     let media=useRef();
-    useImperativeHandle(ref, () => ({
-        setStream:(stream)=>{media.current.srcObj=stream;}
-    }));
+    console.log("Peer name:"+JSON.stringify(peerObj));
+    useEffect(()=>{
+        //media.current.srcObj=peerObj.stream;        
+        console.log("Media:"+media.current);
+    },[])
+    
     return (
         <div className="border border-info d-flex flex-row flex-grow-1 peer" key={peerObj.socketId}>
             <div className="w-50">
@@ -15,5 +18,4 @@ const Peer = forwardRef(({peerObj}, ref) => {
             </div>
         </div>
     )
-});
-export default Peer;
+}

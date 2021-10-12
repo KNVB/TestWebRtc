@@ -40,7 +40,6 @@ export default class Meeting{
         this.init=(peerName)=>{
             socket.emit("hi", peerName, (response) => {
                 console.log("Say hi to peer.");
-                peerList={...response.peerList}
                 if (initialPeerListEventHandler){
                     initialPeerListEventHandler(response.peerList);            
                 }
@@ -67,15 +66,8 @@ export default class Meeting{
                     break    
             }
         }
-        this.peerList=()=>{
-            return peerList;
-        }
         this.setStream=(localStream)=>{
-            Object.keys(peerList).forEach(key=>{
-                msgLogger("Setting stream to "+peerList[key].name);
-                peerList[key].setStream(localStream);
-                //console.log(peerList[key]);
-            })
+            setStream(localStream);
         }
 //==============================================================================================================
         let initPeer=(peer)=>{
@@ -91,6 +83,14 @@ export default class Meeting{
             })
             newPeer.init();
             return newPeer;
+        }
+        let setStream=(stream)=>{
+            console.log("set Stream::"+JSON.stringify(peerList));
+            Object.keys(peerList).forEach(key=>{
+                msgLogger("Setting stream to "+peerList[key].name);
+                peerList[key].setStream(stream);
+                //console.log(peerList[key]);
+            })
         }
         let msgLogger=(msg)=>{
             console.log(msg);

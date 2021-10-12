@@ -15,7 +15,7 @@ class TestMeeting{
             });
             socket.on('disconnect', function () {
                 let peer=peerList[socket.id];
-                console.log("TestSimplePeer:Disconnected");
+                console.log("TestMeeting:Disconnected");
                 if (peer){
                     console.log(peer.name+" leave the meeting.");
                 }
