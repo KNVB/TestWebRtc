@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 export default function PeerList({ peerList }) {
+  
+  let result=[];
+  console.log("Peer List:"+JSON.stringify(peerList));
+
   return (
     <>
-      {Object.keys(peerList).map((key, index) => (
-        <div key={index}>{peerList[key].name}</div>
-      ))}
+      {result}
     </>
   );
 }

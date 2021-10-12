@@ -37,9 +37,10 @@ export default class Meeting{
             msgLogger("Rececived signal Data from "+peerList[param.from].name);
             peerList[param.from].signal(param.signalData);
         });
-        this.init=(peerName)=>{  
+        this.init=(peerName)=>{
             socket.emit("hi", peerName, (response) => {
                 console.log("Say hi to peer.");
+                peerList={...response.peerList}
                 if (initialPeerListEventHandler){
                     initialPeerListEventHandler(response.peerList);            
                 }
@@ -65,7 +66,10 @@ export default class Meeting{
                 default:
                     break    
             }
-        }       
+        }
+        this.peerList=()=>{
+            return peerList;
+        }
         this.setStream=(localStream)=>{
             Object.keys(peerList).forEach(key=>{
                 msgLogger("Setting stream to "+peerList[key].name);
