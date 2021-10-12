@@ -6,7 +6,6 @@ import PeerList from "./PeerList";
 export default function TestMeeting() {
   let initialState = {meeting:new Meeting(),peerList:{}};
   let localStreamManager = new LocalStreamManager();
-  let meeting = new Meeting();
   let peerName;
   let sUsrAg = navigator.userAgent;
   if (sUsrAg.indexOf("Edg") > -1) {
@@ -27,7 +26,7 @@ export default function TestMeeting() {
   let go = async () => {
     let localStream;
     try {
-      localStream = await localStreamManager.getMediaStream(true, true);
+      localStream = await localStreamManager.getMediaStream(true, false);
     } catch (error) {
       console.log("Getting local media failure:" + error.message);
       localStream = null;
@@ -67,9 +66,9 @@ export default function TestMeeting() {
             result.peerList={...action.newPeerList};
             break;
         case "setRemoteStream":
-            //console.log(action)
             result={...state};
-            result.peerList[action.socketId].stream=action.stream;
+            document.getElementById(action.socketId).srcObject=action.stream;
+            //result.peerList[action.socketId].stream=action.stream;
             break;        
         default:
             result=state;
