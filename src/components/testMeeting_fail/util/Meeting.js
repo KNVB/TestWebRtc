@@ -66,8 +66,8 @@ export default class Meeting{
                     break    
             }
         }
-        this.setLocalStream=(localStream)=>{
-            setLocalStream(localStream);
+        this.setStream=(localStream)=>{
+            setStream(localStream);
         }
 //==============================================================================================================
         let initPeer=(peer)=>{
@@ -84,7 +84,7 @@ export default class Meeting{
             newPeer.init();
             return newPeer;
         }
-        let setLocalStream=(stream)=>{
+        let setStream=(stream)=>{
             console.log("set Stream::"+JSON.stringify(peerList));
             Object.keys(peerList).forEach(key=>{
                 msgLogger("Setting stream to "+peerList[key].name);
