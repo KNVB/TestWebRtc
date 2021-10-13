@@ -2,12 +2,16 @@ import io from "socket.io-client";
 import Peer from './Peer';
 export default class Meeting{
     constructor(){
-        let dataEventHandler;
-        let initialPeerListEventHandler,newPeerEventHandler,removePeerEventHandler,streamEventHandler;
+        let dataEventHandler,initialPeerListEventHandler;
+        let newPeerEventHandler,removePeerEventHandler,streamEventHandler;
+        let isDebug=false,localStream=null;
         let peerList={};
         let socket = io.connect(process.env.REACT_APP_SOCKET_URL + "testMeeting", {
             transports: ["websocket"],
         });
+/*=====================================================================*/
+/*        To handler for varies socket event                           */
+/*=====================================================================*/
         socket.on("newPeer", peer => {
             msgLogger("new peer event received.");
             socket.emit("askConnect",{from:socket.id,to:peer.socketId});
@@ -19,7 +23,7 @@ export default class Meeting{
             }
         });
         socket.on("removePeer", (socketId) => {
-            console.log("remove peer event received.");
+            msgLogger("remove peer event received.");
             if (peerList[socketId]){
                 peerList[socketId].hangUp();
                 delete peerList[socketId];
@@ -37,14 +41,20 @@ export default class Meeting{
             msgLogger("Rececived signal Data from "+peerList[param.from].name);
             peerList[param.from].signal(param.signalData);
         });
+/*=====================================================================*/
+/*        To join the meeting                                          */
+/*=====================================================================*/
         this.init=(peerName)=>{
             socket.emit("hi", peerName, (response) => {
-                console.log("Say hi to peer.");
+                msgLogger("Say hi to peer.");
                 if (initialPeerListEventHandler){
                     initialPeerListEventHandler(response.peerList);            
                 }
             });
         }
+/*=====================================================================*/
+/*        To configure handler for varies event                        */
+/*=====================================================================*/
         this.on=(eventType,handler)=>{
             switch (eventType){
                 case "data":
@@ -66,12 +76,30 @@ export default class Meeting{
                     break    
             }
         }
-        this.setLocalStream=(localStream)=>{
-            setLocalStream(localStream);
+/*=====================================================================*/
+/*        To control if message error is shown                         */
+/*=====================================================================*/
+        this.setDebug=(debug)=>{
+            isDebug=debug;
+        }
+/*=====================================================================*/
+/*       The local stream setter                                       */
+/*=====================================================================*/        
+        this.setLocalStream=(stream)=>{
+            localStream=stream;
+            setLocalStream(stream);
         }
 //==============================================================================================================
+//      Private function
+/*=====================================================================*/
+/*        To initialize a Peer object                                  */
+/*=====================================================================*/
         let initPeer=(peer)=>{
             let newPeer=new Peer(peer.name,peer.socketId,socket);
+            
+            if (localStream){
+                newPeer.setStream(localStream);
+            }
             newPeer.on("data",param=>{
                 if (dataEventHandler){
                     dataEventHandler(param);
@@ -84,16 +112,24 @@ export default class Meeting{
             newPeer.init();
             return newPeer;
         }
+/*=====================================================================*/
+/*        To send the local stream all remote peer                     */
+/*=====================================================================*/
         let setLocalStream=(stream)=>{
-            console.log("set Stream::"+JSON.stringify(peerList));
+            msgLogger("set Stream::"+JSON.stringify(peerList));
             Object.keys(peerList).forEach(key=>{
                 msgLogger("Setting stream to "+peerList[key].name);
                 peerList[key].setStream(stream);
-                //console.log(peerList[key]);
+                //msgLogger(peerList[key]);
             })
         }
+/*=====================================================================*/
+/*        Message Logger                                               */
+/*=====================================================================*/
         let msgLogger=(msg)=>{
-            console.log(msg);
+            if (isDebug){
+                console.log(msg);
+            }
         }        
     }
 }

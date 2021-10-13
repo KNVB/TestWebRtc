@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef,useState } from "react";
+import { forwardRef, useImperativeHandle,useState } from "react";
 import Peer from "./Peer";
 const PeerList = forwardRef((props, ref) => {
   const [peerList, setPeerList] = useState({ref:{},element:{}});
@@ -18,7 +18,7 @@ const PeerList = forwardRef((props, ref) => {
       let temp = {ref:{},element:{}};
       Object.keys(newPeerList).forEach((socketId) => {
         temp.element[socketId] = (
-          <Peer key={socketId} ref={peerRef=>temp.ref[socketId]=peerRef} peerObj={newPeerList[socketId]} />
+          <Peer key={socketId} peerObj={newPeerList[socketId]} ref={peerRef=>temp.ref[socketId]=peerRef}/>
         );
       });
       setPeerList(temp);

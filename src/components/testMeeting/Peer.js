@@ -8,7 +8,7 @@ const Peer = forwardRef(({peerObj}, ref) => {
     return (
         <div className="border border-info d-flex flex-row flex-grow-1 peer" key={peerObj.socketId}>
             <div className="w-50">
-                <video autoPlay ref={media}/>
+                <video autoPlay muted controls ref={media}/>
             </div>
             <div className="w-50">
                 {peerObj.name}

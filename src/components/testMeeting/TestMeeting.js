@@ -35,7 +35,8 @@ export default function TestMeeting() {
     }
   }
   useEffect(() => {
-    let temp=new Meeting();  
+    let temp=new Meeting();
+    temp.setDebug(true);  
     temp.on("initialPeerList", (newPeerList) => {
       peerList.current.setPeerList(newPeerList);
     });
