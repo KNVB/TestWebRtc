@@ -50,7 +50,7 @@ export default function TestMeeting() {
         console.log("Stream Event Received:"+JSON.stringify(param));
         peerList.current.setRemoteStream(param.stream,param.peer);
     })    
-    temp.init(peerName);
+    temp.join(peerName);
     setMeeting(temp);
   }, [peerName]);
   return (

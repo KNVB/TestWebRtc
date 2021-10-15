@@ -44,7 +44,7 @@ export default class Meeting{
 /*=====================================================================*/
 /*        To join the meeting                                          */
 /*=====================================================================*/
-        this.init=(peerName)=>{
+        this.join=(peerName)=>{
             socket.emit("hi", peerName, (response) => {
                 msgLogger("Say hi to peer.");
                 if (initialPeerListEventHandler){
