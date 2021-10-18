@@ -19,7 +19,7 @@ export default class Meeting{
             peerList[peer.socketId]=newPeer;
             newPeer.call();
             if (newPeerEventHandler){
-                newPeerEventHandler(newPeer);
+                newPeerEventHandler(peer);
             }
         });
         socket.on("removePeer", (socketId) => {
@@ -47,13 +47,8 @@ export default class Meeting{
         this.join=(peerName)=>{
             socket.emit("hi", peerName, (response) => {
                 msgLogger("Say hi to peer.");
-                peerList={};
-                Object.keys(response.peerList).forEach(socketId=>{
-                    let peer=response.peerList[socketId];
-                    peerList[socketId]=initPeer(peer);
-                })
                 if (initialPeerListEventHandler){
-                    initialPeerListEventHandler(peerList);
+                    initialPeerListEventHandler(response.peerList);            
                 }
             });
         }
@@ -100,21 +95,18 @@ export default class Meeting{
 /*        To initialize a Peer object                                  */
 /*=====================================================================*/
         let initPeer=(peer)=>{
-            let newPeer=new Peer(peer.name,peer.socketId);
+            let newPeer=new Peer(peer.name,peer.socketId,socket);
             
             if (localStream){
                 newPeer.setStream(localStream);
             }
-            newPeer.on("signal",param=>{
-                socket.emit("signalData",param);
-            });
             newPeer.on("data",param=>{
                 if (dataEventHandler){
                     dataEventHandler(param);
                 }
             });
             newPeer.on("stream",param=>{
-                msgLogger("A stream event from "+peer.name+" received.");
+                msgLogger("Recevived Stream event from "+peer.name);
                 streamEventHandler(param);
             })
             newPeer.init();

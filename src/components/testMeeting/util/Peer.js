@@ -1,7 +1,8 @@
 import WebRTC from "./WebRTC";
 export default class Peer{
-    constructor(peerName,remoteSocketId,socket){
-        let handleDataEvent, handleStreamEvent;
+    constructor(peerName,remoteSocketId){
+        let closeEventHandler=[], connectedEventHandler=[];
+        let dataEventHandler=[],signalEventHandler=[],streamEventHandler=[];
         this.socketId=remoteSocketId;
         let webRTC=new WebRTC(peerName);
         //webRTC.setDebug(true);
@@ -14,33 +15,48 @@ export default class Peer{
             webRTC.hangUp();
         }
         this.init=()=>{
+            webRTC.on("close",()=>{
+                msgLogger("Connection to "+peerName+" is closed.");
+                closeEventHandler.forEach(handler=>{
+                    handler();
+                })
+            });
             webRTC.on("connect",()=>{
                 msgLogger("Connection to "+peerName+" is established.");
+                connectedEventHandler.forEach(handler=>{
+                    handler();
+                })
             })
             webRTC.on('signal',data=>{
-                msgLogger(peerName+" send signal event.");
-                socket.emit("signalData",{to:this.socketId,signalData:data});
+                msgLogger("Emit signal event to "+peerName+".");
+                signalEventHandler.forEach(handler=>{
+                    handler({to:this.socketId,signalData:data});
+                });               
             });
             webRTC.on("data",(data)=>{
-                if (handleDataEvent){
-                    handleDataEvent(data,this);
-                }
+                msgLogger("Receive stream event from "+peerName+".");
+                dataEventHandler.forEach(handler=>{
+                    handler({"data":data,peer:this});
+                });
             });
             webRTC.on("stream",(stream)=>{
-                msgLogger(peerName+" receive stream event.");
-                if (handleStreamEvent) {
-                    handleStreamEvent({stream:stream,peer:this});
-                }
+                msgLogger("Receive stream event from "+peerName+".");
+                streamEventHandler.forEach(handler=>{
+                    handler({peer:this,"stream":stream});
+                })
             });
             webRTC.init();
         }
         this.on=(eventType,handler)=>{
             switch (eventType){
                 case "data":
-                    handleDataEvent=handler;
+                    dataEventHandler.push(handler);
+                    break;
+                case "signal":    
+                    signalEventHandler.push(handler);
                     break;
                 case "stream":
-                    handleStreamEvent=handler;
+                    streamEventHandler.push(handler);
                     break;
                 default:
                     break;    
