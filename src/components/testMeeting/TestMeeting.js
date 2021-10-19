@@ -53,7 +53,8 @@ export default function TestMeeting() {
             peerList.current.removePeer(socketId);
         });
         temp.on("stream", param => {
-            console.log("A stream event received:" + JSON.stringify(param));
+            console.log("A stream event from "+param.peer.name+" received.");
+            //console.log(param);
             peerList.current.setRemoteStream(param.stream,param.peer);
         })
         temp.join(peerName);

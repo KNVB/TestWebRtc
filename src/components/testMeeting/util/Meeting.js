@@ -115,6 +115,7 @@ export default class Meeting{
             });
             newPeer.on("stream",param=>{
                 msgLogger("A stream event from "+peer.name+" received.");
+                //console.log(param);
                 streamEventHandler(param);
             })
             newPeer.init();
