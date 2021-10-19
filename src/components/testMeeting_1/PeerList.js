@@ -32,6 +32,10 @@ const PeerList = forwardRef((props, ref) => {
   Object.keys(peerList.element).forEach((key) => {
     peerComponentList.push(peerList.element[key]);
   });
-  return <div>{peerComponentList}</div>;
+  return (
+    <>
+      {peerComponentList}
+    </>
+  );
 });
 export default PeerList;
