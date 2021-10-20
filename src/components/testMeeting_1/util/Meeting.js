@@ -6,7 +6,7 @@ export default class Meeting{
         let newPeerEventHandler,removePeerEventHandler,streamEventHandler;
         let isDebug=false,localStream=null;
         let peerList={};
-        let socket = io.connect(process.env.REACT_APP_SOCKET_URL + "testMeeting", {
+        let socket = io(process.env.REACT_APP_SOCKET_URL + "testMeeting", {
             transports: ["websocket"],
         });
 /*=====================================================================*/
@@ -125,11 +125,13 @@ export default class Meeting{
 /*        To send the local stream all remote peer                     */
 /*=====================================================================*/
         let setLocalStream=(stream)=>{
-            msgLogger("set Stream::"+JSON.stringify(peerList));
+            msgLogger("set Stream:"+JSON.stringify(peerList));
             Object.keys(peerList).forEach(key=>{
-                msgLogger("Setting stream to "+peerList[key].name);
-                peerList[key].setStream(stream);
-                //msgLogger(peerList[key]);
+                if (peerList[key].socketId !== socket.id){
+                    msgLogger("Setting stream to "+peerList[key].name);
+                    peerList[key].setStream(stream);
+                    //msgLogger(peerList[key]);
+                }
             })
         }
 /*=====================================================================*/

@@ -1,36 +1,33 @@
 import { forwardRef, useImperativeHandle,useState } from "react";
 import PeerElement from "./PeerElement";
 const PeerList = forwardRef((props, ref) => {
-  const [peerList, setPeerList] = useState({ref:{},element:{}});
+  const [peerList, setPeerList] = useState({});
   useImperativeHandle(ref, () => ({
     addPeer: (peer) => {
       let temp = { ...peerList };
-      temp.element[peer.socketId] = <PeerElement key={peer.socketId} peerObj={peer} ref={peerRef=>temp.ref[peer.socketId]=peerRef}/>;
+      temp[peer.socketId] ={"element":<PeerElement key={peer.socketId} peerObj={peer} ref={peerRef=>temp[peer.socketId].ref=peerRef}/>};
       setPeerList(temp);
     },
     removePeer: (socketId) => {
       let temp = { ...peerList };
-      delete temp.element[socketId];
-      delete temp.ref[socketId];
+      delete temp[socketId];      
       setPeerList(temp);
     },
     setPeerList: (newPeerList) => {
-      let temp = {ref:{},element:{}};
+      let temp = {};
       Object.keys(newPeerList).forEach((socketId) => {
-        temp.element[socketId] = (
-          <PeerElement key={socketId} peerObj={newPeerList[socketId]} ref={peerRef=>temp.ref[socketId]=peerRef}/>
-        );
+        temp[socketId]={"element": <PeerElement key={socketId} peerObj={newPeerList[socketId]} ref={peerRef=>temp[socketId].ref=peerRef}/>}
       });
       setPeerList(temp);
     },
     setRemoteStream: (stream, peer) => {
       //console.log(peerList.ref[peer.socketId]);
-      peerList.ref[peer.socketId].setStream(stream);
+      peerList[peer.socketId].ref.setStream(stream);
     },
   }));
   let peerComponentList = [];
-  Object.keys(peerList.element).forEach((key) => {
-    peerComponentList.push(peerList.element[key]);
+  Object.keys(peerList).forEach((key) => {
+    peerComponentList.push(peerList[key].element);
   });
   return (
     <>

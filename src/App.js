@@ -8,7 +8,7 @@ function App() {
   return (
       <Router>
         <Switch>
-          <Route exact path='/' component={Panel}/>
+          <Route exact path='/' component={Panel}/>         
           <Route exact path='/testMeeting' component={TestMeeting}/>
           <Route exact path='/testSimplePeer' component={TestSimplePeer}/>
           <Route exact path='/testPureWebRTC' component={TestPureWebRTC}/>

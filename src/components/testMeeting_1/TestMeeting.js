@@ -36,7 +36,7 @@ export default function TestMeeting() {
     }
     useEffect(() => {
         let temp = new Meeting();
-        temp.setDebug(true);
+        //temp.setDebug(true);
         temp.on("data", param => {
             console.log("Data Event Recevied:" + JSON.stringify(param));
         })
