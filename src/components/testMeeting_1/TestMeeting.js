@@ -15,6 +15,7 @@ export default function TestMeeting() {
             localStream = null;
         } finally {
             meeting.setLocalStream(localStream);
+            peerList.current.setLocalStream(meeting.getLocalSocketId(),localStream);
         }
     };
     let peerName;
@@ -36,7 +37,7 @@ export default function TestMeeting() {
     }
     useEffect(() => {
         let temp = new Meeting();
-        //temp.setDebug(true);
+        temp.setDebug(true);
         temp.on("data", param => {
             console.log("Data Event Recevied:" + JSON.stringify(param));
         })

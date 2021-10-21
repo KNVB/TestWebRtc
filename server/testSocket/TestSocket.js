@@ -33,8 +33,13 @@ class TestSocket{
                 calllBack({"peerList":peerList})
             });
             socket.on("sendSignalData",param=>{
-                let signalData={from:socket.id,signalData:param.signalData};
-                socket.broadcast.to(param.to).emit("receiveSignalData",signalData);
+                let source=peerList[socket.id];
+                let destination=peerList[param.to];
+                
+                if ((source) && (destination)){
+                    console.log(source.name+" sent signal data to "+destination.name);
+                    socket.broadcast.to(param.to).emit('signalData', {from:socket.id,signalData:param.signalData});
+                }
             });
         }
     }

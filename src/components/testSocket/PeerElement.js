@@ -6,9 +6,25 @@ export default function PeerElement({peerInfo,socket}) {
     useEffect(() => {
         console.log(peerInfo);
         let peer=new Peer(peerInfo.name,peerInfo.socketId);
-        peer.on("signal",signalData=>{
-            
+        peer.on("connect",()=>{
+            console.log("Connection to "+peerInfo.name+ " is established.");
         })
+        peer.on("signal",signalData=>{
+            console.log("Send Signal Data to "+peerInfo.name);
+            socket.emit("sendSignalData",{"signalData":signalData,to:peerInfo.socketId})
+        });
+        
+        socket.on("signalData",param=>{
+            if (param.from === peerInfo.socketId){
+                peer.signal(param.signalData);
+                console.log("Receive Signal Data from "+peerInfo.name);
+            }
+        });
+
+        peer.init();
+        if (peerInfo.call){
+            peer.call();
+        }
     }, []);
 
 

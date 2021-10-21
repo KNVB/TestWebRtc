@@ -13,6 +13,9 @@ const PeerList = forwardRef((props, ref) => {
       delete temp[socketId];      
       setPeerList(temp);
     },
+    setLocalStream:(localSocketId,localStream)=>{
+      peerList[localSocketId].ref.setStream(localStream);
+    },
     setPeerList: (newPeerList) => {
       let temp = {};
       Object.keys(newPeerList).forEach((socketId) => {

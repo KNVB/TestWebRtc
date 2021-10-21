@@ -42,6 +42,12 @@ export default class Meeting{
             peerList[param.from].signal(param.signalData);
         });
 /*=====================================================================*/
+/*        To get local socket id                                       */
+/*=====================================================================*/
+        this.getLocalSocketId=()=>{
+            return socket.id;
+        }
+/*=====================================================================*/
 /*        To join the meeting                                          */
 /*=====================================================================*/
         this.join=(peerName)=>{
@@ -105,6 +111,9 @@ export default class Meeting{
             if (localStream){
                 newPeer.setStream(localStream);
             }
+            newPeer.on("connect",()=>{
+                msgLogger("Connection to "+peer.name+" is established");
+            })
             newPeer.on("signal",param=>{
                 socket.emit("signalData",param);
             });

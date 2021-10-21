@@ -4,9 +4,8 @@ export default class Peer {
         let closeEventHandler = [], connectedEventHandler = [];
         let dataEventHandler = [], signalEventHandler = [], streamEventHandler = [];
         let isDebug=false;
-        this.socketId = remoteSocketId;
         let webRTC = new WebRTC(peerName);
-        //webRTC.setDebug(true);
+        this.socketId = remoteSocketId;
         this.name = peerName;
 /*=====================================================================*/
 /*        To make a WebRTC connection                                  */
@@ -62,6 +61,12 @@ export default class Peer {
 /*=====================================================================*/
         this.on = (eventType, handler) => {
             switch (eventType) {
+                case "close":
+                    closeEventHandler.push(handler);
+                    break;
+                case "connect":
+                    connectedEventHandler.push(handler);
+                    break;
                 case "data":
                     dataEventHandler.push(handler);
                     break;
@@ -80,6 +85,7 @@ export default class Peer {
 /*=====================================================================*/
         this.setDebug=(debug)=>{
             isDebug=debug;
+            webRTC.setDebug(debug);
         }
 /*=====================================================================*/
 /*       Set the media stream to the WebRTC Object                     */
