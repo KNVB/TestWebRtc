@@ -1,16 +1,6 @@
 export default class WebRTC{
     constructor(peerName){
-        let configuration = {
-            iceServers: [
-              { urls: "stun:stun.stunprotocol.org" },
-              { urls: "stun:stun.l.google.com:19302" },
-              {
-                urls: "turn:numb.viagenie.ca",
-                credential: "turnserver",
-                username: "sj0016092@gmail.com",
-              },
-            ],
-          };
+        let configuration = {};
         let dataChannel = null, dataHandler=null;
         let dataChannelOpenHandler = null,dataChannelCloseHandler = null;
         let ignoreOffer = false,isDebug=false;
@@ -73,6 +63,12 @@ export default class WebRTC{
               break; 
             default:break;  
           }
+        }
+/*=====================================================================*/
+/*        To set the ICE server list                                   */
+/*=====================================================================*/
+        this.setConfiguration=(config)=>{
+          configuration=config;
         }
 /*=====================================================================*/
 /*        To control if message error is shown                         */
