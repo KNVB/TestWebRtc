@@ -1,10 +1,9 @@
 import WebRTC from "./WebRTC";
-export default class Peer{
-    constructor(peerName, remoteSocketId){
+export default class Peer {
+    constructor(peerName, remoteSocketId) {
         let closeEventHandler = [], connectedEventHandler = [];
         let dataEventHandler = [], signalEventHandler = [], streamEventHandler = [];
         let isDebug=false;
-        this.isCall=false;
         this.socketId = remoteSocketId;
         let webRTC = new WebRTC(peerName);
         //webRTC.setDebug(true);
@@ -47,13 +46,13 @@ export default class Peer{
             webRTC.on("data", (data) => {
                 msgLogger("Receive stream event from " + peerName + ".");
                 dataEventHandler.forEach(handler => {
-                    handler(data);
+                    handler({ "data": data, peer: this });
                 });
             });
             webRTC.on("stream", (stream) => {
                 msgLogger("Receive stream event from " + peerName + ".");
                 streamEventHandler.forEach(handler => {
-                    handler(stream);
+                    handler({ peer: this, "stream": stream });
                 })
             });
             webRTC.init();
@@ -108,4 +107,5 @@ export default class Peer{
             }
         }
     }
+
 }

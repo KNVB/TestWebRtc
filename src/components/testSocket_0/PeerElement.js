@@ -1,29 +1,34 @@
 import './PeerElement.css';
 import { useEffect, useRef } from "react";
-export default function PeerElement({peer,socket}) {
+import Peer from './Peer';
+export default function PeerElement({peerInfo,socket}) {
     let media = useRef();
     useEffect(() => {
+        //console.log(peerInfo);
+        let peer=new Peer(peerInfo.name,peerInfo.socketId);
         //peer.setDebug(true);
         peer.on("connect",()=>{
-            console.log("Connection to "+peer.name+ " is established.");
+            console.log("Connection to "+peerInfo.name+ " is established.");
         })
         peer.on("signal",signalData=>{
-            console.log("Send Signal Data to "+peer.name);
+            console.log("Send Signal Data to "+peerInfo.name);
             socket.emit("sendSignalData",signalData)
         });
-        peer.on("stream",stream=>{
-            console.log(peer.name+" received stream event");
-            media.current.srcObject=stream;
+        peer.on("stream",param=>{
+            console.log(peerInfo.name+" received stream event");
+            console.log(param);
+            //media.current.srcObject=param.stream;
         });       
         socket.on("signalData",param=>{
-            if (param.from === peer.socketId){
+            if (param.from === peerInfo.socketId){
                 peer.signal(param.signalData);
-                console.log("Receive Signal Data from "+peer.name);                
+                console.log("Receive Signal Data from "+peerInfo.name);
+                //console.log(param);
             }
         });
        
         peer.init();
-        if (peer.isCall){
+        if (peerInfo.call){
             peer.call();
         }
         
@@ -36,7 +41,7 @@ export default function PeerElement({peer,socket}) {
                 <video autoPlay muted controls ref={media} />
             </div>
             <div className="w-50">
-                {peer.name}
+                {peerInfo.name}
             </div>
         </div>
     )

@@ -111,7 +111,7 @@ export default class WebRTC{
 /*        Data Channel related event handler                           */
 /*=====================================================================*/
         let dataChannelEventHandler=(event)=>{
-          msgLogger(" Data channel to "+peerName+" is created!");
+          msgLogger(peerName + " Data channel is created!");
           event.channel.onclose = dataChannelClose;
           event.channel.onerror = dataChannelError;
           event.channel.onmessage = dataChannelMessage;
@@ -150,7 +150,7 @@ export default class WebRTC{
         }
         let dataChannelOpen=(event)=>{
           if (localStream){
-            msgLogger("Add local stream to "+peerName+".");            
+            msgLogger(peerName+" add local stream.");            
             setStream(localStream);
           }   
           if (dataChannelOpenHandler) {
@@ -162,11 +162,11 @@ export default class WebRTC{
 /*=====================================================================*/
         let handleNegotiation=async (event)=>{
           try {
-            msgLogger("Handle Negotiation with "+peerName);
+            msgLogger(peerName + " Handle Negotiation");
             makingOffer = true;
             await peerConnection.setLocalDescription();
             signalEventHandler(peerConnection.localDescription);
-            msgLogger("Sent local Description to "+peerName);
+            msgLogger(peerName + " Sent local Description");
           } catch (err) {
             msgLogger("Failed to send Local Description:"+err);
           } finally {
@@ -191,7 +191,7 @@ export default class WebRTC{
 /*=====================================================================*/
         let iceCandidateEventHandler=(event)=>{
           if (event.candidate == null) {
-            msgLogger("All ICE candidates are sent to "+peerName);
+            msgLogger(peerName + " All ICE candidates are sent");
           } else {
             signalEventHandler(event.candidate);
           }
@@ -233,7 +233,7 @@ export default class WebRTC{
 /*=====================================================================*/
         let processSignalData=async (signalData)=>{
           if (signalData.type){
-              msgLogger("Receive Remote Description from "+peerName);
+              msgLogger(peerName+" receive Remote Description");
               const offerCollision = (signalData.type === "offer") &&
                             (makingOffer || peerConnection.signalingState !== "stable");
               
@@ -244,16 +244,16 @@ export default class WebRTC{
                 return;
               }
               await peerConnection.setRemoteDescription(signalData);
-              msgLogger("Set Remote Description for "+peerName);
+              msgLogger(peerName + " Set Remote Description");
 
               if (signalData.type === "offer") {
                 await peerConnection.setLocalDescription();
                 signalEventHandler(peerConnection.localDescription);
-                msgLogger("Sent local Description to "+peerName);
+                msgLogger(peerName + " Sent local Description");
               }
           }else {
             if (signalData.candidate){
-              msgLogger("Receive ICE Candidate "+peerName);
+              msgLogger(peerName+" receive ICE Candidate");
               await peerConnection.addIceCandidate(signalData);
             }
           }
