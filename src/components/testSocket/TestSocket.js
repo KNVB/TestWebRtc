@@ -60,7 +60,7 @@ export default function TestSocket() {
     setItem({ type: "init", peerInfoList: {}, socket: socket });
 
     socket.emit("hi", peerName, (response) => {
-      console.log(response.peerList);
+      //console.log(response.peerList);
       setItem({ type: "setPeerList", peerInfoList: response.peerList });
     });
     socket.on("newPeer", (newPeer) => {
@@ -72,11 +72,15 @@ export default function TestSocket() {
   }, [peerName]);
   let peerElementList = [];
   const [items, setItem] = useReducer(reducer, {});
-  console.log(items);
+  //console.log(items);
   if (items.peerInfoList) {
     Object.keys(items.peerInfoList).forEach((key) => {
-      peerElementList.push(<PeerElement key={key} peerInfo={items.peerInfoList[key]} socket={items.socket}/>);
+      peerElementList.push(<PeerElement key={key} peerInfo={items.peerInfoList[key]} socket={items.socket} />);
     });
   }
-  return <>{peerElementList}</>;
+  return (
+    <>
+      {peerElementList}      
+    </>
+  );
 }

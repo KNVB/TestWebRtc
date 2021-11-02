@@ -38,6 +38,7 @@ class TestSocket{
                 
                 if ((source) && (destination)){
                     console.log(source.name+" sent signal data to "+destination.name);
+                    //console.log(param);
                     socket.broadcast.to(param.to).emit('signalData', {from:socket.id,signalData:param.signalData});
                 }
             });
