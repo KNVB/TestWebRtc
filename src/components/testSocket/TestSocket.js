@@ -1,7 +1,9 @@
 import { useEffect, useReducer} from "react";
+import LocalStreamManager from "../../util/LocalStreamManager";
 import Meeting from "./Meeting";
-
+import PeerElement from "./PeerElement";
 export default function TestSocket(){
+    let localStreamManager = new LocalStreamManager();
     let peerName;
     let sUsrAg = navigator.userAgent;
     if (sUsrAg.indexOf("Edg") > -1) {
@@ -21,13 +23,16 @@ export default function TestSocket(){
     }
     useEffect(()=>{
         let meeting=new Meeting();
+        meeting.setDebug(true);
         meeting.on("newPeer",peer=>{
             console.log("newPeer event occured.");
+            console.log("New Peer name:"+peer.name);
+            peer.isCall = true;
             updatePeerList({type:"newPeer","newPeer":peer});
         });
         meeting.on("setPeerList",initialPeerList=>{
             console.log("setPeerList event occured.");
-            updatePeerList({type:"setPeerList","peerList":initialPeerList});
+            updatePeerList({type:"setPeerList","meeting":meeting,"peerList":initialPeerList});
         });
         meeting.on("removePeer",socketId=>{
             console.log("removePeer event occured.");
@@ -39,22 +44,43 @@ export default function TestSocket(){
         let result = { ...state };
         switch (action.type){
             case "newPeer":
-                result[action.newPeer.socketId]=action.newPeer;
+                result.peerList[action.newPeer.socketId]=action.newPeer;
                 break;
             case "removePeer":
-                delete result[action.socketId];
+                delete result.peerList[action.socketId];
                 break;
             case "setPeerList":
-                result={...action.peerList};
+                result.peerList={...action.peerList};
+                result.meeting=action.meeting;
                 break;                
             default:
                 break;
         }
         return result;
     }
-    const [peerList, updatePeerList] = useReducer(reducer, {});
-    console.log(peerList);
+       
+    const [items, updatePeerList] = useReducer(reducer, {});
+    let go = async () => {
+      let localStream;
+      try {
+        localStream = await localStreamManager.getMediaStream(true, false);
+      } catch (error) {
+        console.log("Getting local media failure:" + error.message);
+        localStream = null;
+      } finally {
+        items.meeting.setLocalStream(localStream);
+      }
+    }; 
+    let peerElementList = [];
+    if (items.peerList) {
+      Object.keys(items.peerList).forEach(socketId => {
+        peerElementList.push(<PeerElement key={socketId} peer={items.peerList[socketId]} meeting={items.meeting} />);
+      })
+    }
     return (
-        <></>
+        <>
+          {peerElementList}
+          <button onClick={go}>Share Video</button>
+        </>
     )
 }
