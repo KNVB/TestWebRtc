@@ -52,9 +52,7 @@ export default class Peer{
             });
             webRTC.on("stream", (stream) => {
                 msgLogger("Receive stream event from " + peerName + ".");
-                streamEventHandler.forEach(handler => {
-                    handler(stream);
-                })
+                doStreamEvent(stream);                
             });
             webRTC.init();
         }
@@ -97,9 +95,24 @@ export default class Peer{
         this.signal = (signalData) => {
             webRTC.signal(signalData);
         }
+/*=====================================================================*/
+/*       Strigger the stream event                                     */
+/*=====================================================================*/
+        this.stream=(stream)=>{
+            doStreamEvent(stream);
+        }
 //========================================================================================
 //      Private function        
 /*=====================================================================*/
+/*=====================================================================*/
+/*      Do Stream Event                                                */
+/*=====================================================================*/
+        let doStreamEvent=(stream)=>{
+            streamEventHandler.forEach(handler => {
+                handler(stream);
+            });
+        }
+/*=====================================================================*/                
 /*        Message Logger                                               */
 /*=====================================================================*/
         let msgLogger = (msg) => {

@@ -52,6 +52,9 @@ export default function TestSocket(){
                 result.peerList[action.newPeer.socketId]=peer; 
                 break;
             case "removePeer":
+                if (result.peerList[action.socketId]){
+                  result.peerList[action.socketId].hangUp();
+                }
                 delete result.peerList[action.socketId];
                 break;
             case "setPeerList":
@@ -77,7 +80,9 @@ export default function TestSocket(){
             //peerList.current.setLocalStream(meeting.getLocalSocketId(),localStream);
             Object.keys(items.peerList).forEach(socketId=>{
                 if (socketId !== items.socket.id){
-                    items.peerList[socketId].setStream(localStream);
+                  items.peerList[socketId].setStream(localStream);
+                }else {
+                  items.peerList[socketId].stream(localStream);
                 }
             })
         }
