@@ -22,7 +22,10 @@ export default function TestSocket(){
       }
     }
     useEffect(()=>{
+        let webSocketServerURL=process.env.REACT_APP_SOCKET_URL + "a";
         let meeting=new Meeting();
+        //meeting.setWebRTCConfig();
+        meeting.setWebSocketServerURL(webSocketServerURL);
         meeting.setDebug(true);
         meeting.on("newPeer",peer=>{
             console.log("newPeer event occured.");
@@ -38,6 +41,7 @@ export default function TestSocket(){
             console.log("removePeer event occured.");
             updatePeerList({type:"removePeer","socketId":socketId});
         });
+        meeting.connect();
         meeting.join(peerName);
     },[peerName]);
     let reducer = (state, action) => {
