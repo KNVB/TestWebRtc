@@ -1,0 +1,9 @@
+.peer{
+    height: 100px;
+    width:50%;
+}
+.videoTag {
+    object-fit: cover;
+    width:100%;
+    height:100%;
+}
