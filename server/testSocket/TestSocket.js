@@ -1,6 +1,5 @@
 class TestSocket{
     constructor(){
-        console.log("TestSocket:Connection established");
         let peerList={};
         this.addPeer=(socket)=>{
             socket.on("askConnect",(param)=>{
@@ -16,7 +15,7 @@ class TestSocket{
             });
             socket.on('disconnect', function () {
                 let peer=peerList[socket.id];
-                console.log("TestMeeting:Disconnected");
+                console.log("TestSocket("+socket.id+"):Disconnected");
                 if (peer){
                     console.log(peer.name+" leave the meeting.");
                 }

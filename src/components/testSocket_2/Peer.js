@@ -8,7 +8,7 @@ export default class Peer {
         this.socketId = remoteSocketId;
         let webRTC = new WebRTC(peerName);
         let webRtcConfig = {};
-        //webRTC.setDebug(true);
+        webRTC.setDebug(true);
         this.name = peerName;
         /*=====================================================================*/
         /*        To make a WebRTC connection                                  */

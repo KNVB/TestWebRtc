@@ -14,6 +14,7 @@ httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();
 io.of("/a").on("connection",socket=>{
+	console.log("TestSocket("+socket.id+"):Connection established");
 	testSocket.addPeer(socket);
 })
 io.of("/testMeeting").on("connection",socket=>{
