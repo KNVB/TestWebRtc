@@ -10,9 +10,19 @@ let TestMeeting=require('./testMeeting/TestMeeting_1.js');
 let TestPureWebRTC=require('./testPureWebRTC/TestPureWebRTC');
 let TestSimplePeer=require('./testSimplePeer/TestSimplePeer');
 let TestSocket=require('./testSocket/TestSocket');
+
+if (process.env.NODE_ENV==="production"){
+    const path = require('path');
+    app.use(express.static(path.resolve(__dirname, '../build')));
+    app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
+    });
+}
+
 httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
   console.log('Express server is running on localhost:'+process.env.REACT_APP_SOCKET_PORT);
 });
+
 let b=new B(io);
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();

@@ -13,6 +13,8 @@ class B {
                         console.log("Peer (" + peer.name + "): connection time out.");
                         delete peerList[peerId];
                         disconnectedPeerIdList.push(peerId);
+                        console.log("==================peer list===============");
+                        console.log(peerList);
                     }
                 }
             });
@@ -47,6 +49,8 @@ class B {
             socket.on("refreshSocketId", peerId => {
                 console.log("Peer (" + peerList[peerId].name + "): refresh socket id.");
                 peerList[peerId].socketId = socket.id;
+                peerList[peerId].disconnectTime = null;
+                socket.broadcast.emit("peerReconnect", peerId);
             })
         }
         /*=======================================================*/
