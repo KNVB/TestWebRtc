@@ -1,42 +1,58 @@
-class B{
-    constructor(){
-        let peerList={};
-        this.addPeer=(socket)=>{
-            socket.on('disconnect', ()=>{
-                let peerId;
-                Object.keys(peerList).forEach(key=>{
-                    let peer=peerList[key];
-                    if (peer.socketId === socket.id){
-                        peerId=key;
-                        console.log("Peer ("+peer.name+"):Disconnected");
-                        delete peerList[key];                        
+class B {
+    constructor(io) {
+        let peerList = {};
+        let timeOut = 60; // in sec
+        setInterval(() => {
+            let disconnectedPeerIdList = [];
+            let now = new Date().getTime();
+            let finalTimeOut=timeOut*1000;
+            Object.keys(peerList).forEach(peerId => {
+                let peer = peerList[peerId];
+                if (peer.socketId === null){
+                    if ((now - peer.disconnectTime) > finalTimeOut) {
+                        console.log("Peer (" + peer.name + "): connection time out.");
+                        delete peerList[peerId];
+                        disconnectedPeerIdList.push(peerId);
                     }
-                });                
+                }
+            });
+            if (disconnectedPeerIdList.length > 0) {
+                io.of("/b").emit("disconnectedPeerIdList", disconnectedPeerIdList);
+                //console.log(io.of("/b"))
+            }
+        }, timeOut * 1000);
+        this.register = (socket) => {
+            socket.on('disconnect', (reason) => {
+                Object.keys(peerList).forEach(peerId => {
+                    let peer = peerList[peerId];
+                    if (peer.socketId === socket.id) {
+                        console.log("Peer (" + peer.name + "):Disconnected");
+                        console.log("reason= " + reason);
+                        peerList[peerId].disconnectTime = new Date();
+                        peerList[peerId].socketId = null;
+                    }
+                });
                 console.log("==================peer list===============");
                 console.log(peerList);
-                socket.broadcast.emit("removePeer",peerId);
             });
-            socket.on("hi",(peerName,calllBack)=>{
-                let peerId=generateUID();
-                peerList[peerId]={name:peerName,socketId:socket.id};
-                console.log("Received say hi from "+peerName+".");
-                socket.broadcast.emit("newPeer",{peerId:peerId,...peerList[peerId]});
-                console.log("Broadcast newPeer ("+peerName+") to other peer.");
-                calllBack({peerId:peerId,"peerList":peerList});
+            socket.on("hi", (peerName, calllBack) => {
+                let peerId = generateUID();
+                peerList[peerId] = { disconnectTime: null, name: peerName, socketId: socket.id };
+                console.log("Received say hi from " + peerName + ".");
+                socket.broadcast.emit("newPeer", { "peerId": peerId, name: peerName });
+                calllBack({ peerId: peerId, "peerList": peerList });
                 console.log("==================peer list===============");
                 console.log(peerList);
             });
-            socket.on("refreshSocketId",peerId=>{
-                console.log("Refresh socket Id:"+peerId);
-                let peer=peerList[peerId];
-                console.log(peerList[peerId]);
-                //peerList[peerId].socketId=socket.id;
-            });
+            socket.on("refreshSocketId", peerId => {
+                console.log("Peer (" + peerList[peerId].name + "): refresh socket id.");
+                peerList[peerId].socketId = socket.id;
+            })
         }
         /*=======================================================*/
         /*      Private Method                                   */
         /*=======================================================*/
-        let generateUID=()=>{
+        let generateUID = () => {
             // I generate the UID from two parts here 
             // to ensure the random number provide enough bits.
             let firstPart = (Math.random() * 46656) | 0;
@@ -47,4 +63,4 @@ class B{
         }
     }
 }
-module.exports=B;
+module.exports = B;

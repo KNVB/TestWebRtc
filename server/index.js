@@ -13,7 +13,7 @@ let TestSocket=require('./testSocket/TestSocket');
 httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
   console.log('Express server is running on localhost:'+process.env.REACT_APP_SOCKET_PORT);
 });
-let b=new B();
+let b=new B(io);
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();
 io.of("/a").on("connection",socket=>{
@@ -22,7 +22,7 @@ io.of("/a").on("connection",socket=>{
 });
 io.of("/b").on("connection",socket=>{
 	console.log("B("+socket.id+"):Connection established");
-	b.addPeer(socket);
+	b.register(socket);
 })
 io.of("/testMeeting").on("connection",socket=>{
 	testMeeting.addPeer(socket);

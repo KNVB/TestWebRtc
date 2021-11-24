@@ -12,7 +12,9 @@ export default function TestSocket() {
                 };
                 break;
             case "removePeer":
-                delete result.peerInfoList[action.peerId];
+                action.peerIdList.forEach(peerId=>{
+                    delete result.peerInfoList[peerId];
+                })                
                 break;
             case "setPeerList":
                 let temp = {};
@@ -31,6 +33,7 @@ export default function TestSocket() {
         return result;
     };
     useEffect(() => {
+        let peerId=null;
         let peerName;
         let sUsrAg = navigator.userAgent;
         if (sUsrAg.indexOf("Edg") > -1) {
@@ -53,17 +56,18 @@ export default function TestSocket() {
         });
         socket.on("connect", () => {
             const engine = socket.io.engine;
-            let peerId=null;
+            
             let lastDisCntReason = "";
             //console.log(engine.transport.name);
             console.log("Connect to server established.");
-            socket.emit("hi", peerName, response => {
-                peerId=response.peerId;
-                setItem({ type: "setPeerList", peerInfoList: response.peerList });
-            });
+            if (peerId === null){
+                socket.emit("hi", peerName, response => {
+                    peerId=response.peerId;
+                    setItem({ type: "setPeerList", peerInfoList: response.peerList });
+                });
+            }
             socket.on("disconnect", reason => {
-                console.log("socket disconnect event occur:" + reason);
-                lastDisCntReason = reason;
+                console.log("socket disconnect event occur:" + reason);                
             });
             socket.on("newPeer", newPeer => {
                 setItem({ type: "newPeer", newPeer: newPeer });
@@ -71,13 +75,10 @@ export default function TestSocket() {
           
             engine.on("reconnect", () => {
                 console.log("Reconnect successed.");
-                if (lastDisCntReason === "transport close") {
-                    lastDisCntReason = "";
-                    socket.emit("refreshSocketId",peerId);
-                }
+                socket.emit("refreshSocketId",peerId);                
             });
-            socket.on("removePeer", peerId => {
-                setItem({ type: "removePeer", peerId: peerId });
+            socket.on("disconnectedPeerIdList", peerIdList => {
+                setItem({ type: "removePeer", peerIdList: peerIdList });
             });
 
             engine.on("close", reason => {
