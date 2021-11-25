@@ -1,46 +1,41 @@
 class B {
-    constructor(io) {
+    constructor(io, path) {
         let peerList = {};
-        let timeOut = 60; // in sec
+        let timeOut = 30; // in sec
+        let finalTimeOut = timeOut * 1000;
         setInterval(() => {
-            let disconnectedPeerIdList = [];
             let now = new Date().getTime();
-            let finalTimeOut=timeOut*1000;
-            Object.keys(peerList).forEach(peerId => {
-                let peer = peerList[peerId];
-                if (peer.socketId === null){
-                    if ((now - peer.disconnectTime) > finalTimeOut) {
-                        console.log("Peer (" + peer.name + "): connection time out.");
-                        delete peerList[peerId];
-                        disconnectedPeerIdList.push(peerId);
-                        console.log("==================peer list===============");
-                        console.log(peerList);
+            let removePeerIdList = [];
+            for (const [peerId, peer] of Object.entries(peerList)) {
+                if (peer.socketId === null) {
+                    let diff = now - peer.disconnectTime.getTime();
+                    if (diff > finalTimeOut) {
+                        console.log("Peer (" + peer.name + ") connection time out.");
+                        removePeerIdList.push(peerId);
                     }
                 }
-            });
-            if (disconnectedPeerIdList.length > 0) {
-                io.of("/b").emit("disconnectedPeerIdList", disconnectedPeerIdList);
-                //console.log(io.of("/b"))
             }
-        }, timeOut * 1000);
-        this.register = (socket) => {
+            removePeerNow(removePeerIdList);
+        }, finalTimeOut);
+        io.of(path).on("connection", socket => {
+            console.log("B(" + socket.id + "):Connection established");
+
             socket.on('disconnect', (reason) => {
-                Object.keys(peerList).forEach(peerId => {
-                    let peer = peerList[peerId];
+                let removePeerId = null;
+                for (const [peerId, peer] of Object.entries(peerList)) {
                     if (peer.socketId === socket.id) {
-                        console.log("Peer (" + peer.name + "):Disconnected");
-                        console.log("reason= " + reason);
-                        if (reason === "client namespace disconnect"){
-                            delete peerList[peerId];
-                            io.of("/b").emit("disconnectedPeerIdList",[peerId]);
-                        }else {
-                            peerList[peerId].disconnectTime = new Date();
-                            peerList[peerId].socketId = null;
-                        }
+                        removePeerId = peerId;
+                        break;
                     }
-                });
-                console.log("==================peer list===============");
-                console.log(peerList);
+                }
+                if (removePeerId) {
+                    if (reason === "client namespace disconnect") {
+                        removePeerNow([removePeerId]);
+                    } else {
+                        peerList[removePeerId].disconnectTime = new Date();
+                        peerList[removePeerId].socketId = null;
+                    }
+                }
             });
             socket.on("hi", (peerName, calllBack) => {
                 let peerId = generateUID();
@@ -51,6 +46,7 @@ class B {
                 console.log("==================peer list===============");
                 console.log(peerList);
             });
+
             socket.on("refreshSocketId", (peerId, calllBack) => {
                 if (peerList[peerId]) {
                     console.log("Peer (" + peerList[peerId].name + "): refresh socket id.");
@@ -62,7 +58,8 @@ class B {
                     calllBack({ peerId: peerId, result:false, message:"Connection time out,please login again"});
                 }
             })
-        }
+        })
+
         /*=======================================================*/
         /*      Private Method                                   */
         /*=======================================================*/
@@ -74,6 +71,17 @@ class B {
             firstPart = ("000" + firstPart.toString(36)).slice(-3);
             secondPart = ("000" + secondPart.toString(36)).slice(-3);
             return firstPart + secondPart;
+        }
+        let removePeerNow = (peerIdList) => {
+            peerIdList.forEach(peerId => {
+                console.log("Peer (" + peerList[peerId].name + ") leave the meeting.")
+                delete peerList[peerId];
+            });
+            if (peerIdList.length > 0) {
+                console.log("==================peer list===============");
+                console.log(peerList);
+                io.of(path).emit("removePeerIdList", peerIdList);
+            }
         }
     }
 }

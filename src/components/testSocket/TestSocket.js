@@ -75,7 +75,7 @@ export default function TestSocket() {
             socket.on("disconnect", reason => {
                 console.log("socket disconnect event occur:" + reason);
             });
-            socket.on("disconnectedPeerIdList", peerIdList => {
+            socket.on("removePeerIdList", peerIdList => {
                 setItem({ type: "removePeer", peerIdList: peerIdList });
             });
             socket.on("newPeer", newPeer => {

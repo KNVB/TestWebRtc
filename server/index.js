@@ -23,17 +23,13 @@ httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
   console.log('Express server is running on localhost:'+process.env.REACT_APP_SOCKET_PORT);
 });
 
-let b=new B(io);
+let b=new B(io,"/b");
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();
 io.of("/a").on("connection",socket=>{
 	console.log("TestSocket("+socket.id+"):Connection established");
 	testSocket.addPeer(socket);
 });
-io.of("/b").on("connection",socket=>{
-	console.log("B("+socket.id+"):Connection established");
-	b.register(socket);
-})
 io.of("/testMeeting").on("connection",socket=>{
 	testMeeting.addPeer(socket);
 });
