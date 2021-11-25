@@ -6,7 +6,7 @@ export default function TestSocket() {
         let result = { ...state };
         switch (action.type) {
             case "disconnect":
-                result.socket.close();
+                result.socket.disconnect();
                 break
             case "newPeer":
                 let peer =new Peer(action.newPeer.name);
@@ -103,7 +103,7 @@ export default function TestSocket() {
                 //lastDisCntReason = reason;
             });
         });
-        return () => { socket.close() }
+        return () => { socket.disconnect() }
     }, []);    
     let peerElementList = [];
     const [items, setItem] = useReducer(reducer, { peerInfoList: {},socket:null});
