@@ -1,16 +1,17 @@
 import { useEffect, useReducer } from "react";
-import WebRTC from "./WebRTC";
-
 import io from "socket.io-client";
+import Peer from './Peer';
 export default function TestSocket() {
     let reducer = (state, action) => {
         let result = { ...state };
         switch (action.type) {
+            case "disconnect":
+                result.socket.close();
+                break
             case "newPeer":
-                result.peerInfoList[action.newPeer.peerId] = {
-                    call: true,
-                    name: action.newPeer.name
-                };
+                let peer =new Peer(action.newPeer.name);
+                peer.isCall=true;
+                result.peerInfoList[action.newPeer.peerId] = peer;
                 break;
             case "peerReconnect":
                 console.log("Peer " + result.peerInfoList[action.peerId].name + " Reconnect");
@@ -24,12 +25,14 @@ export default function TestSocket() {
                 let temp = {};
                 Object.keys(action.peerInfoList).forEach((key) => {
                     let peerInfo = action.peerInfoList[key];
-                    temp[key] = {
-                        call: false,
-                        name: peerInfo.name,
-                    };
+                    let peer =new Peer(peerInfo.name);
+                    peer.isCall=false;
+                    temp[key] = peer;
                 });
                 result.peerInfoList = temp;
+                break;
+            case "setSocket":
+                result.socket=action.socket;
                 break;
             default:
                 break;
@@ -59,9 +62,7 @@ export default function TestSocket() {
             transports: ["websocket"],
         });
         socket.on("connect", () => {
-            const engine = socket.io.engine;
-
-            let lastDisCntReason = "";
+            const engine = socket.io.engine;           
             //console.log(engine.transport.name);
             console.log("Connect to server established.");
             if (peerId === null) {
@@ -70,6 +71,7 @@ export default function TestSocket() {
                     setItem({ type: "setPeerList", peerInfoList: response.peerList });
                 });
             }
+            setItem({type:"setSocket","socket":socket});
             socket.on("disconnect", reason => {
                 console.log("socket disconnect event occur:" + reason);
             });
@@ -82,7 +84,11 @@ export default function TestSocket() {
 
             socket.io.on("reconnect", () => {
                 console.log("Reconnect successed.");
-                socket.emit("refreshSocketId", peerId);
+                socket.emit("refreshSocketId", peerId,response=>{
+                    if (response.result === false){
+                        alert(response.message);
+                    }
+                });
             });
             socket.on("peerReconnect", peerId => {
                 //console.log("Peer Reconnect:"+peerId);
@@ -94,13 +100,16 @@ export default function TestSocket() {
             engine.on("close", reason => {
                 // called when the underlying connection is closed
                 console.log("Engine Close event occured:" + reason);
-                lastDisCntReason = reason;
+                //lastDisCntReason = reason;
             });
         });
         return () => { socket.close() }
-    }, []);
+    }, []);    
     let peerElementList = [];
-    const [items, setItem] = useReducer(reducer, { peerInfoList: {} });
+    const [items, setItem] = useReducer(reducer, { peerInfoList: {},socket:null});
+    let disconnect=()=>{
+        setItem({type:"disconnect"});
+    }
     if (items.peerInfoList) {
         Object.keys(items.peerInfoList).forEach((peerId) => {
             peerElementList.push(<div key={peerId}>{items.peerInfoList[peerId].name}</div>);
@@ -109,6 +118,7 @@ export default function TestSocket() {
     return (
         <>
             {peerElementList}
+            <button onClick={disconnect}>Disconnect</button>
         </>
     )
 }

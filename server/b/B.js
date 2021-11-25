@@ -30,8 +30,13 @@ class B {
                     if (peer.socketId === socket.id) {
                         console.log("Peer (" + peer.name + "):Disconnected");
                         console.log("reason= " + reason);
-                        peerList[peerId].disconnectTime = new Date();
-                        peerList[peerId].socketId = null;
+                        if (reason === "client namespace disconnect"){
+                            delete peerList[peerId];
+                            io.of("/b").emit("disconnectedPeerIdList",[peerId]);
+                        }else {
+                            peerList[peerId].disconnectTime = new Date();
+                            peerList[peerId].socketId = null;
+                        }
                     }
                 });
                 console.log("==================peer list===============");
@@ -46,11 +51,16 @@ class B {
                 console.log("==================peer list===============");
                 console.log(peerList);
             });
-            socket.on("refreshSocketId", peerId => {
-                console.log("Peer (" + peerList[peerId].name + "): refresh socket id.");
-                peerList[peerId].socketId = socket.id;
-                peerList[peerId].disconnectTime = null;
-                socket.broadcast.emit("peerReconnect", peerId);
+            socket.on("refreshSocketId", (peerId, calllBack) => {
+                if (peerList[peerId]) {
+                    console.log("Peer (" + peerList[peerId].name + "): refresh socket id.");
+                    peerList[peerId].socketId = socket.id;
+                    peerList[peerId].disconnectTime = null;
+                    socket.broadcast.emit("peerReconnect", peerId);
+                    calllBack({ peerId: peerId, result:true});
+                } else {
+                    calllBack({ peerId: peerId, result:false, message:"Connection time out,please login again"});
+                }
             })
         }
         /*=======================================================*/
