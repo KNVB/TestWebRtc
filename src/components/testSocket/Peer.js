@@ -1,23 +1,13 @@
 import WebRTC from "./WebRTC";
 export default class Peer{
-    constructor(peerName){
+    constructor(peerName,peerId){
         let webRTC=new WebRTC(peerName);
         let closeEventHandler = [], connectedEventHandler = [];
         let dataEventHandler = [], signalEventHandler = [], streamEventHandler = [];
         let isDebug = false;
         this.isCall = false;
-
-        let webRtcConfig = {
-            iceServers: [
-                { urls: "stun:stun.stunprotocol.org" },
-                { urls: "stun:stun.l.google.com:19302" },
-                {
-                    urls: "turn:numb.viagenie.ca",
-                    credential: "turnserver",
-                    username: "sj0016092@gmail.com",
-                },
-            ],
-        };
+        this.peerId=peerId;
+        let webRtcConfig = {};
 
         webRTC.setDebug(true);
         this.name = peerName;
@@ -53,7 +43,7 @@ export default class Peer{
             webRTC.on('signal', data => {
                 msgLogger("Emit signal event to " + peerName + ".");
                 signalEventHandler.forEach(handler => {
-                    handler({ to: this.socketId, signalData: data });
+                    handler({ to: this.peerId, signalContent: data });
                 });
             });
             webRTC.on("data", (data) => {

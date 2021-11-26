@@ -1,46 +1,32 @@
 import { useEffect, useReducer } from "react";
-import io from "socket.io-client";
-import Peer from './Peer';
+import Meeting from "./Meeting";
+import PeerElement from './PeerElement';
 export default function TestSocket() {
     let reducer = (state, action) => {
         let result = { ...state };
         switch (action.type) {
             case "disconnect":
-                result.socket.disconnect();
-                break
-            case "newPeer":
-                let peer =new Peer(action.newPeer.name);
-                peer.isCall=true;
-                result.peerInfoList[action.newPeer.peerId] = peer;
+                result.meeting.leave();
                 break;
-            case "peerReconnect":
-                console.log("Peer " + result.peerInfoList[action.peerId].name + " Reconnect");
+            case "initMeetingObj":
+                result.meeting = action.meeting;
+                result.peerId = action.peerId;
+                result.peerList = action.peerList;
+                break;
+            case "newPeer":
+                result.peerList[action.newPeer.peerId] = action.newPeer;
                 break;
             case "removePeer":
                 action.peerIdList.forEach(peerId => {
-                    delete result.peerInfoList[peerId];
+                    delete result.peerList[peerId];
                 })
-                break;
-            case "setPeerList":
-                let temp = {};
-                Object.keys(action.peerInfoList).forEach((key) => {
-                    let peerInfo = action.peerInfoList[key];
-                    let peer =new Peer(peerInfo.name);
-                    peer.isCall=false;
-                    temp[key] = peer;
-                });
-                result.peerInfoList = temp;
-                break;
-            case "setSocket":
-                result.socket=action.socket;
                 break;
             default:
                 break;
         }
         return result;
-    };
+    }
     useEffect(() => {
-        let peerId = null;
         let peerName;
         let sUsrAg = navigator.userAgent;
         if (sUsrAg.indexOf("Edg") > -1) {
@@ -58,61 +44,38 @@ export default function TestSocket() {
                 }
             }
         }
-        let socket = io(process.env.REACT_APP_SOCKET_URL + "b", {
-            transports: ["websocket"],
+        let meeting = new Meeting();
+        meeting.setDebug(true);
+        meeting.setSignalServerURL(process.env.REACT_APP_SOCKET_URL + "b");
+        meeting.on("initMeeting", (peerId, peerList) => {
+            console.log("initMeeting event received.");
+            updateItemList({ type: "initMeetingObj", meeting: meeting, peerId: peerId, peerList: peerList });
         });
-        socket.on("connect", () => {
-            const engine = socket.io.engine;           
-            //console.log(engine.transport.name);
-            console.log("Connect to server established.");
-            if (peerId === null) {
-                socket.emit("hi", peerName, response => {
-                    peerId = response.peerId;
-                    setItem({ type: "setPeerList", peerInfoList: response.peerList });
-                });
-            }
-            setItem({type:"setSocket","socket":socket});
-            socket.on("disconnect", reason => {
-                console.log("socket disconnect event occur:" + reason);
-            });
-            socket.on("removePeerIdList", peerIdList => {
-                setItem({ type: "removePeer", peerIdList: peerIdList });
-            });
-            socket.on("newPeer", newPeer => {
-                setItem({ type: "newPeer", newPeer: newPeer });
-            });
-
-            socket.io.on("reconnect", () => {
-                console.log("Reconnect successed.");
-                socket.emit("refreshSocketId", peerId,response=>{
-                    if (response.result === false){
-                        alert(response.message);
-                    }
-                });
-            });
-            socket.on("peerReconnect", peerId => {
-                //console.log("Peer Reconnect:"+peerId);
-                //console.log("Peer " + items.peerInfoList[peerId].name + " Reconnect");
-                setItem({type:"peerReconnect","peerId": peerId});
-            });
-
-
-            engine.on("close", reason => {
-                // called when the underlying connection is closed
-                console.log("Engine Close event occured:" + reason);
-                //lastDisCntReason = reason;
-            });
+        meeting.on("newPeer", newPeer => {
+            updateItemList({ type: "newPeer", newPeer: newPeer });
         });
-        return () => { socket.disconnect() }
-    }, []);    
+        meeting.on("peerReconnect", peer => {
+            console.log("Peer " + peer.name + " reconnected");
+        });
+        meeting.on("refreshSocketId", response => {
+            console.log(response);
+        });
+        meeting.on("removePeer", peerIdList => {
+            updateItemList({ type: "removePeer", peerIdList: peerIdList });
+        });
+        meeting.connect();
+        meeting.join(peerName);
+      
+    }, []);
+
     let peerElementList = [];
-    const [items, setItem] = useReducer(reducer, { peerInfoList: {},socket:null});
-    let disconnect=()=>{
-        setItem({type:"disconnect"});
+    const [itemList, updateItemList] = useReducer(reducer, { meeting: null, peerId: null, peerList: {} });
+    let disconnect = () => {
+        updateItemList({ type: "disconnect" });
     }
-    if (items.peerInfoList) {
-        Object.keys(items.peerInfoList).forEach((peerId) => {
-            peerElementList.push(<div key={peerId}>{items.peerInfoList[peerId].name}</div>);
+    if (itemList.peerList) {
+        Object.keys(itemList.peerList).forEach((peerId) => {
+            peerElementList.push(<PeerElement key={peerId} peer={itemList.peerList[peerId]} meeting={itemList.meeting}/>);
         });
     }
     return (
