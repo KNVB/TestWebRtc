@@ -80,6 +80,9 @@ export default class Peer{
                     break;
             }
         }
+        this.restartICE=()=>{
+            webRTC.restartICE();
+        }
         /*=====================================================================*/
         /*        To control if message error is shown                         */
         /*=====================================================================*/

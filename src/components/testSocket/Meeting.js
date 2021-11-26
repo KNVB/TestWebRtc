@@ -51,6 +51,7 @@ export default class Meeting {
                 });
                 socket.on("peerReconnect", peerId => {
                     msgLogger("Peer Reconnect:" + peerId);
+                    peerList[peerId].restartICE();
                     //console.log("Peer " + items.peerList[peerId].name + " Reconnect");
                     //setItem({ type: "peerReconnect", "peerId": peerId });
                     if (peerReconnectEventHandler) {
@@ -81,11 +82,11 @@ export default class Meeting {
                         */
                     });
                 });
-                socket.on('signalData',signalData=>{
+                socket.on('signalData', signalData => {
                     msgLogger("Receive SignalData");
                     msgLogger(signalData);
-                    let peer=peerList[signalData.from];
-                    if (peer){
+                    let peer = peerList[signalData.from];
+                    if (peer) {
                         peer.signal(signalData.signalContent);
                     }
                 });
@@ -145,6 +146,18 @@ export default class Meeting {
         /*=====================================================================*/
         this.setDebug = (debug) => {
             isDebug = debug;
+        }
+        /*=====================================================================*/
+        /*       The local stream setter                                       */
+        /*=====================================================================*/
+        this.setLocalStream = (stream) => {
+            for (const [peerId, peer] of Object.entries(peerList)){
+                if (peerId === localPeerId){
+                    peer.stream(stream);
+                }else {
+                    peer.setStream(stream);
+                }
+            }
         }
         /*=====================================================================*/
         /*        Set the signal server url                                    */

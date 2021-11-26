@@ -13,12 +13,12 @@ export default function PeerElement({peer,meeting}) {
             console.log("Send Signal Data to "+peer.name);
             meeting.sendSignalData(signalData);
         });
-         /*
+        
         peer.on("stream",stream=>{
             console.log(peer.name+" received stream event");
             media.current.srcObject=stream;
         });
-        */       
+               
         peer.init();       
         if (peer.isCall){
             peer.call();

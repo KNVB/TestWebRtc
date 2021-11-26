@@ -1,7 +1,9 @@
 import { useEffect, useReducer } from "react";
+import LocalStreamManager from "../../util/LocalStreamManager";
 import Meeting from "./Meeting";
 import PeerElement from './PeerElement';
 export default function TestSocket() {
+    let localStreamManager = new LocalStreamManager();
     let reducer = (state, action) => {
         let result = { ...state };
         switch (action.type) {
@@ -73,6 +75,17 @@ export default function TestSocket() {
     let disconnect = () => {
         updateItemList({ type: "disconnect" });
     }
+    let go = async () => {
+        let localStream;
+        try {
+          localStream = await localStreamManager.getMediaStream(true, false);
+        } catch (error) {
+          console.log("Getting local media failure:" + error.message);
+          localStream = null;
+        } finally {
+          itemList.meeting.setLocalStream(localStream);
+        }
+      }; 
     if (itemList.peerList) {
         Object.keys(itemList.peerList).forEach((peerId) => {
             peerElementList.push(<PeerElement key={peerId} peer={itemList.peerList[peerId]} meeting={itemList.meeting}/>);
@@ -80,6 +93,7 @@ export default function TestSocket() {
     }
     return (
         <>
+            <button onClick={go}>Share Video</button>
             {peerElementList}
             <button onClick={disconnect}>Disconnect</button>
         </>

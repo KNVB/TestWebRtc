@@ -64,6 +64,11 @@ export default class WebRTC {
         default: break;
       }
     }
+    this.restartICE=()=>{
+      if (peerConnection){
+        peerConnection.restartIce();
+      }      
+    }
     /*=====================================================================*/
     /*        Set the Configuration                                        */
     /*=====================================================================*/
@@ -198,6 +203,7 @@ export default class WebRTC {
         " ICE Connection State Changed to:" +
         peerConnection.iceConnectionState
       );
+      /*
       switch (peerConnection.iceConnectionState) {
         case "failed":
           msgLogger(peerName + " restart ICE");
@@ -207,7 +213,7 @@ export default class WebRTC {
           break;
         default:
           break;
-      }
+      }*/
     }
     let iceGatheringStateChangeHandler = (event) => {
       msgLogger(

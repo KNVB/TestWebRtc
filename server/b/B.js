@@ -1,7 +1,7 @@
 class B {
     constructor(io, path) {
         let peerList = {};
-        let timeOut = 30; // in sec
+        let timeOut = 60; // in sec
         let finalTimeOut = timeOut * 1000;
         setInterval(() => {
             let now = new Date().getTime();
