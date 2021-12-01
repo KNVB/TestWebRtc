@@ -4,6 +4,7 @@ export default class Meeting {
     constructor() {
         let isDebug = false;
         let localPeerId;
+        let localStream;
         let peerList = {};
         let peerName;
         let setInitMeetingEventHandler, newPeerEventHandler;
@@ -44,6 +45,9 @@ export default class Meeting {
                     let peer = new Peer(newPeer.name, newPeer.peerId);
                     peer.isCall = true;
                     peer.setWebRTCConfig(webRtcConfig);
+                    if (localStream){
+                        peer.setStream(localStream);
+                    }
                     peerList[newPeer.peerId] = peer;
                     if (newPeerEventHandler) {
                         newPeerEventHandler(peer);
@@ -104,6 +108,9 @@ export default class Meeting {
             join();
         }
         this.leave = () => {
+            Object.values(peerList).forEach(peer=>{
+                peer.hangUp();
+            })
             socket.disconnect();
         }
         /*=====================================================================*/
@@ -151,6 +158,7 @@ export default class Meeting {
         /*       The local stream setter                                       */
         /*=====================================================================*/
         this.setLocalStream = (stream) => {
+            localStream=stream;
             for (const [peerId, peer] of Object.entries(peerList)){
                 if (peerId === localPeerId){
                     peer.stream(stream);
