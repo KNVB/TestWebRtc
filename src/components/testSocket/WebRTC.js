@@ -242,7 +242,7 @@ export default class WebRTC {
         ignoreOffer = !polite && offerCollision;
         msgLogger("ignoreOffer = " + ignoreOffer + ",offerCollision=" + offerCollision + ",polite=" + polite);
         if (ignoreOffer) {
-          msgLogger(peerName + " ignore offer");
+          msgLogger("Ignore offer from "+ peerName);
           return;
         }
         await peerConnection.setRemoteDescription(signalData);
