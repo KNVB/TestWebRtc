@@ -60,7 +60,7 @@ export default function TestSocket() {
             console.log("Peer " + peer.name + " reconnected");
         });
         meeting.on("refreshSocketId", response => {
-            console.log(response);
+            console.log("Refresh Socket Id result:"+response.result);
         });
         meeting.on("removePeer", peerIdList => {
             updateItemList({ type: "removePeer", peerIdList: peerIdList });
