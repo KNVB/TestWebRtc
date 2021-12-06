@@ -86,6 +86,16 @@ export default class Meeting {
                 });
                 socket.io.on("reconnect", () => {
                     msgLogger("Reconnect successed.");
+                    for (const [peerId, peer] of Object.entries(peerList)){
+                        peer.init();
+                        if (localStream){
+                            if (peerId === localPeerId){
+                                peer.stream(localStream);
+                            }else {
+                                peer.setStream(localStream);
+                            }
+                        }
+                    }
                     socket.emit("refreshSocketId", localPeerId, response => {
                         if (refreshSocketIdEventHandler) {
                             refreshSocketIdEventHandler(response);
