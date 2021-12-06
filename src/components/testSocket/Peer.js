@@ -15,13 +15,14 @@ export default class Peer{
         /*        To make a WebRTC connection                                  */
         /*=====================================================================*/
         this.call = () => {
-            msgLogger("Make Call to " + peerName);
+            msgLogger("Make a Call to " + peerName);
             webRTC.call();
         }
         /*=====================================================================*/
         /*        To hangup the WebRTC connection                              */
         /*=====================================================================*/
         this.hangUp = () => {
+            msgLogger("Hang up the "+peerName+" connection.");
             webRTC.hangUp();
         }
         /*=====================================================================*/
