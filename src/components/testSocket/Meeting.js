@@ -55,7 +55,18 @@ export default class Meeting {
                 });
                 socket.on("peerReconnect", peerId => {
                     msgLogger("Peer Reconnect:" + peerId);
-                    peerList[peerId].restartICE();
+                    let oldPeer=peerList[peerId];
+                    let newPeer=new Peer(oldPeer.name,peerId);
+                    newPeer.isCall=oldPeer.isCall;
+                    newPeer.setWebRTCConfig(webRtcConfig);
+                    if (localStream){
+                        newPeer.setStream(localStream);
+                    }
+                    peerList[newPeer.peerId] = newPeer;
+                    if (newPeerEventHandler) {
+                        newPeerEventHandler(newPeer);
+                    }
+                    //peerList[peerId].restartICE();
                     //console.log("Peer " + items.peerList[peerId].name + " Reconnect");
                     //setItem({ type: "peerReconnect", "peerId": peerId });
                     if (peerReconnectEventHandler) {
