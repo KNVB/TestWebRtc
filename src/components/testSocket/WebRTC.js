@@ -18,6 +18,13 @@ export default class WebRTC {
       dataChannel.onclose = dataChannelClose;
       dataChannel.onerror = dataChannelError;
     }
+    this.getConnectionState=()=>{
+      if (peerConnection){
+        return peerConnection.iceConnectionState;
+      }else {
+        return null;
+      }      
+    };
     /*=====================================================================*/
     /*        To hangup the connection                                     */
     /*=====================================================================*/
@@ -64,8 +71,12 @@ export default class WebRTC {
         default: break;
       }
     }
+    /*=====================================================================*/
+    /*        Restart ICE                                                  */
+    /*=====================================================================*/
     this.restartICE=()=>{
       if (peerConnection){
+        msgLogger("WebRTC:restart ice.")
         peerConnection.restartIce();
       }      
     }

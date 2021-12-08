@@ -1,12 +1,12 @@
 import WebRTC from "./WebRTC";
-export default class Peer{
-    constructor(peerName,peerId){
-        let webRTC=new WebRTC(peerName);
+export default class Peer {
+    constructor(peerName, peerId) {
+        let webRTC = new WebRTC(peerName);
         let closeEventHandler = [], connectedEventHandler = [];
         let dataEventHandler = [], signalEventHandler = [], streamEventHandler = [];
         let isDebug = false;
         this.isCall = false;
-        this.peerId=peerId;
+        this.peerId = peerId;
         let webRtcConfig = {};
 
         webRTC.setDebug(true);
@@ -18,11 +18,14 @@ export default class Peer{
             msgLogger("Make a Call to " + peerName);
             webRTC.call();
         }
+        this.getConnectionState=()=>{            
+            return webRTC.getConnectionState();                  
+        };
         /*=====================================================================*/
         /*        To hangup the WebRTC connection                              */
         /*=====================================================================*/
         this.hangUp = () => {
-            msgLogger("Hang up the "+peerName+" connection.");
+            msgLogger("Hang up the " + peerName + " connection.");
             webRTC.hangUp();
         }
         /*=====================================================================*/
@@ -57,7 +60,7 @@ export default class Peer{
                 msgLogger("Receive stream event from " + peerName + ".");
                 doStreamEvent(stream);
             });
-            webRTC.setConfig(webRtcConfig);            
+            webRTC.setConfig(webRtcConfig);
             webRTC.init();
         }
         /*=====================================================================*/
@@ -81,7 +84,10 @@ export default class Peer{
                     break;
             }
         }
-        this.restartICE=()=>{
+        /*=====================================================================*/
+        /*        Restart ICE                                                  */
+        /*=====================================================================*/
+        this.restartICE = () => {
             webRTC.restartICE();
         }
         /*=====================================================================*/
@@ -111,8 +117,8 @@ export default class Peer{
         /*=====================================================================*/
         /*        Set the Web RTC configuration                                */
         /*=====================================================================*/
-        this.setWebRTCConfig=(config)=>{
-            webRtcConfig=config;
+        this.setWebRTCConfig = (config) => {
+            webRtcConfig = config;
         }
         /*=====================================================================*/
         /*      Private function                                               */
