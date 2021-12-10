@@ -18,6 +18,9 @@ export default class WebRTC {
       dataChannel.onclose = dataChannelClose;
       dataChannel.onerror = dataChannelError;
     }
+    /*=====================================================================*/
+    /*        Get the connection state                                     */
+    /*=====================================================================*/    
     this.getConnectionState=()=>{
       if (peerConnection){
         return peerConnection.iceConnectionState;

@@ -18,8 +18,11 @@ export default class Peer {
             msgLogger("Make a Call to " + peerName);
             webRTC.call();
         }
-        this.getConnectionState=()=>{            
-            return webRTC.getConnectionState();                  
+        /*=====================================================================*/
+        /*        Get the connection state                                     */
+        /*=====================================================================*/
+        this.getConnectionState = () => {
+            return webRTC.getConnectionState();
         };
         /*=====================================================================*/
         /*        To hangup the WebRTC connection                              */
