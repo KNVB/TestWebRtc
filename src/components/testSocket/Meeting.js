@@ -54,9 +54,12 @@ export default class Meeting {
                     }
                 });
                 socket.on("peerReconnect", peerId => {
-                    msgLogger("Peer Reconnect:" + peerId);
+                    
                     let oldPeer=peerList[peerId];
                     let newPeer=new Peer(oldPeer.name,peerId);
+                    
+                    msgLogger("Peer "+oldPeer.name+ " Reconnect:");
+
                     newPeer.isCall=oldPeer.isCall;
                     newPeer.setWebRTCConfig(webRtcConfig);
                     if (localStream){

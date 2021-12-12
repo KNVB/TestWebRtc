@@ -6,7 +6,7 @@ export default class WebRTC {
     let ignoreOffer = false, isDebug = false;
     let localStream = null, makingOffer = false;
     let peerConnection = null, polite = false;
-    let signalEventHandler = null, trackHandler = null;
+    let signalEventHandler = null, signalingStateChangeEventHandler=null,trackHandler = null;
     /*=====================================================================*/
     /*        To set up a connection                                       */
     /*=====================================================================*/
@@ -67,6 +67,9 @@ export default class WebRTC {
           break;
         case "signal":
           signalEventHandler = param;
+          break;
+        case "signalingStateChange":
+          signalingStateChangeEventHandler=param; 
           break;
         case "stream":
           trackHandler = param;
@@ -145,6 +148,11 @@ export default class WebRTC {
         peerConnection.close();
         msgLogger(
           "peerConnection.signalingState=" + peerConnection.signalingState
+        );
+        msgLogger(
+          peerName +
+          " ICE Connection State Changed to:" +
+          peerConnection.iceConnectionState
         );
         peerConnection = null;
       }
@@ -299,6 +307,9 @@ export default class WebRTC {
       msgLogger(
         peerName + " Signaling State change to " + peerConnection.signalingState
       );
+      if (signalingStateChangeEventHandler){
+        signalingStateChangeEventHandler(peerConnection.signalingState);
+      }
     }
     /*=====================================================================*/
     /*        Track event handler                                          */

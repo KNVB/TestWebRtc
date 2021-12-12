@@ -9,7 +9,7 @@ export default class Peer {
         this.peerId = peerId;
         let webRtcConfig = {};
 
-        webRTC.setDebug(true);
+        //webRTC.setDebug(true);
         this.name = peerName;
         /*=====================================================================*/
         /*        To make a WebRTC connection                                  */
@@ -52,6 +52,9 @@ export default class Peer {
                 signalEventHandler.forEach(handler => {
                     handler({ to: this.peerId, signalContent: data });
                 });
+            });
+            webRTC.on("signalingStateChange",signalingState=>{
+                msgLogger("Peer " + peerName + " signaling state changed to "+signalingState);
             });
             webRTC.on("data", (data) => {
                 msgLogger("Receive stream event from " + peerName + ".");
