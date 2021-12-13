@@ -3,7 +3,7 @@ export default class WebRTC {
     let configuration = {};
     let dataChannel = null, dataHandler = null;
     let dataChannelOpenHandler = null, dataChannelCloseHandler = null;
-    let ignoreOffer = false, isDebug = false;
+    let iceStateChangeEventHandler=null,ignoreOffer = false, isDebug = false;
     let localStream = null, makingOffer = false;
     let peerConnection = null, polite = false;
     let signalEventHandler = null, signalingStateChangeEventHandler=null,trackHandler = null;
@@ -65,6 +65,9 @@ export default class WebRTC {
         case "data":
           dataHandler = param;
           break;
+        case "iceStateChange":
+          iceStateChangeEventHandler=param;
+          break  
         case "signal":
           signalEventHandler = param;
           break;
@@ -142,23 +145,6 @@ export default class WebRTC {
         msgLogger("dataChannel.readyState=" + dataChannel.readyState);
         dataChannel = null;
       }
-
-      msgLogger("peerConnection is " + (peerConnection ? "not" : "") + " null");
-      if (peerConnection) {
-        peerConnection.close();
-        msgLogger(
-          "peerConnection.signalingState=" + peerConnection.signalingState
-        );
-        msgLogger(
-          peerName +
-          " ICE Connection State Changed to:" +
-          peerConnection.iceConnectionState
-        );
-        peerConnection = null;
-      }
-      ignoreOffer = false;
-      makingOffer = false;
-      polite = false;
       if (dataChannelCloseHandler) {
         dataChannelCloseHandler();
       }
@@ -203,10 +189,29 @@ export default class WebRTC {
       if (peerConnection) {
         peerConnection.getSenders().forEach(sender => {
           peerConnection.removeTrack(sender);
-        })
+        });
+        msgLogger("peerConnection is " + (peerConnection ? "not" : "") + " null");
+        if (peerConnection) {
+          peerConnection.close();
+          msgLogger(
+            "peerConnection.signalingState=" + peerConnection.signalingState
+          );
+          msgLogger(
+            peerName +
+            " ICE Connection State Changed to:" +
+            peerConnection.iceConnectionState
+          );
+          //peerConnection = null;
+        }
+        ignoreOffer = false;
+        makingOffer = false;
+        polite = false;
+  
+        /*
         if (dataChannel) {
           dataChannel.close();
         }
+        */
       }
     }
     /*=====================================================================*/
@@ -225,6 +230,9 @@ export default class WebRTC {
         " ICE Connection State Changed to:" +
         peerConnection.iceConnectionState
       );
+      if (iceStateChangeEventHandler){
+        iceStateChangeEventHandler(peerConnection.iceConnectionState);
+      }
       /*
       switch (peerConnection.iceConnectionState) {
         case "failed":

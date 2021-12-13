@@ -56,10 +56,11 @@ export default class Meeting {
                 socket.on("peerReconnect", peerId => {
                     
                     let oldPeer=peerList[peerId];
-                    let newPeer=new Peer(oldPeer.name,peerId);
+                    //let newPeer=new Peer(oldPeer.name,peerId);
                     
                     msgLogger("Peer "+oldPeer.name+ " Reconnect:");
-
+                    
+                    /*
                     newPeer.isCall=oldPeer.isCall;
                     newPeer.setWebRTCConfig(webRtcConfig);
                     if (localStream){
@@ -75,20 +76,23 @@ export default class Meeting {
                     if (peerReconnectEventHandler) {
                         peerReconnectEventHandler(peerList[peerId]);
                     }
+                    */
                 });
                 socket.on("removePeerIdList", (peerIdList) => {
                     msgLogger("removePeerIdList event received.");
+                    /*
                     msgLogger(peerIdList);
                     peerIdList.forEach(peerId => {
                         delete peerList[peerId];
                     })
-
+                    */
                     if (removePeerEventHandler) {
                         removePeerEventHandler(peerIdList);
                     }
                 });
                 socket.io.on("reconnect", () => {
                     msgLogger("Reconnect successed.");
+                    /*
                     for (const [peerId, peer] of Object.entries(peerList)){
                         peer.init();
                         if (localStream){
@@ -103,12 +107,12 @@ export default class Meeting {
                         if (refreshSocketIdEventHandler) {
                             refreshSocketIdEventHandler(response);
                         }
-                        /*
+                        
                         if (response.result === false) {
                             alert(response.message);
                         }
-                        */
                     });
+                    */
                 });
                 socket.on('signalData', signalData => {
                     msgLogger("Receive SignalData");
@@ -133,8 +137,10 @@ export default class Meeting {
         }
         this.leave = () => {
             Object.values(peerList).forEach(peer=>{
-                peer.hangUp();
-            })
+                if (peer.peerId !== localPeerId){
+                    peer.hangUp();
+                }
+            });
             socket.disconnect();
         }
         /*=====================================================================*/

@@ -4,7 +4,7 @@ export default class Peer {
         let webRTC = new WebRTC(peerName);
         let closeEventHandler = [], connectedEventHandler = [];
         let dataEventHandler = [], signalEventHandler = [], streamEventHandler = [];
-        let isDebug = false;
+        let isDebug = false,isHangUpByUser=false;
         this.isCall = false;
         this.peerId = peerId;
         let webRtcConfig = {};
@@ -29,24 +29,31 @@ export default class Peer {
         /*=====================================================================*/
         this.hangUp = () => {
             msgLogger("Hang up the " + peerName + " connection.");
+            isHangUpByUser=true;
             webRTC.hangUp();
         }
         /*=====================================================================*/
         /*        To initialize the WebRTC object                              */
         /*=====================================================================*/
         this.init = () => {
+            isHangUpByUser=false;
             webRTC.on("close", () => {
                 msgLogger("Connection to " + peerName + " is closed.");
+                msgLogger("isHangUpByUser="+ isHangUpByUser);
+                msgLogger(peerName +" ICE connection state="+ webRTC.getConnectionState());
                 closeEventHandler.forEach(handler => {
                     handler();
                 })
             });
             webRTC.on("connect", () => {
-                msgLogger("Connection to " + peerName + " is established.");
+                msgLogger("Connection to " + peerName + " is established.");                
                 connectedEventHandler.forEach(handler => {
                     handler();
                 })
             })
+            webRTC.on("iceStateChange",iceState=>{
+                msgLogger(peerName+" ICE connection state="+iceState);
+            });
             webRTC.on('signal', data => {
                 msgLogger("Emit signal event to " + peerName + ".");
                 signalEventHandler.forEach(handler => {
