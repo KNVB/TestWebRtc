@@ -19,6 +19,11 @@ export default function TestPureWebRTC(){
             console.log('Received request connect event from '+remotePeerName);
             myPeer.init();
         });
+        signalSocket.io.on("reconnect", () => {
+            console.log("Reconnect successed.");
+            myPeer.init();
+            myPeer.call();    
+        });
         signalSocket.on("signalData",async (data)=>{
             //console.log(peerName+" receive Signal Data");
             try{

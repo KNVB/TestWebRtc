@@ -118,23 +118,14 @@ export default class MyPeer{
           dataChannel = event.channel;
         }
         let dataChannelClose=(event)=>{
+          msgLogger("dataChannel.readyState=" + dataChannel.readyState);
+          /*
           msgLogger("dataChannel is " + (dataChannel ? "not" : "") + " null");
           if (dataChannel) {
             msgLogger("dataChannel.readyState=" + dataChannel.readyState);
             dataChannel = null;
           }
-
-          msgLogger("peerConnection is " + (peerConnection ? "not" : "") + " null");
-          if (peerConnection) {
-            peerConnection.close();
-            msgLogger(
-              "peerConnection.signalingState=" + peerConnection.signalingState
-            );
-            peerConnection = null;
-          }
-          ignoreOffer = false;
-          makingOffer = false;
-          polite=false;
+          */
           if (dataChannelCloseHandler) {
             dataChannelCloseHandler();
           }
@@ -176,6 +167,7 @@ export default class MyPeer{
 /*        Hang Up                                                      */
 /*=====================================================================*/
         let hangUp=()=>{
+          /*
           if (peerConnection){
             peerConnection.getSenders().forEach(sender=>{
               peerConnection.removeTrack(sender);
@@ -184,7 +176,18 @@ export default class MyPeer{
               dataChannel.close();
             }
           }
+          */
           //peerConnection.close();
+          //msgLogger("peerConnection is " + (peerConnection ? "not" : "") + " null");
+          
+          peerConnection.close();
+          msgLogger(
+            "peerConnection.signalingState=" + peerConnection.signalingState
+          );
+          
+          ignoreOffer = false;
+          makingOffer = false;
+          polite=false;
         }
 /*=====================================================================*/
 /*        ICE related event handler                                    */
@@ -202,6 +205,7 @@ export default class MyPeer{
               " ICE Connection State Changed to:" +
               peerConnection.iceConnectionState
           );
+          /*
           switch (peerConnection.iceConnectionState) {
             case "failed":
               msgLogger(peerName + " restart ICE");
@@ -211,7 +215,7 @@ export default class MyPeer{
               break;
             default:
               break;
-          }        
+          }*/        
         }
         let iceGatheringStateChangeHandler=(event)=>{
           msgLogger(
