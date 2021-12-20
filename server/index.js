@@ -5,7 +5,7 @@ const http =require('http');
 const httpServer= http.createServer(app);
 const io = require('socket.io')(httpServer);
 let B=require('./b/B');
-
+let C=require('./c/C');
 let TestMeeting=require('./testMeeting/TestMeeting_1.js');
 let TestPureWebRTC=require('./testPureWebRTC/TestPureWebRTC');
 let TestSimplePeer=require('./testSimplePeer/TestSimplePeer');
@@ -24,6 +24,7 @@ httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
 });
 
 let b=new B(io,"/b");
+let c=new C(io,"/c");
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();
 io.of("/a").on("connection",socket=>{

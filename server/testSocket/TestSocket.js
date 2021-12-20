@@ -30,7 +30,7 @@ class TestSocket{
                 socket.broadcast.emit("newPeer",peerList[socket.id]);
                 console.log("Broadcast newPeer ("+peerName+") to other peer.");
                 calllBack({"peerList":peerList})
-            });
+            });           
             socket.on("sendSignalData",param=>{
                 let source=peerList[socket.id];
                 let destination=peerList[param.to];
