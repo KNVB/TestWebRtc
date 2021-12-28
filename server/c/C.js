@@ -4,6 +4,23 @@ class C {
         let timeOut = 60; // in sec
         let finalTimeOut = timeOut * 1000;        
 
+        setInterval(() => {
+            let now = new Date().getTime();
+            let removePeerIdList = [];
+            for (const [peerId, peer] of Object.entries(peerList)) {
+                if (peer.disconnectTime) {
+                    let diff = now - peer.disconnectTime.getTime();
+                    if (diff >= finalTimeOut) {
+                        console.log("Peer (" + peer.name + ") connection time out.");
+                        removePeerIdList.push(peerId);
+                    }
+                }
+            }            
+            if (removePeerIdList.length>0){
+                removePeerNow(removePeerIdList);
+            }            
+        }, finalTimeOut);
+
         io.of(path).on("connection", socket => {
             console.log("Connection to Class C is established.");
             socket.on("hi", (peerName, calllBack) => {
@@ -20,11 +37,11 @@ class C {
             socket.on("reconnectRequest", peer => {
                 console.log("==================Receive reconnectRequest Event Start==============="); 
                 console.log("Receive reconnect Event from " + peer.peerName);
-                console.log("peerid="+peer.peerId);
-                console.log("==================peer list===============");
-                console.log(peerList);
+                console.log("peerid="+peer.peerId);               
                 peerList[peer.peerId].socketId=socket.id;
                 peerList[peer.peerId].disconnectTime=null;
+                console.log("==================peer list===============");
+                console.log(peerList);
                 socket.broadcast.emit("askReconnect", peer.peerId);               
                 console.log("==================Receive reconnectRequest Event End==============="); 
             });
@@ -47,10 +64,10 @@ class C {
                         peerList[removePeerId].disconnectTime=new Date();
                     }
                 }
+                /*
                 console.log("==================peer list===============");
                 console.log(peerList);
-                console.log("==================time out peer list===============");
-                console.log(timeOutPeer);           
+                */
                 console.log("==================Receive Disconnect Event End===============");
             });
         });
@@ -68,12 +85,15 @@ class C {
             return firstPart + secondPart;
         }
         let removePeerNow=(removePeerIdList)=>{
-            /*
-            let peer=peerList[peerId];
-            console.log("Peer :" + peer.peerName + " Disconnected:(" + reason + ")");
-            delete peerList[peerId];
-            //io.of(path).broadcast.emit("removeId",peerId);
-            */
+            console.log("==================peer list before remove the disconnected peer===============");
+            console.log(peerList);
+            removePeerIdList.forEach(peerId => {
+                console.log("Peer (" + peerList[peerId].peerName + ") leave the meeting.")
+                delete peerList[peerId];
+            });
+            console.log("==================peer list after remove the disconnected peer===============");
+            console.log(peerList);
+            io.of(path).emit("removePeerIdList", removePeerIdList);            
         }
     }
 }
