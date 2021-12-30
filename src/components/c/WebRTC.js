@@ -3,9 +3,8 @@ export default class WebRTC {
         let dataHandler;
         let dataChannelCloseHandler, dataChannelOpenHandler;
         let iceCandidateEventHandler, iceConnectionStateChangeHandler, iceGatheringStateChangeHandler;
-        let ignoreOffer = false, isDebug = false;
-        let localStream = null, makingOffer = false;
-        let peerConnection = null, polite = false;
+        let isDebug = false, localStream = null;
+        let negotiationHandler,peerConnection = null
         let signalingStateChangeHandler, signalEventHandler, trackHandler;
         /*=====================================================================*/
         /*        To configure handler for varies event                        */
@@ -29,6 +28,9 @@ export default class WebRTC {
                     break;
                 case "iceGatheringStateChange":
                     iceGatheringStateChangeHandler = param;
+                    break;
+                case "negotiation":
+                    negotiationHandler = param;
                     break;
                 case "signal":
                     signalEventHandler = param;
