@@ -29,7 +29,11 @@ class C {
                 console.log("==================Receive Hi Event Start===============");
                 console.log("from:" + peerName);
                 socket.broadcast.emit("askConnect", { peerId: peerId, peerName: peerName });
-                calllBack({ peerId: peerId, "peerList": peerList });
+                let temp={};
+                for (const [peerId, peer] of Object.entries(peerList)) {
+                    temp[peerId]={peerId:peerId,peerName:peer.peerName};
+                }
+                calllBack({ peerId: peerId, "peerList": temp });
                 console.log("==================peer list===============");
                 console.log(peerList);
                 console.log("==================Receive Hi Event End===============");
@@ -37,12 +41,14 @@ class C {
             socket.on("reconnectRequest", peer => {
                 console.log("==================Receive reconnectRequest Event Start==============="); 
                 console.log("Receive reconnect Event from " + peer.peerName);
-                console.log("peerid="+peer.peerId);               
-                peerList[peer.peerId].socketId=socket.id;
-                peerList[peer.peerId].disconnectTime=null;
-                console.log("==================peer list===============");
-                console.log(peerList);
-                socket.broadcast.emit("askReconnect", peer.peerId);               
+                console.log("peerid="+peer.peerId);
+                if (peer.peerId in peerList){               
+                    peerList[peer.peerId].socketId=socket.id;
+                    peerList[peer.peerId].disconnectTime=null;
+                    console.log("==================peer list===============");
+                    console.log(peerList);
+                    socket.broadcast.emit("askReconnect", peer.peerId);
+                }               
                 console.log("==================Receive reconnectRequest Event End==============="); 
             });
             socket.on('disconnect', (reason) => {

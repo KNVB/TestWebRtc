@@ -1,16 +1,34 @@
 import io from 'socket.io-client';
+import Peer from './Peer';
 export default class Meeting{
-    constructor(peerName){
+    constructor(peerName){        
         let peerId=null;
-        let peerList=null;
+        let peerList={};
+        let peerListUpdatedHandler;
         let socket=null;
-        console.log("Meeting Object constructor is called.")
+        let webRtcConfig = {
+            iceServers: [
+                { urls: "stun:stun.stunprotocol.org" },
+                { urls: "stun:stun.l.google.com:19302" },
+                {
+                    urls: "turn:numb.viagenie.ca",
+                    credential: "turnserver",
+                    username: "sj0016092@gmail.com",
+                },
+            ],
+        };
+        console.log("Meeting Object constructor is called.");
         this.connect=()=>{
             socket= io(process.env.REACT_APP_SOCKET_URL + "c", {
                 transports: ["websocket"],
             });
-            socket.on("askConnect",peer=>{
-                console.log("Receive Hi Event from "+JSON.stringify(peer)+".");
+            socket.on("askConnect",newPeer=>{
+                console.log("Receive Hi Event from "+JSON.stringify(newPeer)+".");
+                let peer=new Peer(newPeer.peerId,newPeer.peerName);
+                peer.setConfig(webRtcConfig);
+                peer.isCall=true;
+                peerList[peer.peerId]=peer;                 
+                peerListUpdatedHandler(peerList);
             });
             socket.on("askReconnect",peerName=>{
                 console.log("Receive askReconnect Event from "+peerName+".");
@@ -24,18 +42,32 @@ export default class Meeting{
             });
             socket.emit("hi",peerName, response => {
                 peerId=response.peerId;
-                peerList=response.peerList;
-                console.log("==================Receive Hi Response Start===============");
+                let tempPeerList=response.peerList;
+                console.log("==================Sent Hi Response Start===============");
                 console.log("peerId:"+peerId);
                 console.log("==================peer list===============");
+                for (const [peerId, tempPeer] of Object.entries(tempPeerList)) {
+                    let peer=new Peer(peerId,tempPeer.peerName);
+                    peer.setConfig(webRtcConfig);
+                    peerList[peerId]=peer;
+                }
                 console.log(peerList);
-                console.log("==================Receive Hi Response End===============");
+                peerListUpdatedHandler(peerList);
+                console.log("==================Sent Hi Response End===============");
             });            
         }
         this.disconnect=()=>{
             if (socket){
                 socket.disconnect();
             }            
+        }
+        this.on=(eventType,param)=>{
+            switch (eventType) {
+                case "peerListUpdated":
+                    peerListUpdatedHandler=param;
+                    break;
+                default: break;
+            }
         }
     }
 }
