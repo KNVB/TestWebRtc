@@ -23,6 +23,31 @@ class C {
 
         io.of(path).on("connection", socket => {
             console.log("Connection to Class C is established.");
+            socket.on('disconnect', (reason) => {
+                console.log("==================Receive Disconnect Event Start===============");
+                console.log("socket.id="+socket.id);
+                let removePeer=null,removePeerId = null;
+                for (const [peerId, peer] of Object.entries(peerList)) {
+                    if (peer.socketId === socket.id) {
+                        removePeer = peer;
+                        removePeerId=peerId;
+                        break;
+                    }
+                }
+                if (removePeer){
+                    console.log("peer:"+removePeer.peerName);
+                    if (reason === "client namespace disconnect") {               
+                        removePeerNow([removePeerId]);
+                    } else {
+                        peerList[removePeerId].disconnectTime=new Date();
+                    }
+                }
+                /*
+                console.log("==================peer list===============");
+                console.log(peerList);
+                */
+                console.log("==================Receive Disconnect Event End===============");
+            });            
             socket.on("hi", (peerName, calllBack) => {
                 let peerId = generateUID();
                 peerList[peerId] = { peerName: peerName, socketId: socket.id }
@@ -51,30 +76,16 @@ class C {
                 }               
                 console.log("==================Receive reconnectRequest Event End==============="); 
             });
-            socket.on('disconnect', (reason) => {
-                console.log("==================Receive Disconnect Event Start===============");
-                console.log("socket.id="+socket.id);
-                let removePeer=null,removePeerId = null;
-                for (const [peerId, peer] of Object.entries(peerList)) {
-                    if (peer.socketId === socket.id) {
-                        removePeer = peer;
-                        removePeerId=peerId;
-                        break;
-                    }
+            socket.on("signal",signalObj=>{
+                let sourcePeer=peerList[signalObj.from];
+                let destPeer=peerList[signalObj.to];
+
+                console.log("==================Receive Signal Event Start===============");
+                if (sourcePeer && destPeer){
+                    console.log(sourcePeer.peerName+" sent "+signalObj.signalData.type+"data to "+destPeer.peerName);
+                    socket.broadcast.to(destPeer.socketId).emit('signalData', {from:signalObj.from,...signalObj.signalData});
                 }
-                if (removePeer){
-                    console.log("peer:"+removePeer.peerName);
-                    if (reason === "client namespace disconnect") {               
-                        removePeerNow([removePeerId]);
-                    } else {
-                        peerList[removePeerId].disconnectTime=new Date();
-                    }
-                }
-                /*
-                console.log("==================peer list===============");
-                console.log(peerList);
-                */
-                console.log("==================Receive Disconnect Event End===============");
+                console.log("==================Receive Signal Event End===============");
             });
         });
 

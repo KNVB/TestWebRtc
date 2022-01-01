@@ -25,21 +25,45 @@ export default class Meeting{
             socket.on("askConnect",newPeer=>{
                 console.log("Receive Hi Event from "+JSON.stringify(newPeer)+".");
                 let peer=new Peer(newPeer.peerId,newPeer.peerName);
+                peer.on("signal",signalData=>{
+                    let temp={from:peerId,to:peer.peerId,signalData};
+                    socket.emit("signal",temp);
+                });
                 peer.setConfig(webRtcConfig);
+                peer.setDebug(true);
                 peer.isCall=true;
+                peer.call();
                 peerList[peer.peerId]=peer;                 
                 peerListUpdatedHandler(peerList);
             });
             socket.on("askReconnect",peerName=>{
                 console.log("Receive askReconnect Event from "+peerName+".");
+            });            
+            socket.on("removeId",peerId=>{
+                console.log("Receive remove id event ,peerId:"+peerId);
             });
             socket.io.on("reconnect", () => {
                 console.log("Reconnect successed.");
                 socket.emit("reconnectRequest",{ peerId: peerId, peerName: peerName });
             });
-            socket.on("removeId",peerId=>{
-                console.log("Receive remove id event ,peerId:"+peerId);
-            });
+            socket.on("signalData",signalObj=>{
+                console.log("==================Receive Signal Event Start===============");
+                let peer=peerList[signalObj.from];
+                if (peer){
+                    console.log("Receive "+signalObj.type+" from "+peer.peerName);
+                    switch(signalObj.type){
+                        case "iceCandidate":
+                            peer.addICECandidate(signalObj.value);
+                            break;
+                        case "remoteDescription":
+                            processRemoteDescription(peer,signalObj.value)
+                            break;    
+                        default:
+                            break;    
+                    }
+                }
+                console.log("==================Receive Signal Event End=================");
+            })
             socket.emit("hi",peerName, response => {
                 peerId=response.peerId;
                 let tempPeerList=response.peerList;
@@ -48,6 +72,11 @@ export default class Meeting{
                 console.log("==================peer list===============");
                 for (const [peerId, tempPeer] of Object.entries(tempPeerList)) {
                     let peer=new Peer(peerId,tempPeer.peerName);
+                    peer.on("signal",signalData=>{
+                        let temp={from:peerId,to:peer.peerId,signalData};
+                        socket.emit("signal",temp);
+                    });
+                    peer.setDebug(true);
                     peer.setConfig(webRtcConfig);
                     peerList[peerId]=peer;
                 }
@@ -68,6 +97,9 @@ export default class Meeting{
                     break;
                 default: break;
             }
+        }
+        let processRemoteDescription=(peer,remoteDescription)=>{
+
         }
     }
 }

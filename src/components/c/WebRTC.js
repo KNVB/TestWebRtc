@@ -8,6 +8,9 @@ export default class WebRTC {
         let isDebug = false, localStream = null;
         let negotiationHandler, peerConnection = null
         let signalingStateChangeHandler, trackEventHandler;
+        /*=====================================================================*/
+        /*        Add ICE Candidate to Peer Connection                         */
+        /*=====================================================================*/
         this.addICECandidate = (iceCandidate) => {
             peerConnection.addIceCandidate(iceCandidate);
         }
@@ -72,6 +75,15 @@ export default class WebRTC {
             }
         }
         /*=====================================================================*/
+        /*        Restart ICE                                                  */
+        /*=====================================================================*/
+        this.restartICE = () => {
+            if (peerConnection) {
+                msgLogger("WebRTC:restart ice.")
+                peerConnection.restartIce();
+            }
+        }
+        /*=====================================================================*/
         /*        Set the Configuration                                        */
         /*=====================================================================*/
         this.setConfig = (config) => {
@@ -122,15 +134,15 @@ export default class WebRTC {
                 console.log(msg);
             }
         }
-        let initDataChannel = () => {            
+        let initDataChannel = () => {
             dataChannel.onclose = () => {
                 dataChannelCloseHandler();
             };
             dataChannel.onerror = (event) => {
                 dataChannelErrorHandler(event);
             };
-            dataChannel.onmessage = (event) => {
-                dataChannelMessageHandler(event);
+            dataChannel.onmessage = (message) => {
+                dataChannelMessageHandler(message);
             };
             dataChannel.onopen = () => {
                 dataChannelOpenHandler();
@@ -139,7 +151,7 @@ export default class WebRTC {
         let initPeerConnection = () => {
             peerConnection = new RTCPeerConnection(configuration);
             peerConnection.ondatachannel = (event) => {
-                dataChannel=event.dataChannel;
+                dataChannel = event.dataChannel;
                 initDataChannel();
             }
             peerConnection.onicecandidate = (event) => {
@@ -157,10 +169,10 @@ export default class WebRTC {
             peerConnection.onsignalingstatechange = () => {
                 signalingStateChangeHandler(peerConnection.signalingState);
             };
-            peerConnection.ontrack=event=>{
+            peerConnection.ontrack = event => {
                 trackEventHandler(event.streams[0]);
             }
-            
+
         }
     }
 }
