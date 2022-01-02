@@ -114,7 +114,6 @@ export default class WebRTC {
         this.setRemoteDescription = async (remoteDescription) => {
             await peerConnection.setRemoteDescription(remoteDescription);
         }
-
         /*=====================================================================*/
         /*        Hang Up                                                      */
         /*=====================================================================*/

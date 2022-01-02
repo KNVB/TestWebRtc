@@ -40,27 +40,33 @@ export default class Meeting{
             socket.on("askReconnect",peerName=>{
                 console.log("Receive askReconnect Event from "+peerName+".");
             });            
-            socket.on("removeId",peerId=>{
-                console.log("Receive remove id event ,peerId:"+peerId);
+            socket.on("removePeerIdList",list=>{
+                if (list.length>0){
+                    console.log("Receive remove id List:"+JSON.stringify(list));
+                    list.forEach(removePeerId=>{
+                        delete peerList[removePeerId];
+                    });
+                    peerListUpdatedHandler(peerList);    
+                }
             });
             socket.io.on("reconnect", () => {
                 console.log("Reconnect successed.");
                 socket.emit("reconnectRequest",{ peerId: peerId, peerName: peerName });
             });
             socket.on("signalData",signalObj=>{
-                console.log("==================Receive Signal Event Start===============");
+                console.log("====Receive Signal Event Start====");
                 let peer=peerList[signalObj.from];
                 if (peer){
                     peer.signal(signalObj);
                 }
-                console.log("==================Receive Signal Event End=================");
+                console.log("====Receive Signal Event End====");
             })
             socket.emit("hi",peerName, response => {
                 peerId=response.peerId;
                 let tempPeerList=response.peerList;
-                console.log("==================Sent Hi Response Start===============");
+                console.log("====Sent Hi Response Start====");
                 console.log("peerId:"+peerId);
-                console.log("==================peer list===============");
+                console.log("====Peer list====");
                 for (const [newPeerId, tempPeer] of Object.entries(tempPeerList)) {
                     let peer=new Peer(newPeerId,tempPeer.peerName);
                     peer.on("signal",signalData=>{
@@ -73,10 +79,13 @@ export default class Meeting{
                 }
                 console.log(peerList);
                 peerListUpdatedHandler(peerList);
-                console.log("==================Sent Hi Response End===============");
+                console.log("====Sent Hi Response End====");
             });            
         }
         this.disconnect=()=>{
+            Object.values(peerList).forEach(peer=>{
+                peer.hangUp();
+            })
             if (socket){
                 socket.disconnect();
             }            
