@@ -106,6 +106,9 @@ export default class Peer {
         this.setDebug = (debug) => {
             isDebug = debug;
         }
+        /*=====================================================================*/
+        /*        To process the signal data                                   */
+        /*=====================================================================*/
         this.signal = (signalObj) => {
             console.log("Receive " + signalObj.type + " from " + peerName);
             switch (signalObj.type) {
@@ -128,7 +131,7 @@ export default class Peer {
             }
         }
         /*=====================================================================*/
-        /*        Message Logger                                               */
+        /*        To process the remote description                            */
         /*=====================================================================*/
         let processRemoteDescription = async (signalData) => {
             const offerCollision = (signalData.type === "offer") &&

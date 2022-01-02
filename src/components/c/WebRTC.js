@@ -27,9 +27,15 @@ export default class WebRTC {
         this.hangUp = () => {
             hangUp();
         }
+        /*=====================================================================*/
+        /*        To get the local description                                 */
+        /*=====================================================================*/
         this.getLocalDescription = () => {
             return peerConnection.localDescription;
         }
+        /*=====================================================================*/
+        /*        To get the RTCPeerConnection signal state                    */
+        /*=====================================================================*/
         this.getSignalingState=()=>{
             return peerConnection.signalingState;
         }
@@ -108,9 +114,15 @@ export default class WebRTC {
         this.setDebug = (debug) => {
             isDebug = debug;
         }
+        /*=====================================================================*/
+        /*        To set the local description                                 */
+        /*=====================================================================*/
         this.setLocalDescription = async () => {
             await peerConnection.setLocalDescription();
         }
+        /*=====================================================================*/
+        /*        To set the remote description                                 */
+        /*=====================================================================*/
         this.setRemoteDescription = async (remoteDescription) => {
             await peerConnection.setRemoteDescription(remoteDescription);
         }
