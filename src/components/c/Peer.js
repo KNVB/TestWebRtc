@@ -29,12 +29,13 @@ export default class Peer {
                 signalEventHandler({type:"iceCandidate",value:candidate});
             } else {
                 msgLogger("All ICE candidates are sent to " + peerName);
-            }
-            
+            }            
         });
-        /*
-        webRTC.on("iceConnectionStateChange",
-        */
+        webRTC.on("iceConnectionStateChange",iceConnectionState=>{
+            msgLogger("======================ICE Conntection State Change Start======================");
+            msgLogger("Peer:"+peerName+",ICE Conntection State="+iceConnectionState);
+            msgLogger("======================ICE Conntection State Change End======================"); 
+        });
         webRTC.on("iceGatheringStateChange",iceGatheringState=>{
             msgLogger("======================ICE Gathering State Change Start======================");
             msgLogger("Peer:"+peerName+",ICE Gathering State="+iceGatheringState);
@@ -66,13 +67,11 @@ export default class Peer {
         webRTC.on("stream",
         */
         webRTC.setDebug(true);
-
         webRTC.init();
-        this.addICECandidate=(candidate)=>{
-            webRTC.addICECandidate(candidate);
-        }
-        
+
         this.call=()=>{
+            polite = true;
+            msgLogger("Make a call to "+peerName);
             webRTC.call();
         }
         this.isCall = false;
@@ -101,12 +100,45 @@ export default class Peer {
         this.setDebug = (debug) => {
             isDebug = debug;
         }
+        this.signal=(signalObj)=>{
+            console.log("Receive "+signalObj.type+" from "+peerName);
+            switch(signalObj.type){
+                case "iceCandidate":
+                    webRTC.addICECandidate(signalObj.value);
+                    break;
+                case "remoteDescription":
+                    processRemoteDescription(signalObj.value)
+                    break;    
+                default:
+                    break;    
+            }
+        }
         /*=====================================================================*/
         /*        Message Logger                                               */
         /*=====================================================================*/
         let msgLogger = (msg) => {
             if (isDebug) {
                 console.log(msg);
+            }
+        }
+        /*=====================================================================*/
+        /*        Message Logger                                               */
+        /*=====================================================================*/
+        let processRemoteDescription=async(signalData)=>{        
+            const offerCollision = (signalData.type === "offer") &&
+            (makingOffer || webRTC.getSignalingState() !== "stable");
+            ignoreOffer = !polite && offerCollision;
+            msgLogger("ignoreOffer = " + ignoreOffer + ",offerCollision=" + offerCollision + ",polite=" + polite);
+            if (ignoreOffer) {
+              msgLogger("Ignore offer from "+ peerName);
+              return;
+            }
+            await webRTC.setRemoteDescription(signalData);
+            msgLogger("Set Remote Description for " + peerName);
+            if (signalData.type === "offer") {
+                await webRTC.setLocalDescription();
+                signalEventHandler({"type":"remoteDescription","value":webRTC.getLocalDescription()});
+                msgLogger("Sent local Description to " + peerName);
             }
         }
     }

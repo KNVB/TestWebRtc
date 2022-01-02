@@ -27,6 +27,7 @@ export default class Meeting{
                 let peer=new Peer(newPeer.peerId,newPeer.peerName);
                 peer.on("signal",signalData=>{
                     let temp={from:peerId,to:peer.peerId,signalData};
+                    //console.log("temp="+JSON.stringify(temp));
                     socket.emit("signal",temp);
                 });
                 peer.setConfig(webRtcConfig);
@@ -50,17 +51,7 @@ export default class Meeting{
                 console.log("==================Receive Signal Event Start===============");
                 let peer=peerList[signalObj.from];
                 if (peer){
-                    console.log("Receive "+signalObj.type+" from "+peer.peerName);
-                    switch(signalObj.type){
-                        case "iceCandidate":
-                            peer.addICECandidate(signalObj.value);
-                            break;
-                        case "remoteDescription":
-                            processRemoteDescription(peer,signalObj.value)
-                            break;    
-                        default:
-                            break;    
-                    }
+                    peer.signal(signalObj);
                 }
                 console.log("==================Receive Signal Event End=================");
             })
@@ -70,15 +61,15 @@ export default class Meeting{
                 console.log("==================Sent Hi Response Start===============");
                 console.log("peerId:"+peerId);
                 console.log("==================peer list===============");
-                for (const [peerId, tempPeer] of Object.entries(tempPeerList)) {
-                    let peer=new Peer(peerId,tempPeer.peerName);
+                for (const [newPeerId, tempPeer] of Object.entries(tempPeerList)) {
+                    let peer=new Peer(newPeerId,tempPeer.peerName);
                     peer.on("signal",signalData=>{
                         let temp={from:peerId,to:peer.peerId,signalData};
                         socket.emit("signal",temp);
                     });
                     peer.setDebug(true);
                     peer.setConfig(webRtcConfig);
-                    peerList[peerId]=peer;
+                    peerList[peer.peerId]=peer;
                 }
                 console.log(peerList);
                 peerListUpdatedHandler(peerList);
@@ -97,9 +88,6 @@ export default class Meeting{
                     break;
                 default: break;
             }
-        }
-        let processRemoteDescription=(peer,remoteDescription)=>{
-
-        }
+        }        
     }
 }

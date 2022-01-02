@@ -27,13 +27,16 @@ export default class WebRTC {
         this.hangUp = () => {
             hangUp();
         }
+        this.getLocalDescription = () => {
+            return peerConnection.localDescription;
+        }
+        this.getSignalingState=()=>{
+            return peerConnection.signalingState;
+        }
         /*=====================================================================*/
         /*        To initialize the RTCPeerConnection object                   */
         /*=====================================================================*/
         this.init = () => {
-            msgLogger(
-                "peerConnection is" + (peerConnection ? " not " : " ") + "null"
-            );
             initPeerConnection();
         }
         /*=====================================================================*/
@@ -84,12 +87,6 @@ export default class WebRTC {
             }
         }
         /*=====================================================================*/
-        /*        Set the Configuration                                        */
-        /*=====================================================================*/
-        this.setConfig = (config) => {
-            configuration = { ...config };
-        }
-        /*=====================================================================*/
         /*       Send data to remote peer                                      */
         /*=====================================================================*/
         this.send = (data) => {
@@ -98,9 +95,12 @@ export default class WebRTC {
             } else {
                 throw new Error("The Data Channel is not available.");
             }
-        }
-        this.getLocalDescription = () => {
-            return peerConnection.localDescription;
+        }        
+        /*=====================================================================*/
+        /*        Set the Configuration                                        */
+        /*=====================================================================*/
+        this.setConfig = (config) => {
+            configuration = { ...config };
         }
         /*=====================================================================*/
         /*        To control if message error is shown                         */
@@ -151,7 +151,7 @@ export default class WebRTC {
         let initPeerConnection = () => {
             peerConnection = new RTCPeerConnection(configuration);
             peerConnection.ondatachannel = (event) => {
-                dataChannel = event.dataChannel;
+                dataChannel = event.channel;
                 initDataChannel();
             }
             peerConnection.onicecandidate = (event) => {
@@ -172,7 +172,6 @@ export default class WebRTC {
             peerConnection.ontrack = event => {
                 trackEventHandler(event.streams[0]);
             }
-
         }
     }
 }

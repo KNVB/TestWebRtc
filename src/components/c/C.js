@@ -32,6 +32,7 @@ export default function C() {
         result.meeting = action.meeting;
         result.peerList = action.peerList;
         result.peerName = action.peerName;
+        break;
       case "updatePeerList":
         result.peerList = action.peerList;
         break;  
