@@ -21,13 +21,17 @@ export default function C() {
     }
     let meeting = new Meeting(peerName);
     meeting.on("peerListUpdated", peerList => {
-      updateItemList({ type: "updatePeerList", peerList:peerList});  
+      updateItemList({ type: "updatePeerList", peerList: peerList });
     });
     updateItemList({ type: "init", "meeting": meeting, peerList: {} });
   }, []);
   let reducer = (state, action) => {
     let result = { ...state };
     switch (action.type) {
+      case "disconnect":
+        result.meeting.disconnect();
+        result.peerList = {};
+        break;
       case "init":
         result.meeting = action.meeting;
         result.peerList = action.peerList;
@@ -35,7 +39,7 @@ export default function C() {
         break;
       case "updatePeerList":
         result.peerList = action.peerList;
-        break;  
+        break;
       default:
         break;
     }
@@ -46,7 +50,8 @@ export default function C() {
     itemList.meeting.connect();
   }
   let disconnect = () => {
-    itemList.meeting.disconnect();
+    //itemList.meeting.disconnect();
+    updateItemList({ type: "disconnect" })
   }
   return (
     <div>

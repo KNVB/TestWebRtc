@@ -67,7 +67,6 @@ export default class Peer {
         webRTC.on("stream",
         */
         webRTC.setDebug(true);
-        webRTC.init();
 
         this.call = () => {
             polite = true;
@@ -79,6 +78,9 @@ export default class Peer {
         /*=====================================================================*/
         this.hangUp = () => {
             webRTC.hangUp();
+        }
+        this.init=()=>{
+            webRTC.init();
         }
         this.isCall = false;
         this.peerName = peerName;
@@ -93,6 +95,9 @@ export default class Peer {
                     break;
                 default: break;
             }
+        }
+        this.restartICE=()=>{
+            webRTC.restartICE();
         }
         /*=====================================================================*/
         /*        Set the Web RTC configuration                                */
