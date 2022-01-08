@@ -37,9 +37,11 @@ export default function C() {
         result.peerList = action.peerList;
         result.peerName = action.peerName;
         break;
+      case "sendMsg":
+        break;  
       case "updatePeerList":
         result.peerList = action.peerList;
-        break;
+        break;        
       default:
         break;
     }
@@ -53,16 +55,25 @@ export default function C() {
     //itemList.meeting.disconnect();
     updateItemList({ type: "disconnect" })
   }
+  
+  let sendMessage =()=>{
+    itemList.meeting.sendGlobalMessage("你好!");   
+  }
   return (
     <div>
       <button onClick={connect}>Connect</button>
       <button onClick={disconnect}>Disconnect</button>
       {itemList.peerList &&
-        Object.values(itemList.peerList).map((peer, index) => (
-          <div key={index}>
-            {peer.peerName}
-          </div>
-        ))
+        <div>
+          {  
+            Object.values(itemList.peerList).map((peer, index) => (
+              <div key={index}>
+                {peer.peerName}
+              </div>
+            ))
+          }
+          <button onClick={sendMessage}>Send testing message to all peer</button>
+        </div>        
       }
     </div>
   )

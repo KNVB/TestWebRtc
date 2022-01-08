@@ -33,6 +33,7 @@ export default class Meeting{
             socket.on("askReconnect",reconnectPeerId=>{
                 let reconnectPeer=peerList[reconnectPeerId];                
                 console.log("Receive askReconnect Event from "+reconnectPeer.peerName+".");
+                reconnectPeer.restartICE();
             });            
             socket.on("removePeerIdList",list=>{
                 if (list.length>0){
@@ -87,12 +88,25 @@ export default class Meeting{
                 default: break;
             }
         }
+        this.sendGlobalMessage=message=>{
+            Object.values(peerList).forEach(peer=>{
+                if (peer.peerId!==peerId){
+                    peer.sendMessage(message);
+                }
+            })
+        }
+//========================================================
         let genPeer=(newPeerId,peerName)=>{
             let peer=new Peer(newPeerId,peerName),temp;
             peer.on("signal",signalData=>{
 				temp={from:peerId,to:peer.peerId,signalData};
 				sendSignalData(temp);
 			});
+            peer.on("dataChannelMessage",message=>{
+                console.log("==== Message received from "+peerName+" start====");
+                console.log(message);
+                console.log("==== Message received from "+peerName+" end====");
+            });
             peer.setConfig(webRtcConfig);
             peer.setDebug(true);
             peer.init();

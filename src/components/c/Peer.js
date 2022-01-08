@@ -1,6 +1,7 @@
 import WebRTC from './WebRTC';
 export default class Peer {
     constructor(peerId, peerName) {
+        let dataChannelMessageHandler;
         let ignoreOffer = false, isDebug = false;
         let makingOffer = false, polite = false;
         let signalEventHandler;
@@ -17,7 +18,9 @@ export default class Peer {
             msgLogger(event);
             msgLogger("====Data channel error end====");
         });
-        //webRTC.on("dataChannelMessage",
+        webRTC.on("dataChannelMessage",message=>{
+            dataChannelMessageHandler(message);
+        });
         webRTC.on("dataChannelOpen", () => {
             msgLogger("====Data channel open start====");
             msgLogger("Peer " + peerName + " data channel is opened.");
@@ -54,8 +57,9 @@ export default class Peer {
                 msgLogger("Failed to send Local Description:" + err);
             } finally {
                 makingOffer = false;
+                msgLogger("====Negotiation end====");
             }
-            msgLogger("====Negotiation end====");
+            
         });
 
         webRTC.on("signalingStateChange", signalingState => {
@@ -93,11 +97,17 @@ export default class Peer {
                 case "signal":
                     signalEventHandler = param;
                     break;
+                case "dataChannelMessage":
+                    dataChannelMessageHandler=param;
+                    break;    
                 default: break;
             }
         }
         this.restartICE=()=>{
             webRTC.restartICE();
+        }
+        this.sendMessage=(data) => {
+            webRTC.send(data);
         }
         /*=====================================================================*/
         /*        Set the Web RTC configuration                                */

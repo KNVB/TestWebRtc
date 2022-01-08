@@ -1,7 +1,7 @@
 export default class WebRTC {
     constructor() {
         let configuration = {};
-        let dataChannel;
+        let dataChannel=null;
         let dataChannelCloseHandler, dataChannelErrorHandler;
         let dataChannelMessageHandler, dataChannelOpenHandler;
         let iceCandidateEventHandler, iceConnectionStateChangeHandler, iceGatheringStateChangeHandler;
@@ -18,8 +18,7 @@ export default class WebRTC {
         /*        To set up a connection                                       */
         /*=====================================================================*/
         this.call = () => {
-            dataChannel = peerConnection.createDataChannel("chat");
-            initDataChannel();
+            initDataChannel(peerConnection.createDataChannel("chat"));
         }
         /*=====================================================================*/
         /*        To hangup the connection                                     */
@@ -36,7 +35,7 @@ export default class WebRTC {
         /*=====================================================================*/
         /*        To get the RTCPeerConnection signal state                    */
         /*=====================================================================*/
-        this.getSignalingState=()=>{
+        this.getSignalingState = () => {
             return peerConnection.signalingState;
         }
         /*=====================================================================*/
@@ -101,7 +100,7 @@ export default class WebRTC {
             } else {
                 throw new Error("The Data Channel is not available.");
             }
-        }        
+        }
         /*=====================================================================*/
         /*        Set the Configuration                                        */
         /*=====================================================================*/
@@ -145,7 +144,8 @@ export default class WebRTC {
                 console.log(msg);
             }
         }
-        let initDataChannel = () => {
+        let initDataChannel = (channel) => {
+            dataChannel = channel;
             dataChannel.onclose = () => {
                 dataChannelCloseHandler();
             };
@@ -162,8 +162,7 @@ export default class WebRTC {
         let initPeerConnection = () => {
             peerConnection = new RTCPeerConnection(configuration);
             peerConnection.ondatachannel = (event) => {
-                dataChannel = event.channel;
-                initDataChannel();
+                initDataChannel(event.channel);
             }
             peerConnection.onicecandidate = (event) => {
                 iceCandidateEventHandler(event.candidate);
