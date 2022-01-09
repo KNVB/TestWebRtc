@@ -1,6 +1,6 @@
 export default class WebRTC {
     constructor() {
-        let configuration = {};
+        let configuration = {},connectionStateChangeHandler;
         let dataChannel=null;
         let dataChannelCloseHandler, dataChannelErrorHandler;
         let dataChannelMessageHandler, dataChannelOpenHandler;
@@ -25,7 +25,7 @@ export default class WebRTC {
         /*=====================================================================*/
         this.hangUp = () => {
             hangUp();
-        }
+        }        
         /*=====================================================================*/
         /*        To get the local description                                 */
         /*=====================================================================*/
@@ -96,7 +96,21 @@ export default class WebRTC {
         /*=====================================================================*/
         this.send = (data) => {
             if (dataChannel) {
-                dataChannel.send(data);
+                
+                switch (dataChannel.readyState){
+                    case "open":
+                        dataChannel.send(data);                        
+                        break;
+                    case "closed":
+                    case "closing":
+                        if (peerConnection.iceConnectionState === "connected"){
+                            initDataChannel(peerConnection.createDataChannel("chat"));
+                            dataChannel.send(data);
+                        }
+                        break;
+                    default:
+                        break;              
+                }
             } else {
                 throw new Error("The Data Channel is not available.");
             }
@@ -167,6 +181,12 @@ export default class WebRTC {
             peerConnection.onicecandidate = (event) => {
                 iceCandidateEventHandler(event.candidate);
             };
+           
+            //connectionStateChangeHandler(peerConnection.connectionState);
+            peerConnection.onconnectionstatechange=()=>{
+                iceConnectionStateChangeHandler(peerConnection.connectionState+" C");
+            }                
+            
             peerConnection.oniceconnectionstatechange = () => {
                 iceConnectionStateChangeHandler(peerConnection.iceConnectionState);
             };
