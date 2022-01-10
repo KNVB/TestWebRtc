@@ -18,7 +18,7 @@ export default class Peer {
             msgLogger(event);
             msgLogger("====Data channel error end====");
         });
-        webRTC.on("dataChannelMessage",message=>{
+        webRTC.on("dataChannelMessage", message => {
             dataChannelMessageHandler(message);
         });
         webRTC.on("dataChannelOpen", () => {
@@ -36,7 +36,7 @@ export default class Peer {
         });
         webRTC.on("iceConnectionStateChange", iceConnectionState => {
             msgLogger("====ICE Conntection State Change Start====");
-            msgLogger("Peer:" + peerName + ",ICE Conntection State=" + iceConnectionState);
+            msgLogger("Peer:" + peerName + ",ICE Conntection state chanaged to " + iceConnectionState);
             msgLogger("=====ICE Conntection State Change End====");
         });
         webRTC.on("iceGatheringStateChange", iceGatheringState => {
@@ -59,9 +59,12 @@ export default class Peer {
                 makingOffer = false;
                 msgLogger("====Negotiation end====");
             }
-            
         });
-
+        webRTC.on("peerConnectionStateChange", peerConnectionState => {
+            msgLogger("====Peer Conntection State Change Start====");
+            msgLogger("Peer:" + peerName + " conntection state changed to " + peerConnectionState);
+            msgLogger("=====Peer Conntection State Change End====");
+        });
         webRTC.on("signalingStateChange", signalingState => {
             msgLogger("====Signaling State Change Start====");
             msgLogger("Peer:" + peerName + ",signalingState=" + signalingState);
@@ -83,7 +86,10 @@ export default class Peer {
         this.hangUp = () => {
             webRTC.hangUp();
         }
-        this.init=()=>{
+        /*=====================================================================*/
+        /*        Initialize the WebRTC object                                 */
+        /*=====================================================================*/
+        this.init = () => {
             webRTC.init();
         }
         this.isCall = false;
@@ -98,15 +104,21 @@ export default class Peer {
                     signalEventHandler = param;
                     break;
                 case "dataChannelMessage":
-                    dataChannelMessageHandler=param;
-                    break;    
+                    dataChannelMessageHandler = param;
+                    break;
                 default: break;
             }
         }
-        this.restartICE=()=>{
+        /*=====================================================================*/
+        /*        Restart ICE                                                  */
+        /*=====================================================================*/
+        this.restartICE = () => {
             webRTC.restartICE();
         }
-        this.sendMessage=(data) => {
+        /*=====================================================================*/
+        /*       Sends data across the data channel to the remote peer.        */
+        /*=====================================================================*/
+        this.sendMessage = (data) => {
             webRTC.send(data);
         }
         /*=====================================================================*/
@@ -137,6 +149,9 @@ export default class Peer {
                     break;
             }
         }
+        /*========================================================================================*/
+        /*      Private Method                                                                    */
+        /*========================================================================================*/
         /*=====================================================================*/
         /*        Message Logger                                               */
         /*=====================================================================*/

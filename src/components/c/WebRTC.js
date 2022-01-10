@@ -1,12 +1,12 @@
 export default class WebRTC {
     constructor() {
-        let configuration = {},connectionStateChangeHandler;
-        let dataChannel=null;
+        let configuration = {};
+        let dataChannel = null;
         let dataChannelCloseHandler, dataChannelErrorHandler;
         let dataChannelMessageHandler, dataChannelOpenHandler;
         let iceCandidateEventHandler, iceConnectionStateChangeHandler, iceGatheringStateChangeHandler;
         let isDebug = false, localStream = null;
-        let negotiationHandler, peerConnection = null
+        let negotiationHandler, peerConnection = null, peerConnectionStateChangeHandler;
         let signalingStateChangeHandler, trackEventHandler;
         /*=====================================================================*/
         /*        Add ICE Candidate to Peer Connection                         */
@@ -25,7 +25,7 @@ export default class WebRTC {
         /*=====================================================================*/
         this.hangUp = () => {
             hangUp();
-        }        
+        }
         /*=====================================================================*/
         /*        To get the local description                                 */
         /*=====================================================================*/
@@ -73,6 +73,9 @@ export default class WebRTC {
                 case "negotiation":
                     negotiationHandler = param;
                     break;
+                case "peerConnectionStateChange":
+                    peerConnectionStateChangeHandler = param;
+                    break
                 case "signalingStateChange":
                     signalingStateChangeHandler = param;
                     break;
@@ -92,24 +95,23 @@ export default class WebRTC {
             }
         }
         /*=====================================================================*/
-        /*       Send data to remote peer                                      */
+        /*       Send data across the data channel to the remote peer.         */
         /*=====================================================================*/
         this.send = (data) => {
             if (dataChannel) {
-                
-                switch (dataChannel.readyState){
+                switch (dataChannel.readyState) {
                     case "open":
-                        dataChannel.send(data);                        
+                        dataChannel.send(data);
                         break;
                     case "closed":
                     case "closing":
-                        if (peerConnection.iceConnectionState === "connected"){
+                        if (peerConnection.iceConnectionState === "connected") {
                             initDataChannel(peerConnection.createDataChannel("chat"));
                             dataChannel.send(data);
                         }
                         break;
                     default:
-                        break;              
+                        break;
                 }
             } else {
                 throw new Error("The Data Channel is not available.");
@@ -139,6 +141,9 @@ export default class WebRTC {
         this.setRemoteDescription = async (remoteDescription) => {
             await peerConnection.setRemoteDescription(remoteDescription);
         }
+        /*========================================================================================*/
+        /*      Private Method                                                                    */
+        /*========================================================================================*/
         /*=====================================================================*/
         /*        Hang Up                                                      */
         /*=====================================================================*/
@@ -158,6 +163,9 @@ export default class WebRTC {
                 console.log(msg);
             }
         }
+        /*=====================================================================*/
+        /*        Initialize the data channel                                  */
+        /*=====================================================================*/
         let initDataChannel = (channel) => {
             dataChannel = channel;
             dataChannel.onclose = () => {
@@ -173,6 +181,9 @@ export default class WebRTC {
                 dataChannelOpenHandler();
             };
         }
+        /*=====================================================================*/
+        /*        Initialize the peer connection object                        */
+        /*=====================================================================*/
         let initPeerConnection = () => {
             peerConnection = new RTCPeerConnection(configuration);
             peerConnection.ondatachannel = (event) => {
@@ -181,12 +192,11 @@ export default class WebRTC {
             peerConnection.onicecandidate = (event) => {
                 iceCandidateEventHandler(event.candidate);
             };
-           
-            //connectionStateChangeHandler(peerConnection.connectionState);
-            peerConnection.onconnectionstatechange=()=>{
-                iceConnectionStateChangeHandler(peerConnection.connectionState+" C");
-            }                
-            
+
+            peerConnection.onconnectionstatechange = () => {
+                peerConnectionStateChangeHandler(peerConnection.connectionState);
+            }
+
             peerConnection.oniceconnectionstatechange = () => {
                 iceConnectionStateChangeHandler(peerConnection.iceConnectionState);
             };
