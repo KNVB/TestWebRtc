@@ -21,6 +21,9 @@ export default class Meeting {
             ],            
         };
         console.log("Meeting Object constructor is called.");
+        /*=====================================================================*/
+        /*        To connect from the meeting                                  */
+        /*=====================================================================*/
         this.connect = () => {
             socket = io(process.env.REACT_APP_SOCKET_URL + "c", {
                 transports: ["websocket"],
@@ -42,6 +45,7 @@ export default class Meeting {
                 if (list.length > 0) {
                     console.log("Receive remove id List:" + JSON.stringify(list));
                     list.forEach(removePeerId => {
+                        peerList[removePeerId].hangUp();
                         delete peerList[removePeerId];
                     });
                     peerListUpdatedHandler(peerList);
@@ -67,6 +71,7 @@ export default class Meeting {
                 console.log("====Peer list====");
                 for (const [newPeerId, tempPeer] of Object.entries(tempPeerList)) {
                     let peer = genPeer(newPeerId, tempPeer.peerName);
+                    peer.isLocalPeer = (response.peerId === peer.peerId);
                     peerList[peer.peerId] = peer;
                 }
                 console.log(peerList);
@@ -74,6 +79,9 @@ export default class Meeting {
                 console.log("====Sent Hi Response End====");
             });
         }
+        /*=====================================================================*/
+        /*        To disconnect from the meeting                               */
+        /*=====================================================================*/
         this.disconnect = () => {
             Object.values(peerList).forEach(peer => {
                 peer.hangUp();
@@ -83,6 +91,9 @@ export default class Meeting {
                 socket.disconnect();
             }
         }
+        /*=====================================================================*/
+        /*        To configure handler for varies event                        */
+        /*=====================================================================*/
         this.on = (eventType, param) => {
             switch (eventType) {
                 case "globalMessage":
@@ -94,15 +105,20 @@ export default class Meeting {
                 default: break;
             }
         }
+        /*=====================================================================*/
+        /*        To send a message to all member in this meeting              */
+        /*=====================================================================*/
         this.sendGlobalMessage = message => {
             Object.values(peerList).forEach(peer => {
-                if (peer.peerId !== peerId) {
+                if (!peer.isLocalPeer) {
                     peer.sendMessage(message);
                 }
             })
         }
         /*========================================================================================*/
         /*      Private Method                                                                    */
+        /*========================================================================================*/
+        /*  To generate an Peer instance                                                          */  
         /*========================================================================================*/
         let genPeer = (newPeerId, peerName) => {
             let peer = new Peer(newPeerId, peerName), temp;
@@ -125,6 +141,9 @@ export default class Meeting {
             peer.init();
             return peer;
         }
+        /*========================================================================================*/
+        /*  To send a signal data to remote peer                                                  */  
+        /*========================================================================================*/
         let sendSignalData = (signalData) => {
             socket.emit("signal", signalData);
         }

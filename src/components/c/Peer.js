@@ -1,6 +1,7 @@
 import WebRTC from './WebRTC';
 export default class Peer {
     constructor(peerId, peerName) {
+        let connectionStateChangeHandler;
         let dataChannelMessageHandler;
         let ignoreOffer = false, isDebug = false;
         let makingOffer = false, polite = false;
@@ -38,6 +39,9 @@ export default class Peer {
             msgLogger("====ICE Conntection State Change Start====");
             msgLogger("Peer:" + peerName + ",ICE Conntection state chanaged to " + iceConnectionState);
             msgLogger("=====ICE Conntection State Change End====");
+            if (connectionStateChangeHandler){
+                connectionStateChangeHandler(iceConnectionState);
+            }
         });
         webRTC.on("iceGatheringStateChange", iceGatheringState => {
             msgLogger("====ICE Gathering State Change Start=====");
@@ -64,6 +68,9 @@ export default class Peer {
             msgLogger("====Peer Conntection State Change Start====");
             msgLogger("Peer:" + peerName + " conntection state changed to " + peerConnectionState);
             msgLogger("=====Peer Conntection State Change End====");
+            if (connectionStateChangeHandler){
+                connectionStateChangeHandler(peerConnectionState)
+            }
         });
         webRTC.on("signalingStateChange", signalingState => {
             msgLogger("====Signaling State Change Start====");
@@ -74,7 +81,9 @@ export default class Peer {
         webRTC.on("stream",
         */
         webRTC.setDebug(true);
-
+        /*=====================================================================*/
+        /*       "Make a call to this peer                                     */
+        /*=====================================================================*/
         this.call = () => {
             polite = true;
             msgLogger("Make a call to " + peerName);
@@ -93,6 +102,7 @@ export default class Peer {
             webRTC.init();
         }
         this.isCall = false;
+        this.isLocalPeer=false;
         this.peerName = peerName;
         this.peerId = peerId;
         /*=====================================================================*/
@@ -100,6 +110,9 @@ export default class Peer {
         /*=====================================================================*/
         this.on = (eventType, param) => {
             switch (eventType) {
+                case "connectionStateChange":
+                    connectionStateChangeHandler=param;
+                    break;
                 case "signal":
                     signalEventHandler = param;
                     break;

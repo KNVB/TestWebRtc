@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from "react";
 import { Button, Col, Container, Row } from 'react-bootstrap';
 import Meeting from "./Meeting";
+import PeerElement from "./PeerElement";
 export default function C() {
   useEffect(() => {
     let peerName;
@@ -101,9 +102,7 @@ export default function C() {
               <div className="mt-2 rounded-3">
                 {
                   Object.values(itemList.peerList).map((peer, index) => (
-                    <div className="border border-dark m-1 p-1 rounded-3" key={index}>
-                      {peer.peerName}
-                    </div>
+                    <PeerElement peer={peer} key={index}/>  
                   ))
                 }
               </div>
