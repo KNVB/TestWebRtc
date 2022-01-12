@@ -23,13 +23,17 @@ export default function C() {
     meeting.on("peerListUpdated", peerList => {
       updateItemList({ type: "updatePeerList", peerList: peerList });
     });
-    updateItemList({ type: "init", "meeting": meeting, peerList: {} });
+    meeting.on("globalMessage", messageObj => {
+      updateItemList({ type: "updateGlobalMessage", messageObj: messageObj });
+    })
+    updateItemList({ type: "init", "meeting": meeting, peerList: {},peerName:peerName});
   }, []);
   let reducer = (state, action) => {
     let result = { ...state };
     switch (action.type) {
       case "disconnect":
-        result.meeting.disconnect();
+        result.globalMessageList=[];
+        result.meeting.disconnect();        
         result.peerList = {};
         break;
       case "init":
@@ -38,16 +42,21 @@ export default function C() {
         result.peerName = action.peerName;
         break;
       case "sendMsg":
-        break;  
+        break;
+      case "updateGlobalMessage":
+        let temp=JSON.parse(JSON.stringify(result.globalMessageList));
+        temp.push(action.messageObj);
+        result.globalMessageList=temp;
+        break;
       case "updatePeerList":
         result.peerList = action.peerList;
-        break;        
+        break;
       default:
         break;
     }
     return result;
   }
-  const [itemList, updateItemList] = useReducer(reducer, {});
+  const [itemList, updateItemList] = useReducer(reducer, { peerList: {}, peerName:'', globalMessageList: [] });
   let connect = () => {
     itemList.meeting.connect();
   }
@@ -55,25 +64,54 @@ export default function C() {
     //itemList.meeting.disconnect();
     updateItemList({ type: "disconnect" })
   }
-  
-  let sendMessage =()=>{
-    itemList.meeting.sendGlobalMessage("你好!");   
+
+  let sendMessage = () => {
+    let msg="你好!";
+    itemList.meeting.sendGlobalMessage(msg);
+    updateItemList({ type: "updateGlobalMessage", messageObj:{from:itemList.peerName,message:msg}});
   }
   return (
-    <div>
-      <button onClick={connect}>Connect</button>
-      <button onClick={disconnect}>Disconnect</button>
-      {itemList.peerList &&
-        <div>
-          {  
-            Object.values(itemList.peerList).map((peer, index) => (
-              <div key={index}>
-                {peer.peerName}
+    <div className="m-2 w-100">
+      <div className="m-2">
+        <button onClick={connect}>Connect</button>
+        <button onClick={disconnect}>Disconnect</button>
+      </div>
+      {
+        (Object.values(itemList.peerList).length > 0) &&
+        <div className="d-flex flex-column m-2">
+          <div className="d-flex flex-row m-20">
+            <div className="border border-dark border-end-0 p-1  w-50">
+              <div>Global Message</div>
+              <div>
+                {
+                  itemList.globalMessageList.map((msgObj, index) => (
+                    <div key={index}>
+                      <div>{msgObj.from}:</div>
+                      <div>{msgObj.message}</div>
+                    </div>
+                  ))
+                }
               </div>
-            ))
-          }
-          <button onClick={sendMessage}>Send testing message to all peer</button>
-        </div>        
+            </div>
+            <div className="border border-dark p-1 w-50">
+              <div>
+                Room member list:
+              </div>
+              <div className="border-dark border-top mt-2">
+                {
+                  Object.values(itemList.peerList).map((peer, index) => (
+                    <div className="border-bottom border-dark" key={index}>
+                      {peer.peerName}
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+          <div className="border-top border-dark d-flex justify-content-center m-2 p-2">
+            <button onClick={sendMessage}>Send testing message to all peer</button>
+          </div>
+        </div>
       }
     </div>
   )

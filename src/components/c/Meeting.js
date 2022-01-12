@@ -2,6 +2,7 @@ import io from 'socket.io-client';
 import Peer from './Peer';
 export default class Meeting {
     constructor(peerName) {
+        let globalMessageHandler;
         let peerId = null;
         let peerList = {};
         let peerListUpdatedHandler;
@@ -84,6 +85,9 @@ export default class Meeting {
         }
         this.on = (eventType, param) => {
             switch (eventType) {
+                case "globalMessage":
+                    globalMessageHandler=param;
+                    break;
                 case "peerListUpdated":
                     peerListUpdatedHandler = param;
                     break;
@@ -107,10 +111,15 @@ export default class Meeting {
                 sendSignalData(temp);
             });
             peer.on("dataChannelMessage", message => {
+                globalMessageHandler({from:peerName,message:message});
+            });
+            /*
+            peer.on("dataChannelMessage", message => {
                 console.log("==== Message received from " + peerName + " start====");
                 console.log(message);
                 console.log("==== Message received from " + peerName + " end====");
             });
+            */
             peer.setConfig(webRtcConfig);
             peer.setDebug(true);
             peer.init();

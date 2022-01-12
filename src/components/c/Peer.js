@@ -19,7 +19,7 @@ export default class Peer {
             msgLogger("====Data channel error end====");
         });
         webRTC.on("dataChannelMessage", message => {
-            dataChannelMessageHandler(message);
+            dataChannelMessageHandler(message.data);
         });
         webRTC.on("dataChannelOpen", () => {
             msgLogger("====Data channel open start====");

@@ -141,6 +141,16 @@ export default class WebRTC {
         this.setRemoteDescription = async (remoteDescription) => {
             await peerConnection.setRemoteDescription(remoteDescription);
         }
+        /*=====================================================================*/
+        /*       The local stream setter                                       */
+        /*=====================================================================*/
+        this.setStream = (stream) => {
+            if (peerConnection) {
+                setStream(stream);
+            } else {
+                localStream = stream;
+            }
+        }
         /*========================================================================================*/
         /*      Private Method                                                                    */
         /*========================================================================================*/
@@ -192,11 +202,9 @@ export default class WebRTC {
             peerConnection.onicecandidate = (event) => {
                 iceCandidateEventHandler(event.candidate);
             };
-
             peerConnection.onconnectionstatechange = () => {
                 peerConnectionStateChangeHandler(peerConnection.connectionState);
             }
-
             peerConnection.oniceconnectionstatechange = () => {
                 iceConnectionStateChangeHandler(peerConnection.iceConnectionState);
             };
@@ -211,6 +219,24 @@ export default class WebRTC {
             };
             peerConnection.ontrack = event => {
                 trackEventHandler(event.streams[0]);
+            }
+        }
+        /*=====================================================================*/
+        /*        Set a stream to a RTCPeerConnection                          */
+        /*=====================================================================*/
+        let setStream = (stream) => {
+            if (peerConnection) {
+                let senders = peerConnection.getSenders();
+                senders.forEach(sender => {
+                    peerConnection.removeTrack(sender);
+                })
+                if (stream) {
+                    for (const track of stream.getTracks()) {
+                        peerConnection.addTrack(track, stream);
+                    }
+                }
+            } else {
+                localStream = stream;
             }
         }
     }

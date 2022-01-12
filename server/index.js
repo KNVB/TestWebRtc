@@ -6,10 +6,10 @@ const httpServer= http.createServer(app);
 const io = require('socket.io')(httpServer);
 let B=require('./b/B');
 let C=require('./c/C');
-let TestMeeting=require('./testMeeting/TestMeeting_1.js');
+//let TestMeeting=require('./testMeeting/TestMeeting_1.js');
 let TestPureWebRTC=require('./testPureWebRTC/TestPureWebRTC');
 let TestSimplePeer=require('./testSimplePeer/TestSimplePeer');
-let TestSocket=require('./testSocket/TestSocket');
+//let TestSocket=require('./testSocket/TestSocket');
 
 if (process.env.NODE_ENV==="production"){
     const path = require('path');
@@ -25,15 +25,19 @@ httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
 
 let b=new B(io,"/b");
 let c=new C(io,"/c");
+
+/*
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();
 io.of("/a").on("connection",socket=>{
 	console.log("TestSocket("+socket.id+"):Connection established");
 	testSocket.addPeer(socket);
 });
+
 io.of("/testMeeting").on("connection",socket=>{
 	testMeeting.addPeer(socket);
 });
+*/
 io.of("/testPureWebRTC").on("connection",(socket)=>{
 	let testPureWebRTC=new TestPureWebRTC(socket);
 })
