@@ -23,6 +23,9 @@ export default function C() {
     }
     let meeting = new Meeting(peerName);
     meeting.on("peerListUpdated", peerList => {
+      Object.values(peerList).forEach(peer=>{
+        console.log(peer.peerName+","+peer.getConnectionState());
+      });      
       updateItemList({ type: "updatePeerList", peerList: peerList });
     });
     meeting.on("globalMessage", messageObj => {
@@ -42,9 +45,7 @@ export default function C() {
         result.meeting = action.meeting;
         result.peerList = action.peerList;
         result.peerName = action.peerName;
-        break;
-      case "sendMsg":
-        break;
+        break;     
       case "updateGlobalMessage":
         let temp = JSON.parse(JSON.stringify(result.globalMessageList));
         temp.push(action.messageObj);
