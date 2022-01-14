@@ -40,6 +40,7 @@ export default class Peer {
             msgLogger("====ICE Conntection State Change Start====");
             msgLogger("Peer:" + peerName + ",ICE Conntection state chanaged to " + iceConnectionState);
             msgLogger("=====ICE Conntection State Change End====");
+            connectionState=iceConnectionState;
             if (connectionStateChangeHandler){
                 connectionStateChangeHandler(iceConnectionState);                
             }
@@ -70,6 +71,9 @@ export default class Peer {
             msgLogger("Peer:" + peerName + " conntection state changed to " + peerConnectionState);
             msgLogger("=====Peer Conntection State Change End====");
             connectionState=peerConnectionState;
+            if (connectionStateChangeHandler){
+                connectionStateChangeHandler(peerConnectionState);                
+            }
         });
         webRTC.on("signalingStateChange", signalingState => {
             msgLogger("====Signaling State Change Start====");
@@ -87,6 +91,9 @@ export default class Peer {
             polite = true;
             msgLogger("Make a call to " + peerName);
             webRTC.call();
+        }
+        this.getConnectionState=()=>{
+            return connectionState;
         }
         /*=====================================================================*/
         /*        Hangup the peer connection                                   */
