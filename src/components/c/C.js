@@ -22,10 +22,7 @@ export default function C() {
       }
     }
     let meeting = new Meeting(peerName);
-    meeting.on("peerListUpdated", peerList => {
-      Object.values(peerList).forEach(peer=>{
-        console.log(peer.peerName+","+peer.getConnectionState());
-      });      
+    meeting.on("peerListUpdated", peerList => {            
       updateItemList({ type: "updatePeerList", peerList: peerList });
     });
     meeting.on("globalMessage", messageObj => {
@@ -73,6 +70,7 @@ export default function C() {
     itemList.meeting.sendGlobalMessage(msg);
     updateItemList({ type: "updateGlobalMessage", messageObj: { from: itemList.peerName, message: msg } });
   }
+  
   return (
     <Container fluid className="p-0">
       <Row className="border border-dark m-1 rounded-3">

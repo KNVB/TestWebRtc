@@ -45,8 +45,10 @@ export default class Meeting {
                 if (list.length > 0) {
                     console.log("Receive remove id List:" + JSON.stringify(list));
                     list.forEach(removePeerId => {
-                        peerList[removePeerId].hangUp();
-                        delete peerList[removePeerId];
+                        if (peerList[removePeerId]){
+                            peerList[removePeerId].hangUp();
+                            delete peerList[removePeerId];
+                        }
                     });
                     peerListUpdatedHandler(peerList);
                 }
