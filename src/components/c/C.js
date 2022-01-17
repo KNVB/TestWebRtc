@@ -100,8 +100,8 @@ export default function C() {
               </div>
               <div className="mt-2 rounded-3">
                 {
-                  Object.values(itemList.peerList).map((peer, index) => (
-                    <PeerElement peer={peer} key={index}/>  
+                  Object.values(itemList.peerList).map((peer) => (
+                    <PeerElement peer={peer} key={peer.peerId}/>  
                   ))
                 }
               </div>
