@@ -6,7 +6,7 @@ export default class Peer {
         let dataChannelMessageHandler;
         let ignoreOffer = false, isDebug = false;
         let makingOffer = false, polite = false;
-        let signalEventHandler;
+        let signalEventHandler,streamHandler;
         let webRTC = new WebRTC();
 
         webRTC.on("dataChannelClose", () => {
@@ -80,9 +80,16 @@ export default class Peer {
             msgLogger("Peer:" + peerName + ",signalingState=" + signalingState);
             msgLogger("====Signaling State Change End====");
         });
-        /*
-        webRTC.on("stream",
-        */
+        
+        webRTC.on("stream",stream=>{            
+            msgLogger("====Receive Stream Start====");
+            msgLogger("Receive Stream Peer:" + peerName);
+            msgLogger("====Receive Stream End====");
+            if (streamHandler){
+                streamHandler(stream);
+            }
+        });
+            
         webRTC.setDebug(true);
         /*=====================================================================*/
         /*       "Make a call to this peer                                     */
@@ -125,6 +132,9 @@ export default class Peer {
                 case "dataChannelMessage":
                     dataChannelMessageHandler = param;
                     break;
+                case "stream":
+                    streamHandler=param;
+                    break;    
                 default: break;
             }
         }
@@ -151,6 +161,9 @@ export default class Peer {
         /*=====================================================================*/
         this.setDebug = (debug) => {
             isDebug = debug;
+        }
+        this.setStream=stream=>{
+            webRTC.setStream(stream);
         }
         /*=====================================================================*/
         /*        To process the signal data                                   */

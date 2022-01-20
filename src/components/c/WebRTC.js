@@ -220,6 +220,11 @@ export default class WebRTC {
             peerConnection.ontrack = event => {
                 trackEventHandler(event.streams[0]);
             }
+            if (localStream){
+                for (const track of localStream.getTracks()) {
+                    peerConnection.addTrack(track, localStream);
+                }
+            }
         }
         /*=====================================================================*/
         /*        Set a stream to a RTCPeerConnection                          */

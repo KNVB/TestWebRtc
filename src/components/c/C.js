@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from "react";
 import { Button, Col, Container, Row } from 'react-bootstrap';
+import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import PeerElement from "./PeerElement";
 export default function C() {
@@ -56,7 +57,12 @@ export default function C() {
     }
     return result;
   }
-  const [itemList, updateItemList] = useReducer(reducer, { peerList: {}, peerName: '', globalMessageList: [] });
+  const [itemList, updateItemList] = useReducer(reducer, { 
+    localStreamManager:new LocalStreamManager(),
+    peerList: {}, 
+    peerName: '', 
+    globalMessageList: [] 
+  });
   let connect = () => {
     itemList.meeting.connect();
   }

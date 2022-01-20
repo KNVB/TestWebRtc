@@ -3,6 +3,7 @@ import Peer from './Peer';
 export default class Meeting {
     constructor(peerName) {
         let globalMessageHandler;
+        let localStream;
         let peerId = null;
         let peerList = {};
         let peerListUpdatedHandler;
