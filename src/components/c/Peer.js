@@ -162,6 +162,9 @@ export default class Peer {
         this.setDebug = (debug) => {
             isDebug = debug;
         }
+        /*=====================================================================*/
+        /*        Add a media stream to a peer                                 */
+        /*=====================================================================*/
         this.setStream=stream=>{
             webRTC.setStream(stream);
         }
@@ -169,7 +172,7 @@ export default class Peer {
         /*        To process the signal data                                   */
         /*=====================================================================*/
         this.signal = (signalObj) => {
-            console.log("Receive " + signalObj.type + " from " + peerName);
+            msgLogger("Receive " + signalObj.type + " from " + peerName);
             switch (signalObj.type) {
                 case "iceCandidate":
                     webRTC.addICECandidate(signalObj.value);

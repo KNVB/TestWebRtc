@@ -93,6 +93,9 @@ export default class Meeting {
                 socket.disconnect();
             }
         }
+        /*=====================================================================*/
+        /*        Get the local peer object                                    */
+        /*=====================================================================*/
         this.getLocalPeer=()=>{
             return localPeer;
         }
@@ -120,6 +123,9 @@ export default class Meeting {
                 }
             })
         }
+        /*=====================================================================*/
+        /*        Add a local media stream to a local variable for future use  */
+        /*=====================================================================*/
         this.setLocalStream=stream=>{
             setLocalStream(stream);
         }
@@ -158,6 +164,9 @@ export default class Meeting {
         let sendSignalData = (signalData) => {
             socket.emit("signal", signalData);
         }
+        /*=====================================================================*/
+        /*        Add a local media stream to all peer in the peer list        */
+        /*=====================================================================*/
         let setLocalStream=(stream)=>{
             localStream=stream;
             Object.values(peerList).forEach(peer=>{
