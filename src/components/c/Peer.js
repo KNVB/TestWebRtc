@@ -83,7 +83,7 @@ export default class Peer {
         
         webRTC.on("stream",stream=>{            
             msgLogger("====Receive Stream Start====");
-            msgLogger("Receive Stream Peer:" + peerName);
+            msgLogger("Receive Stream From Peer:" + peerName);
             msgLogger("====Receive Stream End====");
             if (streamHandler){
                 streamHandler(stream);

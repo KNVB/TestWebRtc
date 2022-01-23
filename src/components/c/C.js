@@ -1,8 +1,13 @@
 import { useEffect, useReducer } from "react";
 import { Button, Col, Container, Row } from 'react-bootstrap';
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
+
+import LocalMedia from './LocalMedia';
 import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import PeerElement from "./PeerElement";
+
 export default function C() {
   useEffect(() => {
     let peerName;
@@ -23,27 +28,29 @@ export default function C() {
       }
     }
     let meeting = new Meeting(peerName);
-    meeting.on("peerListUpdated", peerList => {            
+    meeting.on("peerListUpdated", peerList => {
       updateItemList({ type: "updatePeerList", peerList: peerList });
     });
     meeting.on("globalMessage", messageObj => {
       updateItemList({ type: "updateGlobalMessage", messageObj: messageObj });
     })
-    updateItemList({ type: "init", "meeting": meeting, peerList: {}, peerName: peerName });
+    updateItemList({ type: "init", "meeting": meeting, peerList: null, peerName: peerName });
   }, []);
   let reducer = (state, action) => {
     let result = { ...state };
     switch (action.type) {
       case "disconnect":
         result.globalMessageList = [];
+        result.localStream = null;
         result.meeting.disconnect();
-        result.peerList = {};
+        result.peerList = null;
+        result.shareVideo = false;
         break;
       case "init":
         result.meeting = action.meeting;
         result.peerList = action.peerList;
         result.peerName = action.peerName;
-        break;     
+        break;
       case "updateGlobalMessage":
         let temp = JSON.parse(JSON.stringify(result.globalMessageList));
         temp.push(action.messageObj);
@@ -52,22 +59,32 @@ export default function C() {
       case "updatePeerList":
         result.peerList = action.peerList;
         break;
+      case "updateShareVideoState":
+        result.localStream = action.stream;
+        result.shareVideo = action.state;
+        if (result.shareVideo){
+          result.meeting.setLocalStream(action.stream);
+        }
+        break
       default:
         break;
     }
     return result;
   }
-  const [itemList, updateItemList] = useReducer(reducer, { 
-    localStreamManager:new LocalStreamManager(),
-    peerList: {}, 
-    peerName: '', 
-    globalMessageList: [] 
+  const [itemList, updateItemList] = useReducer(reducer, {
+    localStream: null,
+    localStreamManager: new LocalStreamManager(),
+    peerList: null,
+    peerName: '',
+    globalMessageList: [],
+    shareVideo: false
   });
   let connect = () => {
     itemList.meeting.connect();
   }
-  let disconnect = () => {
+  let disconnect = async () => {
     //itemList.meeting.disconnect();
+    await itemList.localStreamManager.closeStream(itemList.localStream);
     updateItemList({ type: "disconnect" })
   }
 
@@ -76,7 +93,23 @@ export default function C() {
     itemList.meeting.sendGlobalMessage(msg);
     updateItemList({ type: "updateGlobalMessage", messageObj: { from: itemList.peerName, message: msg } });
   }
-  
+  let updateShareVideoState = async value => {
+    let localStream = null;
+    let isShareVideo = (value === "true");
+    try {
+      localStream = await itemList.localStreamManager.getMediaStream(isShareVideo, false);
+    } catch (error) {
+      console.log("Get Media Stream failure:" + error.message);
+      localStream = null;
+    } finally {
+      if (localStream === null) {
+        await itemList.localStreamManager.closeStream(itemList.localStream);
+      }
+      console.log(localStream);
+      updateItemList({ type: "updateShareVideoState", state: isShareVideo, stream: localStream });
+    }
+  }
+
   return (
     <Container fluid className="p-0">
       <Row className="border border-dark m-1 rounded-3">
@@ -86,7 +119,7 @@ export default function C() {
         </Col>
       </Row>
       {
-        (Object.values(itemList.peerList).length > 0) &&
+        (itemList.peerList) &&
         <>
           <Row className="border-bottom-0 border-dark m-1 rounded-3">
             <Col className="border border-dark border-end-0 p-1 rounded-3">
@@ -105,9 +138,13 @@ export default function C() {
                 Room member list:
               </div>
               <div className="mt-2 rounded-3">
+                <div className="border border-dark m-1 p-1 rounded-3">
+                  Peer Name:{itemList.meeting.getLocalPeer().peerName}<br />
+                  You
+                </div>
                 {
                   Object.values(itemList.peerList).map((peer) => (
-                    <PeerElement peer={peer} key={peer.peerId}/>  
+                    <PeerElement peer={peer} key={peer.peerId} />
                   ))
                 }
               </div>
@@ -117,7 +154,20 @@ export default function C() {
             <Col className="d-flex flex-row justify-content-center p-2">
               <Button onClick={sendMessage}>Send testing message to all peer</Button>
             </Col>
+            <Col className="d-flex flex-row justify-content-center p-2">
+              <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
+                <div className="m-1">Share Video:</div>
+                <DropdownButton onSelect={updateShareVideoState} title={((itemList.shareVideo) ? "Yes" : "No")} variant="primary">
+                  <Dropdown.Item eventKey={false}>No</Dropdown.Item>
+                  <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
+                </DropdownButton>
+              </div>
+            </Col>
           </Row>
+          {
+            (itemList.shareVideo) &&
+            <LocalMedia localStream={itemList.localStream} />
+          }
         </>
       }
     </Container>

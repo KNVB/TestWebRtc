@@ -3,8 +3,8 @@ import Peer from './Peer';
 export default class Meeting {
     constructor(peerName) {
         let globalMessageHandler;
+        let localPeer;
         let localStream;
-        let peerId = null;
         let peerList = {};
         let peerListUpdatedHandler;
         let socket = null;
@@ -56,7 +56,7 @@ export default class Meeting {
             });
             socket.io.on("reconnect", () => {
                 console.log("Reconnect successed.");
-                socket.emit("reconnectRequest", { peerId: peerId, peerName: peerName });
+                socket.emit("reconnectRequest", localPeer);
             });
             socket.on("signalData", signalObj => {
                 console.log("====Receive Signal Event Start====");
@@ -67,17 +67,16 @@ export default class Meeting {
                 console.log("====Receive Signal Event End====");
             })
             socket.emit("hi", peerName, response => {
-                peerId = response.peerId;
+                localPeer={peerId:response.peerId,peerName:peerName};
                 let tempPeerList = response.peerList;
                 console.log("====Sent Hi Response Start====");
-                console.log("peerId:" + peerId);
+                console.log("peerId:" + response.peerId);
                 console.log("====Peer list====");
                 for (const [newPeerId, tempPeer] of Object.entries(tempPeerList)) {
-                    let peer = genPeer(newPeerId, tempPeer.peerName);
-                    peer.isLocalPeer = (response.peerId === peer.peerId);
+                    let peer = genPeer(newPeerId, tempPeer.peerName);                    
                     peerList[peer.peerId] = peer;
                 }
-                console.log(peerList);
+                //console.log(peerList);
                 peerListUpdatedHandler(peerList);
                 console.log("====Sent Hi Response End====");
             });
@@ -93,6 +92,9 @@ export default class Meeting {
             if (socket) {
                 socket.disconnect();
             }
+        }
+        this.getLocalPeer=()=>{
+            return localPeer;
         }
         /*=====================================================================*/
         /*        To configure handler for varies event                        */
@@ -118,6 +120,9 @@ export default class Meeting {
                 }
             })
         }
+        this.setLocalStream=stream=>{
+            setLocalStream(stream);
+        }
         /*========================================================================================*/
         /*      Private Method                                                                    */
         /*========================================================================================*/
@@ -126,7 +131,7 @@ export default class Meeting {
         let genPeer = (newPeerId, peerName) => {
             let peer = new Peer(newPeerId, peerName), temp;
             peer.on("signal", signalData => {
-                temp = { from: peerId, to: peer.peerId, signalData };
+                temp = { from: localPeer.peerId, to: peer.peerId, signalData };
                 sendSignalData(temp);
             });
             peer.on("dataChannelMessage", message => {
@@ -139,6 +144,9 @@ export default class Meeting {
                 console.log("==== Message received from " + peerName + " end====");
             });
             */
+            if (localStream) {
+                peer.setStream(localStream);
+            }
             peer.setConfig(webRtcConfig);
             peer.setDebug(true);
             peer.init();
@@ -149,6 +157,12 @@ export default class Meeting {
         /*========================================================================================*/
         let sendSignalData = (signalData) => {
             socket.emit("signal", signalData);
+        }
+        let setLocalStream=(stream)=>{
+            localStream=stream;
+            Object.values(peerList).forEach(peer=>{
+                peer.setStream(localStream);
+            })
         }
     }
 }

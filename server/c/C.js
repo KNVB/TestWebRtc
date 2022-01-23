@@ -50,7 +50,6 @@ class C {
             });            
             socket.on("hi", (peerName, calllBack) => {
                 let peerId = generateUID();
-                peerList[peerId] = { peerName: peerName, socketId: socket.id }
                 console.log("==================Receive Hi Event Start===============");
                 console.log("from:" + peerName);
                 socket.broadcast.emit("askConnect", { peerId: peerId, peerName: peerName });
@@ -59,6 +58,7 @@ class C {
                     temp[peerId]={peerId:peerId,peerName:peer.peerName};
                 }
                 calllBack({ peerId: peerId, "peerList": temp });
+                peerList[peerId] = { peerName: peerName, socketId: socket.id };
                 console.log("==================peer list===============");
                 console.log(peerList);
                 console.log("==================Receive Hi Event End===============");
