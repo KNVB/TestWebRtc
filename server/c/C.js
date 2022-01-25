@@ -101,6 +101,9 @@ class C {
             secondPart = ("000" + secondPart.toString(36)).slice(-3);
             return firstPart + secondPart;
         }
+        let isMember=peerId=>{
+            return (Object.keys(peerList).includes(peerId));
+        }
         let removePeerNow=(removePeerIdList)=>{
             console.log("==================peer list before remove the disconnected peer===============");
             console.log(peerList);
