@@ -105,7 +105,7 @@ export default function C() {
       if (localStream === null) {
         await itemList.localStreamManager.closeStream(itemList.localStream);
       }
-      console.log(localStream);
+      //console.log(localStream);
       updateItemList({ type: "updateShareVideoState", state: isShareVideo, stream: localStream });
     }
   }

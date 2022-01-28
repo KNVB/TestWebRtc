@@ -101,7 +101,7 @@ class C {
             secondPart = ("000" + secondPart.toString(36)).slice(-3);
             return firstPart + secondPart;
         }
-        let isMember=peerId=>{
+        let isAMember=peerId=>{
             return (Object.keys(peerList).includes(peerId));
         }
         let removePeerNow=(removePeerIdList)=>{

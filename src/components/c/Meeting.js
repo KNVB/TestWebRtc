@@ -89,6 +89,9 @@ export default class Meeting {
                 peer.hangUp();
             });
             peerList = {};
+            if (localStream){
+                localStream=null;
+            }
             if (socket) {
                 socket.disconnect();
             }

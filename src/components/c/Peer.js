@@ -172,6 +172,7 @@ export default class Peer {
         /*        To process the signal data                                   */
         /*=====================================================================*/
         this.signal = (signalObj) => {
+            msgLogger("====Process Signal Data Start====");
             msgLogger("Receive " + signalObj.type + " from " + peerName);
             switch (signalObj.type) {
                 case "iceCandidate":
@@ -183,6 +184,7 @@ export default class Peer {
                 default:
                     break;
             }
+            msgLogger("====Process Signal Data end====");
         }
         /*========================================================================================*/
         /*      Private Method                                                                    */
@@ -199,9 +201,11 @@ export default class Peer {
         /*        To process the remote description                            */
         /*=====================================================================*/
         let processRemoteDescription = async (signalData) => {
+            msgLogger("====processRemoteDescription Start====");
             const offerCollision = (signalData.type === "offer") &&
                 (makingOffer || webRTC.getSignalingState() !== "stable");
             ignoreOffer = !polite && offerCollision;
+            msgLogger("signalData.type="+signalData.type+",makingOffer="+makingOffer+", webRTC.getSignalingState()="+ webRTC.getSignalingState());
             msgLogger("ignoreOffer = " + ignoreOffer + ",offerCollision=" + offerCollision + ",polite=" + polite);
             if (ignoreOffer) {
                 msgLogger("Ignore offer from " + peerName);
@@ -214,6 +218,7 @@ export default class Peer {
                 signalEventHandler({ "type": "remoteDescription", "value": webRTC.getLocalDescription() });
                 msgLogger("Sent local Description to " + peerName);
             }
+            msgLogger("====processRemoteDescription End====");
         }
     }
 }
