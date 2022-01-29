@@ -2,6 +2,7 @@ import io from 'socket.io-client';
 import Peer from './Peer';
 export default class Meeting {
     constructor(peerName) {
+        let connectionTimeoutHandler;
         let globalMessageHandler;
         let localPeer;
         let localStream;
@@ -56,7 +57,15 @@ export default class Meeting {
             });
             socket.io.on("reconnect", () => {
                 console.log("Reconnect successed.");
-                socket.emit("reconnectRequest", localPeer);
+                socket.emit("reconnectRequest", localPeer,response=>{
+                    switch (response.status){
+                        case 1:
+                            connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                            break;
+                        default:
+                            break;    
+                    }                    
+                });
             });
             socket.on("signalData", signalObj => {
                 console.log("====Receive Signal Event Start====");
@@ -107,6 +116,9 @@ export default class Meeting {
         /*=====================================================================*/
         this.on = (eventType, param) => {
             switch (eventType) {
+                case "connectionTimeout":
+                    connectionTimeoutHandler=param;
+                    break;
                 case "globalMessage":
                     globalMessageHandler=param;
                     break;
@@ -165,7 +177,18 @@ export default class Meeting {
         /*  To send a signal data to remote peer                                                  */  
         /*========================================================================================*/
         let sendSignalData = (signalData) => {
-            socket.emit("signal", signalData);
+            socket.emit("signal", signalData, response => {
+                switch (response.status){
+                    case 1:
+                        connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                        break;
+                    case 2:
+                        console.log("The destination peer does not exist.");
+                        break;    
+                    default:
+                        break;    
+                }                    
+            });
         }
         /*=====================================================================*/
         /*        Add a local media stream to all peer in the peer list        */

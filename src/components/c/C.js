@@ -31,6 +31,10 @@ export default function C() {
     meeting.on("peerListUpdated", peerList => {
       updateItemList({ type: "updatePeerList", peerList: peerList });
     });
+    meeting.on("connectionTimeout",message=>{
+      alert(message);
+      updateItemList({ type: "disconnect" });   
+    });
     meeting.on("globalMessage", messageObj => {
       updateItemList({ type: "updateGlobalMessage", messageObj: messageObj });
     })

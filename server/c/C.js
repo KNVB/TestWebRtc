@@ -63,20 +63,25 @@ class C {
                 console.log(peerList);
                 console.log("==================Receive Hi Event End===============");
             });
-            socket.on("reconnectRequest", peer => {
+            socket.on("reconnectRequest", (peer,calllBack) => {
                 console.log("==================Receive reconnectRequest Event Start==============="); 
                 console.log("Receive reconnect Event from " + peer.peerName);
                 console.log("peerid="+peer.peerId);
-                if (peer.peerId in peerList){               
+                if (isAuthenticated(peer.peerId)){
+                    console.log("Peer "+peer.peerName+" is an authenticated user.");
                     peerList[peer.peerId].socketId=socket.id;
                     peerList[peer.peerId].disconnectTime=null;
                     console.log("==================peer list===============");
                     console.log(peerList);
                     socket.broadcast.emit("askReconnect", peer.peerId);
-                }               
+                    calllBack({status:0});
+                } else {
+                    console.log("Peer "+peer.peerName+" is not an authenticated user.");
+                    calllBack({status:1,message:"The peer is not an authenticated user."});
+                }             
                 console.log("==================Receive reconnectRequest Event End==============="); 
             });
-            socket.on("signal",signalObj=>{
+            socket.on("signal",(signalObj,calllBack)=>{
                 let sourcePeer=peerList[signalObj.from];
                 let destPeer=peerList[signalObj.to];
 
@@ -84,6 +89,13 @@ class C {
                 if (sourcePeer && destPeer){
                     console.log(sourcePeer.peerName+" sent "+signalObj.signalData.type+"data to "+destPeer.peerName);
                     socket.broadcast.to(destPeer.socketId).emit('signalData', {from:signalObj.from,...signalObj.signalData});
+                    calllBack({status:0});
+                } else {
+                    if (sourcePeer === undefined){
+                        calllBack({status:1,message:"The peer is not an authenticated user."});
+                    } else {
+                        calllBack({status:2,message:"The destination peer does not exist."});
+                    }
                 }
                 console.log("==================Receive Signal Event End===============");
             });
@@ -101,8 +113,8 @@ class C {
             secondPart = ("000" + secondPart.toString(36)).slice(-3);
             return firstPart + secondPart;
         }
-        let isAMember=peerId=>{
-            return (Object.keys(peerList).includes(peerId));
+        let isAuthenticated=peerId=>{
+            return (peerId in peerList);
         }
         let removePeerNow=(removePeerIdList)=>{
             console.log("==================peer list before remove the disconnected peer===============");
