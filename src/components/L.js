@@ -1,134 +1,85 @@
-import { Button, Col, Container, Row } from 'react-bootstrap';
+import { Button, Card, Carousel } from 'react-bootstrap';
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 
 export default function L() {
     return (
-        <Container fluid className="border border-primary p-0 m-0 vh-100">
-            <Row className="border border-dark rounded-3 p-0 m-1" style={{ "box-sizing": "border-box", "height": "10vh" }}>
-                <Col className="d-flex flex-row justify-content-center">
-                    <Button className="m-1">Connect</Button>
-                    <Button className="m-1">Disconnect</Button>
-                </Col>
-            </Row>
-            <Row className="border border-dark rounded-3 m-1 p-0" style={{ "box-sizing": "border-box", "height": "77.5vh" }}>
-                <Col className="border border-dark m-1 p-2 d-flex flex-column rounded-3">
-                    <div className='m-0 p-0'>Global Message</div>
-                    <div className="border border-danger h-100 m-0 p-0 position-relative rounded-3 w-100">
-                        <div className="h-100 w-100 m-0 p-1 position-absolute overflow-auto">
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
+        <Card className="p-1 vh-100 vw-100" variant="dark">
+            <Card.Header className="border border-dark d-flex flex-row justify-content-center mb-1 rounded-3">
+                <Button className="m-1">Connect</Button>
+                <Button className="m-1">Disconnect</Button>
+            </Card.Header>
+            <Card.Body className="border border-dark d-flex flex-grow-1 m-0 p-0 rounded-3">
+                <Carousel
+                    className="bg-success border border-success d-flex flex-grow-1 m-0 p-0 rounded-3 w-100"
+                    controls={false}
+                    fade interval={null}
+                    nextIcon={null} nextLabel={null}
+                    prevIcon={null} prevLabel={null}
+                    indicators={false}>
+                    <Carousel.Item className="bg-success d-flex flex-grow-1 h-100 m-0 p-1 text-white">
+                        <div className="border border-white d-flex flex-column flex-grow-1 m-0 p-1 rounded-3">
+                            <div>
+                                Global Message:
+                            </div>
+                            <div className="border border-dark d-flex flex-column-reverse flex-grow-1 m-0 p-1 rounded-3 overflow-auto" style={{"height":"10em"}}>
+                                    <div>9999</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>dfsdfs</div>
+                                    <div>1</div>
+                                
+                            </div>
                         </div>
-                    </div>
-                </Col>
-                <Col className="border border-dark d-flex flex-column flex-grown-1 m-1 p-2 rounded-3">
-                    <div>
-                        Room member list:
-                    </div>
-                    <div className="border border-danger h-100 m-0 p-0 position-relative rounded-3 w-100">
-                    <div className="h-100 w-100 m-0 p-1 position-absolute overflow-auto">
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                            <div>Global Message</div>
-                        </div>
-                    </div>
-                </Col>
-            </Row>
-            <Row className="border border-dark rounded-3 p-0 m-1" style={{ "box-sizing": "border-box", "height": "10vh" }}>
-                <Col className="d-flex flex-row justify-content-center p-2">
-                    <Button >Send testing message to all peer</Button>
-                </Col>
-                <Col className="d-flex flex-row justify-content-center p-2">
-                    <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
-                        <div className="m-1">Share Video:</div>
-                        <DropdownButton title="Yes" variant="primary">
-                            <Dropdown.Item eventKey={false}>No</Dropdown.Item>
-                            <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
-                        </DropdownButton>
-                    </div>
-                </Col>
-            </Row>
-        </Container>
+                    </Carousel.Item>
+                    <Carousel.Item className="bg-success h-100 text-white">
+
+                    </Carousel.Item>
+                    <Carousel.Item className="bg-success h-100 text-white">
+                    </Carousel.Item>
+                </Carousel>
+            </Card.Body>
+            <Card.Footer className="border border-dark d-flex flex-row justify-content-around mt-1 rounded-3">
+                <Button >Send testing message to all peer</Button>
+                <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
+                    <div className="m-1">Share Video:</div>
+                    <DropdownButton title="Yes" variant="primary">
+                        <Dropdown.Item eventKey={false}>No</Dropdown.Item>
+                        <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
+                    </DropdownButton>
+                </div>
+            </Card.Footer>
+        </Card>
     )
 }
