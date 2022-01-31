@@ -1,4 +1,4 @@
-class TestPureWebRTC{
+export default class TestPureWebRTC{
     constructor(socket){
         console.log("TestPureWebRTC:Connection established");
         socket.on('disconnect', function () {
@@ -17,4 +17,3 @@ class TestPureWebRTC{
         });
     }    
 }
-module.exports=TestPureWebRTC;

@@ -1,4 +1,4 @@
-class TestSimplePeer{
+export default class TestSimplePeer{
     constructor(socket){
         console.log("TestSimplePeer:Connection established");
         socket.on('disconnect', function () {
@@ -14,4 +14,3 @@ class TestSimplePeer{
         });
     }
 }
-module.exports=TestSimplePeer;

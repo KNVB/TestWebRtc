@@ -1,4 +1,4 @@
-class C {
+export default class C {
     constructor(io, path) {
         let peerList = {};
         let timeOut = 60; // in sec
@@ -129,4 +129,4 @@ class C {
         }
     }
 }
-module.exports = C;
+//module.exports = C;

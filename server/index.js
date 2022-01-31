@@ -1,46 +1,48 @@
-require('dotenv-flow').config();
-const express = require('express');
-const app = express();
-const http =require('http');
-const httpServer= http.createServer(app);
-const io = require('socket.io')(httpServer);
-let B=require('./b/B');
-let C=require('./c/C');
-//let TestMeeting=require('./testMeeting/TestMeeting_1.js');
-let TestPureWebRTC=require('./testPureWebRTC/TestPureWebRTC');
-let TestSimplePeer=require('./testSimplePeer/TestSimplePeer');
-//let TestSocket=require('./testSocket/TestSocket');
+import dotenv from 'dotenv-flow';
+import express from 'express';
+import http from 'http';
+import { Server } from "socket.io";
+//import B from './b/B.js';
+import C from './c/C.js';
+import TestPureWebRTC from './testPureWebRTC/TestPureWebRTC.js';
+import TestSimplePeer from './testSimplePeer/TestSimplePeer.js';
 
-if (process.env.NODE_ENV==="production"){
-    const path = require('path');
-    app.use(express.static(path.resolve(__dirname, '../build')));
-    app.get('*', (req, res) => {
+const app = express();
+const httpServer = http.createServer(app);
+const io = new Server(httpServer);
+
+dotenv.config();
+
+if (process.env.NODE_ENV === "production") {
+  const path = require('path');
+  app.use(express.static(path.resolve(__dirname, '../build')));
+  app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
-    });
+  });
 }
 
-httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () =>{
-  console.log('Express server is running on localhost:'+process.env.REACT_APP_SOCKET_PORT);
+httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () => {
+  console.log('Express server is running on localhost:' + process.env.REACT_APP_SOCKET_PORT);
 });
 
-let b=new B(io,"/b");
-let c=new C(io,"/c");
+//let b = new B(io, "/b");
+let c = new C(io, "/c");
 
 /*
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();
 io.of("/a").on("connection",socket=>{
-	console.log("TestSocket("+socket.id+"):Connection established");
-	testSocket.addPeer(socket);
+  console.log("TestSocket("+socket.id+"):Connection established");
+  testSocket.addPeer(socket);
 });
 
 io.of("/testMeeting").on("connection",socket=>{
-	testMeeting.addPeer(socket);
+  testMeeting.addPeer(socket);
 });
 */
-io.of("/testPureWebRTC").on("connection",(socket)=>{
-	let testPureWebRTC=new TestPureWebRTC(socket);
+io.of("/testPureWebRTC").on("connection", (socket) => {
+  let testPureWebRTC = new TestPureWebRTC(socket);
 })
-io.of("/testSimplePeer").on("connection",(socket)=>{
-	let testSimplePeer=new TestSimplePeer(socket);
+io.of("/testSimplePeer").on("connection", (socket) => {
+  let testSimplePeer = new TestSimplePeer(socket);
 })

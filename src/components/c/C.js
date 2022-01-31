@@ -31,9 +31,9 @@ export default function C() {
     meeting.on("peerListUpdated", peerList => {
       updateItemList({ type: "updatePeerList", peerList: peerList });
     });
-    meeting.on("connectionTimeout",message=>{
+    meeting.on("connectionTimeout", message => {
       alert(message);
-      updateItemList({ type: "disconnect" });   
+      updateItemList({ type: "disconnect" });
     });
     meeting.on("globalMessage", messageObj => {
       updateItemList({ type: "updateGlobalMessage", messageObj: messageObj });
@@ -66,7 +66,7 @@ export default function C() {
       case "updateShareVideoState":
         result.localStream = action.stream;
         result.shareVideo = action.state;
-        if (result.shareVideo){
+        if (result.shareVideo) {
           result.meeting.setLocalStream(action.stream);
         }
         break
@@ -118,7 +118,7 @@ export default function C() {
     <Container fluid className="p-0">
       <Row className="border border-dark m-1 rounded-3">
         <Col className="d-flex flex-row justify-content-center">
-          <Button onClick={connect} className="m-1">Connect</Button>
+          <Button onClick={connect} className="m-1" disabled={!(itemList.peerList === null)}>Connect</Button>
           <Button onClick={disconnect} className="m-1">Disconnect</Button>
         </Col>
       </Row>
