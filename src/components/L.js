@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card, Carousel } from 'react-bootstrap';
+import { Button, Card,Col, Container,Row } from 'react-bootstrap';
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 
@@ -21,66 +21,147 @@ export default function L() {
                 <Button className="m-1">Disconnect</Button>
             </Card.Header>
             <Card.Body className="border border-dark d-flex flex-grow-1 m-0 p-1 rounded-3">
-                <Carousel
-                    activeIndex={index}
-                    className="d-flex flex-grow-1 m-0 p-0 rounded-3"
-                    controls={false}
-                    interval={10000}
-                    indicators={false}
-                    nextIcon={null} nextLabel={null}
-                    prevIcon={null} prevLabel={null}>
-                    <Carousel.Item className="border border-dark h-100 m-0 p-0 rounded-3">
-                        1
-                    </Carousel.Item>
-                    <Carousel.Item className="border border-dark h-100 m-0 p-0 rounded-3">
-                        2
-                    </Carousel.Item>
-                    <Carousel.Item className="border border-dark h-100 m-0 p-0 rounded-3">
-                        <div className="border border-white d-flex flex-column flex-grow-1 h-100 m-0 p-1 rounded-3">
-                            <div>
-                                Global Message:
-                            </div>
-                            <div className="border border-dark d-flex flex-column-reverse flex-grow-1 m-0 p-1 rounded-3 overflow-auto" style={{ "height": "10em" }}>
-                                <div>9999</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>dfsdfs</div>
-                                <div>1</div>
-                            </div>
+                <div className={'bg-danger ' + ((index === 0) ? "d-flex" : "d-none") + ' flex-grow-1'}>
+                    1
+                </div>
+                <div className={((index === 1) ? "d-flex" : "d-none") + ' flex-grow-1 m-0'} >
+                    <div className="bg-success d-flex flex-column flex-grow-1 p-1 rounded-3 text-white">
+                        <div>
+                            Guest List:
                         </div>
-                    </Carousel.Item>
-                </Carousel>
+                        <Container className="border border-dark overflow-auto p-1 rounded-3" fluid>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>
+                            <Row>
+                                <Col>1</Col>
+                            </Row>                                                                                                                
+                        </Container>
+                    </div>    
+                </div>
+                <div className={((index === 2) ? "d-flex" : "d-none") + ' flex-grow-1'}>
+                    <div className="bg-primary d-flex flex-column flex-grow-1 text-white">
+                        <div>
+                            Global Message:
+                        </div>
+                        <div className="border border-dark d-flex flex-column flex-grow-1 m-0 p-1 rounded-3 overflow-auto" style={{ "height": "10em" }}>
+                            <div>9999</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>dfsdfs</div>
+                            <div>1</div>
+                        </div>
+                    </div>
+                </div>
             </Card.Body>
             <Card.Footer className="border border-dark d-flex flex-row justify-content-around mt-1 rounded-3">
                 <Button >Send testing message to all peer</Button>
