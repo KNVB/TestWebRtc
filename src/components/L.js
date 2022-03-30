@@ -39,31 +39,42 @@ export default function L() {
                 <Button className="m-1">Disconnect</Button>
             </Card.Header>
             <Card.Body className="border border-dark d-flex flex-grow-1 m-0 p-1 rounded-3">
-                <div className={'bg-danger ' + ((index === 0) ? "d-flex" : "d-none") + ' flex-grow-1'}>
-                    1
-                </div>
-                <div className={((index === 1) ? "d-flex" : "d-none") + ' flex-grow-1 m-0'} >
-                    <div className="bg-success d-flex flex-column flex-grow-1 p-1 rounded-3 text-white">
-                        <div>
-                            Guest List:
-                        </div>
-                        <div className="border border-white d-flex flex-grow-1 m-0 overflow-auto p-0 rounded-3" style={{ "height": "10em" }}>
-                            <Container className="flex-grow-1 m-0 p-1 rounded-3" fluid>
-                                {guestList}
-                            </Container>
-                        </div>
-                    </div>
-                </div>
-                <div className={((index === 2) ? "d-flex" : "d-none") + ' flex-grow-1'}>
-                    <div className="bg-primary d-flex flex-column flex-grow-1 text-white">
-                        <div>
-                            Global Message:
-                        </div>
-                        <div className="border border-dark d-flex flex-column flex-grow-1 m-0 p-1 rounded-3 overflow-auto" style={{ "height": "10em" }}>
-                            {globalMessage}
+                {
+                    (index === 0) &&
+                    <div className="bg-danger  d-flex flex-grow-1">
+                        1
+                    </div> 
+                }
+                
+                {
+                    (index === 1) &&
+                    <div className="d-flex flex-grow-1 m-0">
+                        <div className="bg-success d-flex flex-column flex-grow-1 p-1 rounded-3 text-white">
+                            <div>
+                                Guest List:
+                            </div>
+                            <div className="border border-white d-flex flex-grow-1 m-0 overflow-auto p-0 rounded-3" style={{ "height": "10em" }}>
+                                <Container className="flex-grow-1 m-0 p-1 rounded-3" fluid>
+                                    {guestList}
+                                </Container>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
+                
+                {
+                    (index === 2) &&
+                    <div className="d-flex flex-grow-1">
+                        <div className="bg-primary d-flex flex-column flex-grow-1 text-white">
+                            <div>
+                                Global Message:
+                            </div>
+                            <div className="border border-dark d-flex flex-column flex-grow-1 m-0 p-1 rounded-3 overflow-auto" style={{ "height": "10em" }}>
+                                {globalMessage}
+                            </div>
+                        </div>
+                    </div>
+                }                
             </Card.Body>
             <Card.Footer className="border border-dark d-flex flex-row justify-content-around mt-1 rounded-3">
                 <Button >Send testing message to all peer</Button>
