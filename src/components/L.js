@@ -14,6 +14,7 @@ export default function L() {
         }
         setIndex(temp);
     }
+    let cssClassFirst,cssClassEnd;
     let globalMessage = [];
     let guestList = [];
 
@@ -23,17 +24,36 @@ export default function L() {
     }
     globalMessage.push(<div key="msg_99">1</div>);
     for (let i = 0; i < 100; i++) {
+        cssClassFirst="border border-warning p-1";
+        cssClassEnd="border border-warning p-1";
+        switch (i){
+            case 0:
+                cssClassFirst+=" border-bottom-0 border-end-0";
+                cssClassEnd+=" border-bottom-0";
+                break;
+                
+            case 99:
+                cssClassFirst+=" border-end-0";
+                break;
+            
+            default:
+                cssClassFirst+=" border-bottom-0 border-end-0";
+                cssClassEnd+=" border-bottom-0";
+                break;         
+        }
+
         guestList.push(
             <Row key={"guestList_" + i} className="m-0 p-0">
-                <Col className="border border-end-0 border-bottom-0 border-warning p-1" sm={4}><div style={{ "height": "200px", "width": "300px" }}>1</div></Col>
-                <Col className="border border-end-0 border-bottom-0 border-warning p-1" sm={4}><div style={{ "height": "200px", "width": "300px" }}>2</div></Col>
-                <Col className="border border-bottom-0 border-warning p-1" sm={4}><div style={{ "height": "200px", "width": "300px" }}>3</div></Col>
+                <Col className={cssClassFirst} sm={4}><div style={{ "height": "200px", "width": "300px" }}>1</div></Col>
+                <Col className={cssClassFirst} sm={4}><div style={{ "height": "200px", "width": "300px" }}>2</div></Col>
+                <Col className={cssClassEnd} sm={4}><div style={{ "height": "200px", "width": "300px" }}>3</div></Col>
             </Row>
         );
     }
-
+    //position-fixed w-100 can be fix the mobile browser 100% height problem
+    //https://stackoverflow.com/questions/37112218/css3-100vh-not-constant-in-mobile-browser
     return (
-        <Card className="p-1 vh-100 vw-100" variant="dark">
+        <Card className="h-100 p-1 position-fixed w-100" variant="dark">
             <Card.Header className="border border-dark d-flex flex-row justify-content-center mb-1 rounded-3">
                 <Button className="m-1">Connect</Button>
                 <Button className="m-1">Disconnect</Button>
@@ -41,7 +61,7 @@ export default function L() {
             <Card.Body className="border border-dark d-flex flex-grow-1 m-0 p-1 rounded-3">
                 {
                     (index === 0) &&
-                    <div className="bg-danger  d-flex flex-grow-1">
+                    <div className="bg-danger d-flex flex-grow-1">
                         1
                     </div>
                 }
