@@ -48,7 +48,7 @@ export default function L() {
 
                 {
                     (index === 1) &&
-                    <Card className="bg-light d-flex flex-grow-1 m-0 p-0 rounded-5 text-white">
+                    <Card className="bg-secondary d-flex flex-grow-1 m-0 p-0 rounded-5 text-white">
                         <Card.Header className="m-0 p-0">
                             Guest List:
                         </Card.Header>
