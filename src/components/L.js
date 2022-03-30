@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card,Col, Container,Row } from 'react-bootstrap';
+import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 
@@ -14,6 +14,24 @@ export default function L() {
         }
         setIndex(temp);
     }
+    let globalMessage=[];
+    let guestList = [];
+
+    globalMessage.push(<div key="msg_0">9999</div>);
+    for (let i=0;i<98;i++){
+        globalMessage.push(<div key={"msg_"+globalMessage.length}>dfsdfs</div>);
+    }
+    globalMessage.push(<div key="msg_99">1</div>);
+    for (let i = 0; i < 100; i++) {
+        guestList.push(
+            <Row key={"guestList_" + i} className="m-0 p-0">
+                <Col className="border border-end-0 border-bottom-0 border-warning p-1" sm={4}><div style={{"height":"200px","width":"300px"}}>1</div></Col>
+                <Col className="border border-end-0 border-bottom-0 border-warning p-1" sm={4}><div style={{"height":"200px","width":"300px"}}>2</div></Col>
+                <Col className="border border-bottom-0 border-warning p-1" sm={4}><div style={{"height":"200px","width":"300px"}}>3</div></Col>
+            </Row>
+        );
+    }
+
     return (
         <Card className="p-1 vh-100 vw-100" variant="dark">
             <Card.Header className="border border-dark d-flex flex-row justify-content-center mb-1 rounded-3">
@@ -29,93 +47,12 @@ export default function L() {
                         <div>
                             Guest List:
                         </div>
-                        <Container className="border border-dark overflow-auto p-1 rounded-3" fluid>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>
-                            <Row>
-                                <Col>1</Col>
-                            </Row>                                                                                                                
-                        </Container>
-                    </div>    
+                        <div className="border border-white d-flex flex-grow-1 m-0 overflow-auto p-0 rounded-3" style={{ "height": "10em" }}>
+                            <Container className="flex-grow-1 m-0 p-1 rounded-3" fluid>
+                                {guestList}
+                            </Container>
+                        </div>
+                    </div>
                 </div>
                 <div className={((index === 2) ? "d-flex" : "d-none") + ' flex-grow-1'}>
                     <div className="bg-primary d-flex flex-column flex-grow-1 text-white">
@@ -123,42 +60,7 @@ export default function L() {
                             Global Message:
                         </div>
                         <div className="border border-dark d-flex flex-column flex-grow-1 m-0 p-1 rounded-3 overflow-auto" style={{ "height": "10em" }}>
-                            <div>9999</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>dfsdfs</div>
-                            <div>1</div>
+                            {globalMessage}
                         </div>
                     </div>
                 </div>
