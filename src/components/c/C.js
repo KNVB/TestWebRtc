@@ -7,6 +7,41 @@ import LocalMedia from './LocalMedia';
 import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import PeerElement from "./PeerElement";
+let reducer = (state, action) => {
+  let result = { ...state };
+  switch (action.type) {
+    case "disconnect":
+      result.globalMessageList = [];
+      result.localStream = null;
+      result.meeting.disconnect();
+      result.peerList = null;
+      result.shareVideo = false;
+      break;
+    case "init":
+      result.meeting = action.meeting;
+      result.peerList = action.peerList;
+      result.peerName = action.peerName;
+      break;
+    case "updateGlobalMessage":
+      let temp = JSON.parse(JSON.stringify(result.globalMessageList));
+      temp.push(action.messageObj);
+      result.globalMessageList = temp;
+      break;
+    case "updatePeerList":
+      result.peerList = action.peerList;
+      break;
+    case "updateShareVideoState":
+      result.localStream = action.stream;
+      result.shareVideo = action.state;
+      if (result.shareVideo) {
+        result.meeting.setLocalStream(action.stream);
+      }
+      break
+    default:
+      break;
+  }
+  return result;
+}
 
 export default function C() {
   useEffect(() => {
@@ -40,41 +75,6 @@ export default function C() {
     })
     updateItemList({ type: "init", "meeting": meeting, peerList: null, peerName: peerName });
   }, []);
-  let reducer = (state, action) => {
-    let result = { ...state };
-    switch (action.type) {
-      case "disconnect":
-        result.globalMessageList = [];
-        result.localStream = null;
-        result.meeting.disconnect();
-        result.peerList = null;
-        result.shareVideo = false;
-        break;
-      case "init":
-        result.meeting = action.meeting;
-        result.peerList = action.peerList;
-        result.peerName = action.peerName;
-        break;
-      case "updateGlobalMessage":
-        let temp = JSON.parse(JSON.stringify(result.globalMessageList));
-        temp.push(action.messageObj);
-        result.globalMessageList = temp;
-        break;
-      case "updatePeerList":
-        result.peerList = action.peerList;
-        break;
-      case "updateShareVideoState":
-        result.localStream = action.stream;
-        result.shareVideo = action.state;
-        if (result.shareVideo) {
-          result.meeting.setLocalStream(action.stream);
-        }
-        break
-      default:
-        break;
-    }
-    return result;
-  }
   const [itemList, updateItemList] = useReducer(reducer, {
     localStream: null,
     localStreamManager: new LocalStreamManager(),
