@@ -10,7 +10,7 @@ function App() {
       <Router>
         <Switch>
           <Route exact path='/' component={Panel}/>
-          <Route exact path='/c' component={C}/>    
+          <Route exact path='/c' component={C}/>
           <Route exact path='/l' component={L}/>
           <Route exact path='/testSimplePeer' component={TestSimplePeer}/>
           <Route exact path='/testPureWebRTC' component={TestPureWebRTC}/>
