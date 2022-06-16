@@ -11,11 +11,7 @@ export default class Meeting {
         let socket = null;
         let webRtcConfig = {
             iceServers:[
-                {
-                    urls: ["turn:turn.anyfirewall.com:443?transport=tcp"],
-                    credential: "webrtc",
-                    username: "webrtc"
-                },
+                
                 {
                     urls: "turn:numb.viagenie.ca",
                     credential: "turnserver",
