@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useReducer } from "react";
 import { Button, Col, Container, Row } from 'react-bootstrap';
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton'
@@ -53,6 +53,7 @@ export default function C() {
     peerList: null,
     peerName: '',
     globalMessageList: [],
+    shareAudio:false,
     shareVideo: false
   });
   let connect = () => {
