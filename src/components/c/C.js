@@ -30,6 +30,9 @@ let reducer = (state, action) => {
     case "updatePeerList":
       result.peerList = action.peerList;
       break;
+    case "updatePeerName":
+      result.peerName = action.peerName;
+      break;
     case "updateShareVideoState":
       result.localStream = action.stream;
       result.shareVideo = action.state;
@@ -44,37 +47,6 @@ let reducer = (state, action) => {
 }
 
 export default function C() {
-  useEffect(() => {
-    let peerName;
-    let sUsrAg = navigator.userAgent;
-    if (sUsrAg.indexOf("Edg") > -1) {
-      peerName = "Edge";
-    } else {
-      if (sUsrAg.indexOf("Chrome") > -1) {
-        peerName = "Chrome";
-      } else {
-        if (sUsrAg.indexOf("Firefox") > -1) {
-          peerName = "Firefox";
-        } else {
-          if (sUsrAg.indexOf("Safari") > -1) {
-            peerName = "Safari";
-          }
-        }
-      }
-    }
-    let meeting = new Meeting(peerName);
-    meeting.on("peerListUpdated", peerList => {
-      updateItemList({ type: "updatePeerList", peerList: peerList });
-    });
-    meeting.on("connectionTimeout", message => {
-      alert(message);
-      updateItemList({ type: "disconnect" });
-    });
-    meeting.on("globalMessage", messageObj => {
-      updateItemList({ type: "updateGlobalMessage", messageObj: messageObj });
-    })
-    updateItemList({ type: "init", "meeting": meeting, peerList: null, peerName: peerName });
-  }, []);
   const [itemList, updateItemList] = useReducer(reducer, {
     localStream: null,
     localStreamManager: new LocalStreamManager(),
@@ -84,7 +56,23 @@ export default function C() {
     shareVideo: false
   });
   let connect = () => {
-    itemList.meeting.connect();
+    if ((itemList) && (itemList.peerName !== '')) {
+      let meeting = new Meeting(itemList.peerName);
+      meeting.on("peerListUpdated", peerList => {
+        updateItemList({ type: "updatePeerList", peerList: peerList });
+      });
+      meeting.on("connectionTimeout", message => {
+        alert(message);
+        updateItemList({ type: "disconnect" });
+      });
+      meeting.on("globalMessage", messageObj => {
+        updateItemList({ type: "updateGlobalMessage", messageObj: messageObj });
+      })
+      meeting.connect(process.env.REACT_APP_SOCKET_URL + "c");
+      updateItemList({ type: "init", "meeting": meeting, peerList: null, peerName: itemList.peerName });      
+    } else {
+      alert("Please enter your alias before joining a meeting.");
+    }
   }
   let disconnect = async () => {
     //itemList.meeting.disconnect();
@@ -96,6 +84,9 @@ export default function C() {
     let msg = "你好!";
     itemList.meeting.sendGlobalMessage(msg);
     updateItemList({ type: "updateGlobalMessage", messageObj: { from: itemList.peerName, message: msg } });
+  }
+  let updatePeerName = e => {
+    updateItemList({ type: "updatePeerName", "peerName": e.target.value });
   }
   let updateShareVideoState = async value => {
     let localStream = null;
@@ -109,7 +100,6 @@ export default function C() {
       if (localStream === null) {
         await itemList.localStreamManager.closeStream(itemList.localStream);
       }
-      //console.log(localStream);
       updateItemList({ type: "updateShareVideoState", state: isShareVideo, stream: localStream });
     }
   }
@@ -118,8 +108,13 @@ export default function C() {
     <Container fluid className="p-0">
       <Row className="border border-dark m-1 rounded-3">
         <Col className="d-flex flex-row justify-content-center">
-          <Button onClick={connect} className="m-1" disabled={!(itemList.peerList === null)}>Connect</Button>
-          <Button onClick={disconnect} className="m-1">Disconnect</Button>
+          <input type="text" placeholder="Please enter you alias here" onChange={updatePeerName} value={itemList.peerName} />
+        </Col>
+      </Row>
+      <Row className="border border-dark m-1 rounded-3">
+        <Col className="d-flex flex-row justify-content-center">
+          <Button onClick={connect} className="m-1" disabled={!(itemList.peerList === null)}>Join a meeting</Button>
+          <Button onClick={disconnect} className="m-1">Leave the meeting</Button>
         </Col>
       </Row>
       {
@@ -143,8 +138,7 @@ export default function C() {
               </div>
               <div className="mt-2 rounded-3">
                 <div className="border border-dark m-1 p-1 rounded-3">
-                  Peer Name:{itemList.meeting.getLocalPeer().peerName}<br />
-                  You
+                  Peer Name:{itemList.meeting.getLocalPeer().peerName}(You)<br />
                 </div>
                 {
                   Object.values(itemList.peerList).map((peer) => (
