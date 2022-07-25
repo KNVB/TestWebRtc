@@ -11,7 +11,6 @@ export default class Meeting {
         let socket = null;
         let webRtcConfig = {
             iceServers: [
-
                 {
                     urls: "turn:numb.viagenie.ca",
                     credential: "turnserver",
