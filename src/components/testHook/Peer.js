@@ -1,13 +1,17 @@
 import WebRTC from './WebRTC';
 export default class Peer {
-    constructor(peerId, peerName) {
-        let connectionState='';
+    constructor() {
+        let connectionState = '';
         let connectionStateChangeHandler;
         let dataChannelMessageHandler;
         let ignoreOffer = false, isDebug = false;
         let makingOffer = false, polite = false;
-        let signalEventHandler,streamHandler;
+        let peerName = '', peerId = '';
+        let signalEventHandler, streamHandler;
         let webRTC = new WebRTC();
+
+        this.isCall = false;
+        this.isLocalPeer = false;
 
         webRTC.on("dataChannelClose", () => {
             msgLogger("====Data channel close start====");
@@ -40,9 +44,9 @@ export default class Peer {
             msgLogger("====ICE Conntection State Change Start====");
             msgLogger("Peer:" + peerName + ",ICE Conntection state chanaged to " + iceConnectionState);
             msgLogger("=====ICE Conntection State Change End====");
-            connectionState=iceConnectionState;
-            if (connectionStateChangeHandler){
-                connectionStateChangeHandler(iceConnectionState);                
+            connectionState = iceConnectionState;
+            if (connectionStateChangeHandler) {
+                connectionStateChangeHandler(iceConnectionState);
             }
         });
         webRTC.on("iceGatheringStateChange", iceGatheringState => {
@@ -70,9 +74,9 @@ export default class Peer {
             msgLogger("====Peer Conntection State Change Start====");
             msgLogger("Peer:" + peerName + " conntection state changed to " + peerConnectionState);
             msgLogger("=====Peer Conntection State Change End====");
-            connectionState=peerConnectionState;
-            if (connectionStateChangeHandler){
-                connectionStateChangeHandler(peerConnectionState);                
+            connectionState = peerConnectionState;
+            if (connectionStateChangeHandler) {
+                connectionStateChangeHandler(peerConnectionState);
             }
         });
         webRTC.on("signalingStateChange", signalingState => {
@@ -80,51 +84,43 @@ export default class Peer {
             msgLogger("Peer:" + peerName + ",signalingState=" + signalingState);
             msgLogger("====Signaling State Change End====");
         });
-        
-        webRTC.on("stream",stream=>{            
+
+        webRTC.on("stream", stream => {
             msgLogger("====Receive Stream Start====");
             msgLogger("Receive Stream From Peer:" + peerName);
             msgLogger("====Receive Stream End====");
-            if (streamHandler){
+            if (streamHandler) {
                 streamHandler(stream);
             }
         });
-            
+
         webRTC.setDebug(true);
-        /*=====================================================================*/
-        /*        Make a call to this peer                                     */
-        /*=====================================================================*/
-        this.call = () => {
-            polite = true;
-            msgLogger("Make a call to " + peerName);
-            webRTC.call();
-        }
-        this.getConnectionState=()=>{
-            return connectionState;
-        }
-        /*=====================================================================*/
-        /*        Hangup the peer connection                                   */
-        /*=====================================================================*/
-        this.hangUp = () => {
-            webRTC.hangUp();
-        }
+
         /*=====================================================================*/
         /*        Initialize the WebRTC object                                 */
         /*=====================================================================*/
         this.init = () => {
             webRTC.init();
         }
-        this.isCall = false;
-        this.isLocalPeer=false;
-        this.peerName = peerName;
-        this.peerId = peerId;
+        /*=====================================================================*/
+        /*        Get Peer connection state                                    */
+        /*=====================================================================*/
+        this.getConnectionState = () => {
+            return connectionState;
+        }
+        this.getPeerName = () => {
+            return peerName;
+        }
+        this.getPeerId = () => {
+            return peerId;
+        }
         /*=====================================================================*/
         /*        To configure handler for varies event                        */
         /*=====================================================================*/
         this.on = (eventType, param) => {
             switch (eventType) {
                 case "connectionStateChange":
-                    connectionStateChangeHandler=param;
+                    connectionStateChangeHandler = param;
                     break;
                 case "signal":
                     signalEventHandler = param;
@@ -133,23 +129,19 @@ export default class Peer {
                     dataChannelMessageHandler = param;
                     break;
                 case "stream":
-                    streamHandler=param;
-                    break;    
+                    streamHandler = param;
+                    break;
                 default: break;
             }
         }
-        /*=====================================================================*/
-        /*        Restart ICE                                                  */
-        /*=====================================================================*/
-        this.restartICE = () => {
-            webRTC.restartICE();
+        this.setPeerId = (id) => {
+            peerId = id;
         }
-        /*=====================================================================*/
-        /*       Sends data across the data channel to the remote peer.        */
-        /*=====================================================================*/
-        this.sendMessage = (data) => {
-            webRTC.send(data);
+        this.setPeerName = (pn) => {
+            console.log("setPeerName method is called.");
+            peerName = pn;
         }
+        
         /*=====================================================================*/
         /*        Set the Web RTC configuration                                */
         /*=====================================================================*/
@@ -162,30 +154,6 @@ export default class Peer {
         this.setDebug = (debug) => {
             isDebug = debug;
         }
-        /*=====================================================================*/
-        /*        Add a media stream to a peer                                 */
-        /*=====================================================================*/
-        this.setStream=stream=>{
-            webRTC.setStream(stream);
-        }
-        /*=====================================================================*/
-        /*        To process the signal data                                   */
-        /*=====================================================================*/
-        this.signal = (signalObj) => {
-            msgLogger("====Process Signal Data Start====");
-            msgLogger("Receive " + signalObj.type + " from " + peerName);
-            switch (signalObj.type) {
-                case "iceCandidate":
-                    webRTC.addICECandidate(signalObj.value);
-                    break;
-                case "remoteDescription":
-                    processRemoteDescription(signalObj.value)
-                    break;
-                default:
-                    break;
-            }
-            msgLogger("====Process Signal Data end====");
-        }
         /*========================================================================================*/
         /*      Private Method                                                                    */
         /*========================================================================================*/
@@ -196,29 +164,6 @@ export default class Peer {
             if (isDebug) {
                 console.log(msg);
             }
-        }
-        /*=====================================================================*/
-        /*        To process the remote description                            */
-        /*=====================================================================*/
-        let processRemoteDescription = async (signalData) => {
-            msgLogger("====processRemoteDescription Start====");
-            const offerCollision = (signalData.type === "offer") &&
-                (makingOffer || webRTC.getSignalingState() !== "stable");
-            ignoreOffer = !polite && offerCollision;
-            msgLogger("signalData.type="+signalData.type+",makingOffer="+makingOffer+", webRTC.getSignalingState()="+ webRTC.getSignalingState());
-            msgLogger("ignoreOffer = " + ignoreOffer + ",offerCollision=" + offerCollision + ",polite=" + polite);
-            if (ignoreOffer) {
-                msgLogger("Ignore offer from " + peerName);
-                return;
-            }
-            await webRTC.setRemoteDescription(signalData);
-            msgLogger("Set Remote Description for " + peerName);
-            if (signalData.type === "offer") {
-                await webRTC.setLocalDescription();
-                signalEventHandler({ "type": "remoteDescription", "value": webRTC.getLocalDescription() });
-                msgLogger("Sent local Description to " + peerName);
-            }
-            msgLogger("====processRemoteDescription End====");
         }
     }
 }
