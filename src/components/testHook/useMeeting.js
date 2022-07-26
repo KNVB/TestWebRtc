@@ -1,23 +1,33 @@
 import { useEffect, useReducer } from "react";
 import Meeting from "./Meeting";
-
+import Peer from "./Peer";
 let reducer = (state, action) => {
     let result = { ...state };
     let temp;
     switch (action.type) {
         case "init":
-            temp = { "meeting": action.meeting }
-            result = temp;
+            result = { ...action.obj };
             break;
         case "initPeerList":
-            temp={...result.meeting};
-            temp.setLocalPeerId(action.obj.localPeerId);
-            temp.setPeerList(action.obj.peerList);
-            result.meeting={...temp};
-            break;    
+            temp = { ...result };
+            temp.localPeer.setPeerId(action.obj.localPeerId);
+            temp.peerList = action.obj.peerList;
+            result = { ...temp };
+            break;
+        case "leaveMeeting":
+            temp = { ...result };
+            temp.meeting.leave();
+            temp.globalMessageList=[];
+            temp["localPeer"]=new Peer();
+            temp["localStream"]=null;            
+            temp["peerList"]=null;
+            temp["shareAudio"]=false;
+            temp["shareVideo"]=false;
+            result = { ...temp };
+            break
         case "updateLocalPeerName":
             temp = { ...result };
-            temp.meeting.setLocalPeerName(action.peerName);
+            temp.localPeer.setPeerName(action.peerName);
             result = temp;
             break;
         default:
@@ -36,27 +46,48 @@ export function useMeeting() {
             alert(message);
             updateItemList({ type: "disconnect" });
         });
-        meeting.on("initPeerList",obj=>{
-            updateItemList({ type: "initPeerList","obj":obj});
+        meeting.on("initPeerList", obj => {
+            updateItemList({ type: "initPeerList", "obj": obj });
         });
         meeting.on("globalMessage", messageObj => {
             updateItemList({ type: "updateGlobalMessage", messageObj: messageObj });
         })
-        updateItemList({ "type": "init", "meeting": meeting })
+        let obj = {
+            globalMessageList: [],
+            "localPeer": new Peer(),
+            "localStream": null,
+            "meeting": meeting,
+            "peerList": null,
+            "shareAudio": false,
+            "shareVideo": false,
+        }
+        updateItemList({ "type": "init", "obj": obj })
     }, []);
     let joinMeeting = (path) => {
-        if (itemList.meeting.getLocalPeerName() === '') {
+        if (itemList.localPeer.getPeerName() === '') {
             throw new Error("Please enter your alias first.");
         } else {
-            itemList.meeting.join(path);
+            itemList.meeting.join(path,itemList.localPeer);
         }
+    }
+    let leaveMeeting=()=>{
+        updateItemList({ "type":"leaveMeeting"});
     }
     let updateLocalPeerName = peerName => {
         updateItemList({ "type": "updateLocalPeerName", "peerName": peerName })
     }
-    return [itemList.meeting,
-    {
-        "joinMeeting": joinMeeting,
-        "setLocalPeerName": updateLocalPeerName
-    }];
+    return [
+        {
+            globalMessageList: itemList.globalMessageList,            
+            "localPeer": itemList.localPeer,
+            peerList: itemList.peerList,
+            "localStream": itemList.localStream,
+            "shareAudio": itemList.shareAudio,
+            "shareVideo": itemList.shareVideo
+        },
+        {
+            "leaveMeeting":leaveMeeting,
+            "joinMeeting": joinMeeting,
+            "setLocalPeerName": updateLocalPeerName
+        }];
 }

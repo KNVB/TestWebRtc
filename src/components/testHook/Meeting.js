@@ -1,14 +1,11 @@
+import Peer from './Peer';
 import io from 'socket.io-client';
-import Peer from "./Peer";
-
 export default class Meeting {
     constructor() {
         let connectionTimeoutHandler;
         let globalMessageHandler;
         let initPeerListHandler;
-        let localPeer = new Peer();
-        let localStream;
-        let peerList = null;
+        
         let peerListUpdatedHandler;
         let socket = null;
         let webRtcConfig = {
@@ -53,30 +50,27 @@ export default class Meeting {
             */
         };
         console.log("Meeting Object constructor is called.");
-        /*=====================================================================*/
-        /*        Get peer list                                                */
-        /*=====================================================================*/
-        this.getPeerList = () => {
-            return peerList;
-        }
-        this.getLocalPeerName = () => {
-            return localPeer.getPeerName();
-        }
-        this.join = path => {
+        
+        this.join = (path,localPeer) => {
             socket = io(path, {
                 transports: ["websocket"],
             });
-            socket.emit("hi", this.getLocalPeerName(), response => {
+            socket.emit("hi", localPeer.getPeerName(), response => {
                 console.log("====Sent Hi Response Start====");
                 console.log("response:" + JSON.stringify(response));
-                let tempList={};
+                let tempList=[];
                 for (const [newPeerId, tempPeer] of Object.entries(response.peerList)) {
-                    let peer = genPeer(newPeerId, tempPeer.peerName);
-                    tempList[peer.peerId] = peer;
+                    let peer = genPeer(response.peerId,newPeerId, tempPeer.peerName);
+                    tempList.push(peer);
                 }
                 initPeerListHandler({"localPeerId":response.peerId,"peerList":tempList});
                 console.log("====Sent Hi Response End====");
             });
+        }
+        this.leave=()=>{
+            if (socket) {
+                socket.disconnect();
+            }
         }
         /*=====================================================================*/
         /*        To configure handler for varies event                        */
@@ -98,32 +92,17 @@ export default class Meeting {
                 default: break;
             }
         }
-        this.setLocalPeerId = peerId => {
-            localPeer.setPeerId(peerId);
-        }
-        this.setLocalPeerName = peerName => {
-            localPeer.setPeerName(peerName);
-        }
-        this.setPeerList = pl => {
-            peerList=pl;
-        }
-        /*=====================================================================*/
-        /*        Add a local media stream to a local variable for future use  */
-        /*=====================================================================*/
-        this.setLocalStream = stream => {
-            setLocalStream(stream);
-        }
         /*========================================================================================*/
         /*      Private Method                                                                    */
         /*========================================================================================*/
         /*  To generate an Peer instance                                                          */
         /*========================================================================================*/
-        let genPeer = (newPeerId, peerName) => {
+        let genPeer = (localPeerId,newPeerId, peerName) => {
             let peer = new Peer(), temp;
             peer.setPeerName(peerName);
             peer.setPeerId(newPeerId);
             peer.on("signal", signalData => {
-                temp = { from: localPeer.peerId, to: peer.peerId, signalData };
+                temp = { from: localPeerId, to: peer.peerId, signalData };
                 sendSignalData(temp);
             });
             peer.on("dataChannelMessage", message => {
@@ -135,10 +114,7 @@ export default class Meeting {
                 console.log(message);
                 console.log("==== Message received from " + peerName + " end====");
             });
-            */
-            if (localStream) {
-                peer.setStream(localStream);
-            }
+            */            
             peer.setConfig(webRtcConfig);
             peer.setDebug(true);
             peer.init();
@@ -160,15 +136,6 @@ export default class Meeting {
                         break;
                 }
             });
-        }
-        /*=====================================================================*/
-        /*        Add a local media stream to all peer in the peer list        */
-        /*=====================================================================*/
-        let setLocalStream = (stream) => {
-            localStream = stream;
-            Object.values(peerList).forEach(peer => {
-                peer.setStream(localStream);
-            })
         }
     }
 }
