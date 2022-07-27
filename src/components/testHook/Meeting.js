@@ -54,7 +54,7 @@ export default class Meeting {
         };
         
 
-        this.join = (path, localPeer) => {
+        this.join = (path, localPeer,localStream) => {
             socket = io(path, {
                 transports: ["websocket"],
             });
@@ -74,7 +74,7 @@ export default class Meeting {
             socket.on("askConnect", newPeer => {
                 msgLogger("====Receive Hi Start====");
                 msgLogger("Receive Hi Event from " + JSON.stringify(newPeer) + ".");
-                let peer = genPeer(localPeer.getPeerId(), newPeer.peerId, newPeer.peerName);
+                let peer = genPeer(localPeer.getPeerId(), newPeer.peerId, newPeer.peerName,localStream);
                 peer.isCall = true;
                 peer.call();
                 newPeerEventHandler(peer);
@@ -104,7 +104,7 @@ export default class Meeting {
                 msgLogger("response:" + JSON.stringify(response));
                 let tempList = [];
                 for (const [newPeerId, tempPeer] of Object.entries(response.peerList)) {
-                    let peer = genPeer(response.peerId, newPeerId, tempPeer.peerName);
+                    let peer = genPeer(response.peerId, newPeerId, tempPeer.peerName,localStream);
                     tempList.push(peer);
                 }
                 initPeerListHandler({ "localPeerId": response.peerId, "peerList": tempList });
@@ -156,7 +156,7 @@ export default class Meeting {
         /*========================================================================================*/
         /*  To generate an Peer instance                                                          */
         /*========================================================================================*/
-        let genPeer = (localPeerId, newPeerId, peerName) => {
+        let genPeer = (localPeerId, newPeerId, peerName,localStream) => {
             let peer = new Peer(), temp;
             peer.setPeerName(peerName);
             peer.setPeerId(newPeerId);
@@ -175,6 +175,9 @@ export default class Meeting {
                 msgLogger("==== Message received from " + peerName + " end====");
             });
             */
+            if (localStream) {
+                peer.setStream(localStream);
+            }
             peer.setConfig(webRtcConfig);
             peer.setDebug(true);
             peer.init();

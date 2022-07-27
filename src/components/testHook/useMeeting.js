@@ -122,7 +122,7 @@ export function useMeeting() {
         if (itemList.localPeer.getPeerName() === '') {
             throw new Error("Please enter your alias first.");
         } else {
-            itemList.meeting.join(path, itemList.localPeer);
+            itemList.meeting.join(path, itemList.localPeer, itemList.localStream);
         }
     }
     let leaveMeeting = () => {
