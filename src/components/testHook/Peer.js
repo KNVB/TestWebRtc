@@ -25,7 +25,10 @@ export default class Peer {
             msgLogger("====Data channel error end====");
         });
         webRTC.on("dataChannelMessage", message => {
+            msgLogger("====Data channel message start====");
+            msgLogger(message);
             dataChannelMessageHandler(message.data);
+            msgLogger("====Data channel message end====");
         });
         webRTC.on("dataChannelOpen", () => {
             msgLogger("====Data channel open start====");
@@ -95,12 +98,19 @@ export default class Peer {
         });
 
         webRTC.setDebug(true);
-
         /*=====================================================================*/
-        /*        Initialize the WebRTC object                                 */
+        /*        Make a call to this peer                                     */
         /*=====================================================================*/
-        this.init = () => {
-            webRTC.init();
+        this.call = () => {
+            polite = true;
+            msgLogger("Make a call to " + peerName);
+            webRTC.call();
+        }
+        /*=====================================================================*/
+        /*        Hangup the peer connection                                   */
+        /*=====================================================================*/
+        this.hangUp = () => {
+            webRTC.hangUp();
         }
         /*=====================================================================*/
         /*        Get Peer connection state                                    */
@@ -113,6 +123,12 @@ export default class Peer {
         }
         this.getPeerId = () => {
             return peerId;
+        }
+        /*=====================================================================*/
+        /*        Initialize the WebRTC object                                 */
+        /*=====================================================================*/
+        this.init = () => {
+            webRTC.init();
         }
         /*=====================================================================*/
         /*        To configure handler for varies event                        */
@@ -134,6 +150,12 @@ export default class Peer {
                 default: break;
             }
         }
+        /*=====================================================================*/
+        /*        Restart ICE                                                  */
+        /*=====================================================================*/
+        this.restartICE = () => {
+            webRTC.restartICE();
+        }
         this.setPeerId = (id) => {
             peerId = id;
         }
@@ -141,7 +163,15 @@ export default class Peer {
             console.log("setPeerName method is called.");
             peerName = pn;
         }
-        
+        /*=====================================================================*/
+        /*       Sends data across the data channel to the remote peer.        */
+        /*=====================================================================*/
+        this.sendMessage = (data) => {
+            msgLogger("====sendMessage Start====");
+            msgLogger(data);
+            webRTC.send(data);
+            msgLogger("====sendMessage End====");
+        }
         /*=====================================================================*/
         /*        Set the Web RTC configuration                                */
         /*=====================================================================*/
@@ -154,6 +184,24 @@ export default class Peer {
         this.setDebug = (debug) => {
             isDebug = debug;
         }
+        /*=====================================================================*/
+        /*        To process the signal data                                   */
+        /*=====================================================================*/
+        this.signal = (signalObj) => {
+            msgLogger("====Process Signal Data Start====");
+            msgLogger("Receive " + signalObj.type + " from " + peerName);
+            switch (signalObj.type) {
+                case "iceCandidate":
+                    webRTC.addICECandidate(signalObj.value);
+                    break;
+                case "remoteDescription":
+                    processRemoteDescription(signalObj.value)
+                    break;
+                default:
+                    break;
+            }
+            msgLogger("====Process Signal Data end====");
+        }
         /*========================================================================================*/
         /*      Private Method                                                                    */
         /*========================================================================================*/
@@ -164,6 +212,29 @@ export default class Peer {
             if (isDebug) {
                 console.log(msg);
             }
+        }
+        /*=====================================================================*/
+        /*        To process the remote description                            */
+        /*=====================================================================*/
+        let processRemoteDescription = async (signalData) => {
+            msgLogger("====processRemoteDescription Start====");
+            const offerCollision = (signalData.type === "offer") &&
+                (makingOffer || webRTC.getSignalingState() !== "stable");
+            ignoreOffer = !polite && offerCollision;
+            msgLogger("signalData.type=" + signalData.type + ",makingOffer=" + makingOffer + ", webRTC.getSignalingState()=" + webRTC.getSignalingState());
+            msgLogger("ignoreOffer = " + ignoreOffer + ",offerCollision=" + offerCollision + ",polite=" + polite);
+            if (ignoreOffer) {
+                msgLogger("Ignore offer from " + peerName);
+                return;
+            }
+            await webRTC.setRemoteDescription(signalData);
+            msgLogger("Set Remote Description for " + peerName);
+            if (signalData.type === "offer") {
+                await webRTC.setLocalDescription();
+                signalEventHandler({ "type": "remoteDescription", "value": webRTC.getLocalDescription() });
+                msgLogger("Sent local Description to " + peerName);
+            }
+            msgLogger("====processRemoteDescription End====");
         }
     }
 }

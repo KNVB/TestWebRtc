@@ -5,8 +5,11 @@ export default class Meeting {
         let connectionTimeoutHandler;
         let globalMessageHandler;
         let initPeerListHandler;
-        
-        let peerListUpdatedHandler;
+
+        let newPeerEventHandler;
+        let reconnectEventHandler;
+        let removePeerIdHandler;
+        let signalHandler;
         let socket = null;
         let webRtcConfig = {
             iceServers: [
@@ -50,28 +53,69 @@ export default class Meeting {
             */
         };
         console.log("Meeting Object constructor is called.");
-        
-        this.join = (path,localPeer) => {
+
+        this.join = (path, localPeer) => {
             socket = io(path, {
                 transports: ["websocket"],
             });
+            socket.io.on("reconnect", () => {
+                console.log("==========Reconnect successed start=============");
+                socket.emit("reconnectRequest", localPeer, response => {
+                    switch (response.status) {
+                        case 1:
+                            connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                            break;
+                        default:
+                            break;
+                    }
+                });
+                console.log("==========Reconnect successed end=============");
+            });
+            socket.on("askConnect", newPeer => {
+                console.log("====Receive Hi Start====");
+                console.log("Receive Hi Event from " + JSON.stringify(newPeer) + ".");
+                let peer = genPeer(localPeer.getPeerId(), newPeer.peerId, newPeer.peerName);
+                peer.isCall = true;
+                peer.call();
+                newPeerEventHandler(peer);
+                console.log("====Receive Hi End====");
+            });
+            socket.on("askReconnect", reconnectPeerId => {
+                console.log("==================Receive askReconnect Event from " + reconnectPeerId+ "start ==========");
+                reconnectEventHandler(reconnectPeerId);
+                console.log("==================Receive askReconnect Event from " + reconnectPeerId + "end ==========");
+            });           
+            socket.on("removePeerIdList", list => {
+                console.log("====Receive Remove Peer Id List start====");
+                console.log("remove id list:"+JSON.stringify(list))
+                if (list.length > 0) {
+                    removePeerIdHandler(list)
+                }
+                console.log("====Receive Remove Peer Id List end====");
+            });
+            socket.on("signalData", signalObj => {
+                console.log("====Receive Signal Event Start====");
+                console.log("signalObj:" + JSON.stringify(signalObj));
+                signalHandler(signalObj);
+                console.log("====Receive Signal Event End====");
+            })
             socket.emit("hi", localPeer.getPeerName(), response => {
                 console.log("====Sent Hi Response Start====");
                 console.log("response:" + JSON.stringify(response));
-                let tempList=[];
+                let tempList = [];
                 for (const [newPeerId, tempPeer] of Object.entries(response.peerList)) {
-                    let peer = genPeer(response.peerId,newPeerId, tempPeer.peerName);
+                    let peer = genPeer(response.peerId, newPeerId, tempPeer.peerName);
                     tempList.push(peer);
                 }
-                initPeerListHandler({"localPeerId":response.peerId,"peerList":tempList});
+                initPeerListHandler({ "localPeerId": response.peerId, "peerList": tempList });
                 console.log("====Sent Hi Response End====");
             });
         }
-        this.leave=()=>{
+        this.leave = () => {
             if (socket) {
                 socket.disconnect();
             }
-        }
+        }       
         /*=====================================================================*/
         /*        To configure handler for varies event                        */
         /*=====================================================================*/
@@ -86,8 +130,17 @@ export default class Meeting {
                 case "initPeerList":
                     initPeerListHandler = param;
                     break;
-                case "peerListUpdated":
-                    peerListUpdatedHandler = param;
+                case "newPeerEvent":
+                    newPeerEventHandler = param;
+                    break;
+                case "reconnectEvent":
+                    reconnectEventHandler = param;
+                    break;
+                case "removePeerId":
+                    removePeerIdHandler = param;
+                    break;
+                case "signal":
+                    signalHandler = param;
                     break;
                 default: break;
             }
@@ -97,16 +150,17 @@ export default class Meeting {
         /*========================================================================================*/
         /*  To generate an Peer instance                                                          */
         /*========================================================================================*/
-        let genPeer = (localPeerId,newPeerId, peerName) => {
+        let genPeer = (localPeerId, newPeerId, peerName) => {
             let peer = new Peer(), temp;
             peer.setPeerName(peerName);
             peer.setPeerId(newPeerId);
             peer.on("signal", signalData => {
-                temp = { from: localPeerId, to: peer.peerId, signalData };
+                temp = { from: localPeerId, to: peer.getPeerId(), signalData };
                 sendSignalData(temp);
             });
             peer.on("dataChannelMessage", message => {
-                globalMessageHandler({ from: peerName, message: message });
+                //console.log("dataChannelMessage:"+message);
+                globalMessageHandler(JSON.parse(message));
             });
             /*
             peer.on("dataChannelMessage", message => {
@@ -114,7 +168,7 @@ export default class Meeting {
                 console.log(message);
                 console.log("==== Message received from " + peerName + " end====");
             });
-            */            
+            */
             peer.setConfig(webRtcConfig);
             peer.setDebug(true);
             peer.init();
