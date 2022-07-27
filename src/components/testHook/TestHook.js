@@ -5,7 +5,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import LocalMedia from './LocalMedia';
 import PeerElement from "./PeerElement";
 export default function TestHook() {
-    const [data, action] = useMeeting(null);
+    const [data, action] = useMeeting();
     let leaveMeeting = () => {
         action.leaveMeeting();
     }
@@ -70,7 +70,7 @@ export default function TestHook() {
                                     Peer Name:{data.localPeer.getPeerName()}(You)<br />
                                 </div>
                                 {
-                                    data.peerList.map((peer) => (
+                                     Object.values(data.peerList).map((peer) => (
                                         <PeerElement peer={peer} key={peer.getPeerId()} />
                                     ))
                                 }

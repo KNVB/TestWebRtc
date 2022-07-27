@@ -6,12 +6,9 @@ export default class Peer {
         let dataChannelMessageHandler;
         let ignoreOffer = false, isDebug = false;
         let makingOffer = false, polite = false;
-        let peerName = '', peerId = '';
+        let peerId = '', peerName = '';
         let signalEventHandler, streamHandler;
         let webRTC = new WebRTC();
-
-        this.isCall = false;
-        this.isLocalPeer = false;
 
         webRTC.on("dataChannelClose", () => {
             msgLogger("====Data channel close start====");
@@ -25,10 +22,7 @@ export default class Peer {
             msgLogger("====Data channel error end====");
         });
         webRTC.on("dataChannelMessage", message => {
-            msgLogger("====Data channel message start====");
-            msgLogger(message);
             dataChannelMessageHandler(message.data);
-            msgLogger("====Data channel message end====");
         });
         webRTC.on("dataChannelOpen", () => {
             msgLogger("====Data channel open start====");
@@ -106,6 +100,16 @@ export default class Peer {
             msgLogger("Make a call to " + peerName);
             webRTC.call();
         }
+        this.getConnectionState = () => {
+            return connectionState;
+        }
+        this.getPeerId = () => {
+            return peerId;
+        }
+        this.getPeerName = () => {
+            return peerName;
+        }
+        
         /*=====================================================================*/
         /*        Hangup the peer connection                                   */
         /*=====================================================================*/
@@ -113,23 +117,14 @@ export default class Peer {
             webRTC.hangUp();
         }
         /*=====================================================================*/
-        /*        Get Peer connection state                                    */
-        /*=====================================================================*/
-        this.getConnectionState = () => {
-            return connectionState;
-        }
-        this.getPeerName = () => {
-            return peerName;
-        }
-        this.getPeerId = () => {
-            return peerId;
-        }
-        /*=====================================================================*/
         /*        Initialize the WebRTC object                                 */
         /*=====================================================================*/
         this.init = () => {
             webRTC.init();
         }
+        this.isCall = false;
+        this.isLocalPeer = false;
+
         /*=====================================================================*/
         /*        To configure handler for varies event                        */
         /*=====================================================================*/
@@ -156,21 +151,11 @@ export default class Peer {
         this.restartICE = () => {
             webRTC.restartICE();
         }
-        this.setPeerId = (id) => {
-            peerId = id;
-        }
-        this.setPeerName = (pn) => {
-            console.log("setPeerName method is called.");
-            peerName = pn;
-        }
         /*=====================================================================*/
         /*       Sends data across the data channel to the remote peer.        */
         /*=====================================================================*/
         this.sendMessage = (data) => {
-            msgLogger("====sendMessage Start====");
-            msgLogger(data);
             webRTC.send(data);
-            msgLogger("====sendMessage End====");
         }
         /*=====================================================================*/
         /*        Set the Web RTC configuration                                */
@@ -183,6 +168,13 @@ export default class Peer {
         /*=====================================================================*/
         this.setDebug = (debug) => {
             isDebug = debug;
+        }
+        this.setPeerId = (id) => {
+            peerId = id;
+        }
+        this.setPeerName = (pn) => {
+            console.log("setPeerName method is called.");
+            peerName = pn;
         }
         /*=====================================================================*/
         /*        Add a media stream to a peer                                 */

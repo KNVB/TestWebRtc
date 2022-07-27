@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useEffect,useReducer } from "react";
 import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
@@ -11,78 +11,64 @@ let obj = {
     "shareAudio": false,
     "shareVideo": false,
 }
+let webRtcConfig = {
+    iceServers: [
+        {
+            urls: "turn:numb.viagenie.ca",
+            credential: "turnserver",
+            username: "sj0016092@gmail.com",
+        },
+        {
+            urls: ["turn:openrelay.metered.ca:443?transport=tcp"],
+            username: "openrelayproject",
+            credential: "openrelayproject",
+        },
+        {
+            urls: "turn:numb.viagenie.ca",
+            credential: "turnserver",
+            username: "sj0016092@gmail.com",
+        },
+        {
+            urls: [
+                "stun:stun.l.google.com:19302",
+                "stun:stun1.l.google.com:19302",
+                "stun:stun2.l.google.com:19302",
+                "stun:stun3.l.google.com:19302",
+                "stun:stun4.l.google.com:19302",
+            ]
+        },
+    ]
+    /*
+    iceServers: [
+        { urls: "stun:stun.stunprotocol.org" },
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302"},
+        { urls: "stun:stun2.l.google.com:19302"},
+        {
+            urls: "turn:numb.viagenie.ca",
+            credential: "turnserver",
+            username: "sj0016092@gmail.com",
+        },
+    ],
+    */
+};
 
 let reducer = (state, action) => {
     let result = { ...state };
     let temp;
     switch (action.type) {
         case "initMeeting":
-            result.meeting = action.meetingObj;
+            result.meeting=action.meeting;
             break;
         case "initPeerList":
-            temp = { ...result };
-            temp.localPeer.setPeerId(action.obj.localPeerId);
-            temp.peerList = action.obj.peerList;
-            result = { ...temp };
-            break;
-        case "leaveMeeting":
-            temp = { ...result };
-            if (temp.peerList) {
-                temp.peerList.forEach(peer => {
-                    peer.hangUp();
-                })
-            }
-            temp.meeting.leave();
-            temp.globalMessageList = [];
-            temp["localPeer"] = new Peer();
-            temp["localStream"] = null;
-            temp["peerList"] = null;
-            temp["shareAudio"] = false;
-            temp["shareVideo"] = false;
-            result = { ...temp };
+            result.localPeer.setPeerId(action.localPeerId);
+            result.peerList=action.peerList;
             break
-        case "newPeerEvent":
-            temp = [...result.peerList];
-            temp.push(action.newPeer);
-            result.peerList = temp;
-            break;
-        case "reconnectEvent":
-            temp = result.peerList.filter(peer => peer.getPeerId() === action.peerId);
-            temp.restartICE();
-            break;
-        case "removePeerId":
-            temp = result.peerList.filter(peer =>
-                (!action.list.includes(peer.getPeerId()))
-            );
-            result.peerList = temp;
-            break;
-        case "signal":
-            temp = [...result.peerList];
-            let pp = temp.find(peer => peer.getPeerId() === action.signalObj.from);
-            pp.signal(action.signalObj);
-            result.peerList = temp;
-            break;
-        case "updateGlobalMessageList":
-            temp = [action.messageObj];
-            temp = temp.concat(result.globalMessageList);
-            result.globalMessageList = temp;
-            break;
-        case "updateLocalPeerName":
-            temp = { ...result };
-            temp.localPeer.setPeerName(action.peerName);
-            result = temp;
-            break;
-        case "updateShareAudioState":
-            temp = { ...result };
-            temp["shareAudio"] = action.state;
-            temp["localStream"] = action.localStream;
-            result = temp;
-            break;
-        case "updateShareVideoState":
-            temp = { ...result };
-            temp["shareVideo"] = action.state;
-            temp["localStream"] = action.localStream;
-            result = temp;
+        case "newPeer":
+            result.peerList[action.newPeer.getPeerId()]=action.newPeer;
+            break;    
+        case "setLocalPeerName":
+            result.localPeer.setPeerName(action.newName);
             break;
         default:
             break;
@@ -91,90 +77,47 @@ let reducer = (state, action) => {
 }
 export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
-    useEffect(() => {
-        let meeting = new Meeting();
+    useEffect(()=>{
+        let meeting=new Meeting();
         meeting.setDebug(true);
-        meeting.on("connectionTimeout", message => {
-            alert(message);
-            updateItemList({ "type": "leaveMeeting" });
+        meeting.on("initPeerList",obj=>{
+            let peerList={}
+            for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)){
+                let peer=new Peer();
+                peer.setPeerName(tempPeer.peerName);
+                peer.setPeerId(newPeerId);
+                peerList[newPeerId]=peer;
+            }
+            updateItemList({type:"initPeerList",localPeerId:obj.peerId,"peerList":peerList});        
         });
-        meeting.on("initPeerList", obj => {
-            updateItemList({ type: "initPeerList", "obj": obj });
-        });
-        meeting.on("globalMessage", messageObj => {
-            updateItemList({ type: "updateGlobalMessageList", "messageObj": messageObj });
+        meeting.on("newPeerEvent",newPeer=>{
+            let peer=new Peer();
+            peer.setPeerName(newPeer.peerName);
+            peer.setPeerId(newPeer.peerId);
+            peer.isCall = true;
+            peer.call();
+            updateItemList({type:"newPeer", "newPeer":peer});
         })
-        meeting.on("newPeerEvent", newPeer => {
-            updateItemList({ type: "newPeerEvent", "newPeer": newPeer });
-        });
-        meeting.on("reconnectEvent", reconnectPeerId => {
-            updateItemList({ type: "reconnectEvent", peerId: reconnectPeerId });
-        });
-        meeting.on("removePeerId", list => {
-            updateItemList({ type: "removePeerId", "list": list });
-        });
-        meeting.on("signal", signalObj => {
-            updateItemList({ type: "signal", signalObj: signalObj });
-        })
-        updateItemList({ "type": "initMeeting", "meetingObj": meeting })
-    }, []);
-    let joinMeeting = (path) => {
-        if (itemList.localPeer.getPeerName() === '') {
-            throw new Error("Please enter your alias first.");
-        } else {
-            itemList.meeting.join(path, itemList.localPeer, itemList.localStream);
-        }
-    }
+        updateItemList({type:"initMeeting","meeting":meeting});
+    },[])
     let leaveMeeting = () => {
-        updateItemList({ "type": "leaveMeeting" });
+
     }
-    let sendGlobalMessage = (msg) => {
-        let msgObj = { from: itemList.localPeer.getPeerName(), message: msg };
-        itemList.peerList.forEach(peer => {
-            peer.sendMessage(JSON.stringify(msgObj));
-        });
-        updateItemList({ "type": "updateGlobalMessageList", "messageObj": msgObj });
-    }
-    let updateLocalPeerName = peerName => {
-        updateItemList({ "type": "updateLocalPeerName", "peerName": peerName })
-    }
-    let updateShareAudioState = async shareAudioState => {
-        let localStream;
-        let isShareAudio = (shareAudioState === "true");
-        try {
-            localStream = await itemList.localStreamManager.getMediaStream(itemList.shareVideo, isShareAudio);
-            itemList.peerList.forEach(peer => {
-                peer.setStream(localStream);
-            });
-        } catch (error) {
-            console.log("Get Media Stream failure:" + error.message);
-            localStream = null;
-        } finally {
-            if (localStream === null) {
-                await itemList.localStreamManager.closeStream(itemList.localStream);
-            }
-            updateItemList({ "type": "updateShareAudioState", "localStream": localStream, state: isShareAudio });
+    let joinMeeting = (path) => {
+        if (itemList.localPeer.getPeerName() === ''){
+            throw new Error("Please enter your alias first.")
+        }else{
+            itemList.meeting.join(path,itemList.localPeer);
         }
     }
-    let updateShareVideoState = async shareVideoState => {
-        let localStream;
-        let isShareVideo = (shareVideoState === "true");
-        try {
-            localStream = await itemList.localStreamManager.getMediaStream(isShareVideo, itemList.shareAudio);
-            itemList.peerList.forEach(peer => {
-                peer.setStream(localStream);
-            });
-        } catch (error) {
-            console.log("Get Media Stream failure:" + error.message);
-            localStream = null;
-        } finally {
-            if (localStream === null) {
-                await itemList.localStreamManager.closeStream(itemList.localStream);
-            }
-            updateItemList({ "type": "updateShareVideoState", "localStream": localStream, state: isShareVideo });
-        }
+    let sendGlobalMessage = () => {
+
     }
-    
+    let setLocalPeerName = (newName) => { 
+        updateItemList({"type":"setLocalPeerName","newName":newName})
+    }
+    let updateShareAudioState = (newState) => { }
+    let updateShareVideoState = (newState) => { }
     return [
         {
             globalMessageList: itemList.globalMessageList,
@@ -185,11 +128,11 @@ export function useMeeting() {
             "shareVideo": itemList.shareVideo
         },
         {
-            "leaveMeeting": leaveMeeting,
-            "joinMeeting": joinMeeting,
-            "sendGlobalMessage": sendGlobalMessage,
-            "setLocalPeerName": updateLocalPeerName,
-            "updateShareAudioState": updateShareAudioState,
-            "updateShareVideoState": updateShareVideoState
+            leaveMeeting,
+            joinMeeting,
+            sendGlobalMessage,
+            setLocalPeerName,
+            updateShareAudioState,
+            updateShareVideoState
         }];
 }
