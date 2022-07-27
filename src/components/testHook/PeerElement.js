@@ -8,9 +8,9 @@ export default function PeerElement({ peer }) {
             console.log(peer.peerName + "," + peer.getConnectionState() + "," + connectionState);
             setPeerConnectionState(connectionState);
         });
-        peer.on("stream",stream=>{
-            console.log("Received stream event from:"+peer.peerName);
-            media.current.srcObject=stream;
+        peer.on("stream", stream => {
+            console.log("Received stream event from:" + peer.getPeerName());
+            media.current.srcObject = stream;
         });
     }, [peer]);
     return (

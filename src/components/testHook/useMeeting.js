@@ -1,10 +1,12 @@
 import { useEffect, useReducer } from "react";
+import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
 let obj = {
     globalMessageList: [],
     "localPeer": new Peer(),
     "localStream": null,
+    "localStreamManager": new LocalStreamManager(),
     "peerList": null,
     "shareAudio": false,
     "shareVideo": false,
@@ -53,7 +55,7 @@ let reducer = (state, action) => {
                 (!action.list.includes(peer.getPeerId()))
             );
             result.peerList = temp;
-            break;    
+            break;
         case "signal":
             temp = [...result.peerList];
             let pp = temp.find(peer => peer.getPeerId() === action.signalObj.from);
@@ -61,13 +63,25 @@ let reducer = (state, action) => {
             result.peerList = temp;
             break;
         case "updateGlobalMessageList":
-            temp=[action.messageObj];            
-            temp=temp.concat(result.globalMessageList);
+            temp = [action.messageObj];
+            temp = temp.concat(result.globalMessageList);
             result.globalMessageList = temp;
             break;
         case "updateLocalPeerName":
             temp = { ...result };
             temp.localPeer.setPeerName(action.peerName);
+            result = temp;
+            break;
+        case "updateShareAudioState":
+            temp = { ...result };
+            temp["shareAudio"] = action.state;
+            temp["localStream"] = action.localStream;
+            result = temp;
+            break;
+        case "updateShareVideoState":
+            temp = { ...result };
+            temp["shareVideo"] = action.state;
+            temp["localStream"] = action.localStream;
             result = temp;
             break;
         default:
@@ -79,7 +93,7 @@ export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
     useEffect(() => {
         let meeting = new Meeting();
-
+        meeting.setDebug(true);
         meeting.on("connectionTimeout", message => {
             alert(message);
             updateItemList({ "type": "leaveMeeting" });
@@ -115,15 +129,52 @@ export function useMeeting() {
         updateItemList({ "type": "leaveMeeting" });
     }
     let sendGlobalMessage = (msg) => {
-        let msgObj= { from: itemList.localPeer.getPeerName(), message: msg };
+        let msgObj = { from: itemList.localPeer.getPeerName(), message: msg };
         itemList.peerList.forEach(peer => {
             peer.sendMessage(JSON.stringify(msgObj));
         });
-        updateItemList({ "type": "updateGlobalMessageList", "messageObj": msgObj});
+        updateItemList({ "type": "updateGlobalMessageList", "messageObj": msgObj });
     }
     let updateLocalPeerName = peerName => {
         updateItemList({ "type": "updateLocalPeerName", "peerName": peerName })
     }
+    let updateShareAudioState = async shareAudioState => {
+        let localStream;
+        let isShareAudio = (shareAudioState === "true");
+        try {
+            localStream = await itemList.localStreamManager.getMediaStream(itemList.shareVideo, isShareAudio);
+            itemList.peerList.forEach(peer => {
+                peer.setStream(localStream);
+            });
+        } catch (error) {
+            console.log("Get Media Stream failure:" + error.message);
+            localStream = null;
+        } finally {
+            if (localStream === null) {
+                await itemList.localStreamManager.closeStream(itemList.localStream);
+            }
+            updateItemList({ "type": "updateShareAudioState", "localStream": localStream, state: isShareAudio });
+        }
+    }
+    let updateShareVideoState = async shareVideoState => {
+        let localStream;
+        let isShareVideo = (shareVideoState === "true");
+        try {
+            localStream = await itemList.localStreamManager.getMediaStream(isShareVideo, itemList.shareAudio);
+            itemList.peerList.forEach(peer => {
+                peer.setStream(localStream);
+            });
+        } catch (error) {
+            console.log("Get Media Stream failure:" + error.message);
+            localStream = null;
+        } finally {
+            if (localStream === null) {
+                await itemList.localStreamManager.closeStream(itemList.localStream);
+            }
+            updateItemList({ "type": "updateShareVideoState", "localStream": localStream, state: isShareVideo });
+        }
+    }
+    
     return [
         {
             globalMessageList: itemList.globalMessageList,
@@ -137,6 +188,8 @@ export function useMeeting() {
             "leaveMeeting": leaveMeeting,
             "joinMeeting": joinMeeting,
             "sendGlobalMessage": sendGlobalMessage,
-            "setLocalPeerName": updateLocalPeerName
+            "setLocalPeerName": updateLocalPeerName,
+            "updateShareAudioState": updateShareAudioState,
+            "updateShareVideoState": updateShareVideoState
         }];
 }

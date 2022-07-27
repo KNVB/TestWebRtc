@@ -2,6 +2,7 @@ import { useMeeting } from "./useMeeting";
 import { Button, Col, Container, Row } from 'react-bootstrap';
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton';
+import LocalMedia from './LocalMedia';
 import PeerElement from "./PeerElement";
 export default function TestHook() {
     const [data, action] = useMeeting(null);
@@ -21,7 +22,13 @@ export default function TestHook() {
     }
     let updateLocalPeerName = e => {
         action.setLocalPeerName(e.target.value);
-    }   
+    }
+    let updateShareAudioState = value =>{
+        action.updateShareAudioState(value);
+    }
+    let updateShareVideoState = value =>{
+        action.updateShareVideoState(value);
+    }
     return (
         <Container fluid className="p-0">
             <Row className="border border-dark m-1 rounded-3">
@@ -74,7 +81,27 @@ export default function TestHook() {
                         <Col className="d-flex flex-row justify-content-center p-2">
                             <Button onClick={sendGlobalMessage}>Send testing message to all peer</Button>
                         </Col>
+                        <Col className="d-flex flex-row justify-content-center p-2">
+                        <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
+                                <div className="m-1">Share Audio:</div>
+                                <DropdownButton onSelect={updateShareAudioState} title={((data.shareAudio) ? "Yes" : "No")} variant="primary">
+                                    <Dropdown.Item eventKey={false}>No</Dropdown.Item>
+                                    <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
+                                </DropdownButton>
+                            </div>
+                            <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
+                                <div className="m-1">Share Video:</div>
+                                <DropdownButton onSelect={updateShareVideoState} title={((data.shareVideo) ? "Yes" : "No")} variant="primary">
+                                    <Dropdown.Item eventKey={false}>No</Dropdown.Item>
+                                    <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
+                                </DropdownButton>
+                            </div>                           
+                        </Col>
                     </Row>
+                    {
+                        data.localStream && 
+                        <LocalMedia localStream={data.localStream} />
+                    }
                 </>
             }
         </Container>
