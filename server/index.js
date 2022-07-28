@@ -4,6 +4,7 @@ import http from 'http';
 import { Server } from "socket.io";
 //import B from './b/B.js';
 import C from './c/C.js';
+import T from './t/T.js';
 import TestPureWebRTC from './testPureWebRTC/TestPureWebRTC.js';
 import TestSimplePeer from './testSimplePeer/TestSimplePeer.js';
 
@@ -27,7 +28,7 @@ httpServer.listen(process.env.REACT_APP_SOCKET_PORT, () => {
 
 //let b = new B(io, "/b");
 let c = new C(io, "/c");
-
+let t = new T(io, "/t");
 /*
 let testMeeting=new TestMeeting();
 let testSocket=new TestSocket();

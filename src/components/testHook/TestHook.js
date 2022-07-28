@@ -11,7 +11,7 @@ export default function TestHook() {
     }
     let joinMeeting = () => {
         try {
-            action.joinMeeting(process.env.REACT_APP_SOCKET_URL + "c", data.localPeer);
+            action.joinMeeting(process.env.REACT_APP_SOCKET_URL + "t", data.localPeer);
         } catch (error) {
             alert(error.message)
         }

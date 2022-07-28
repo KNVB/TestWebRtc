@@ -72,8 +72,8 @@ let reducer = (state, action) => {
             result.peerList[action.newPeer.getPeerId()] = action.newPeer;
             break;
         case "removePeerId":
-            action.removePeerIdList.forEach(peerId=>{
-                if (result.peerList[peerId]){
+            action.removePeerIdList.forEach(peerId => {
+                if (result.peerList[peerId]) {
                     result.peerList[peerId].hangUp();
                     delete result.peerList[peerId];
                 }
@@ -85,11 +85,20 @@ let reducer = (state, action) => {
         case "setLocalPeerName":
             result.localPeer.setPeerName(action.newName);
             break;
-        case "updateGlobalMessageList":           
-            temp=[action.msgObj];
-            temp=temp.concat(result.globalMessageList);
+        case "updateGlobalMessageList":
+            let fromPeer;
+            if (result.localPeer.getPeerId() === action.msgObj.from) {
+                fromPeer=result.localPeer;
+            }else{
+                fromPeer = result.peerList[action.msgObj.from];
+            }
+            temp = [{ from: fromPeer.getPeerName(), message: action.msgObj.message }];
+            temp = temp.concat(result.globalMessageList);
             result.globalMessageList = temp;
             break;
+        case "updatePeerName":
+            result.peerList[action.peer.peerId].setPeerName(action.peer.peerName);
+            break
         default:
             break;
     }
@@ -100,6 +109,9 @@ export function useMeeting() {
     useEffect(() => {
         let meeting = new Meeting();
         meeting.setDebug(true);
+        meeting.on("globalMessage", msgObj => {
+            updateItemList({ type: "updateGlobalMessageList", "msgObj": msgObj });
+        });
         meeting.on("initPeerList", obj => {
             let peerList = {}
             for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)) {
@@ -114,15 +126,17 @@ export function useMeeting() {
             peer.call();
             updateItemList({ type: "newPeer", "newPeer": peer });
         })
-        meeting.on("removePeerIdList",list=>{
-            updateItemList({ type: "removePeerId",removePeerIdList:list});
+        meeting.on("removePeerIdList", list => {
+            updateItemList({ type: "removePeerId", removePeerIdList: list });
         });
         meeting.on("signalEvent", signalObj => {
             console.log("====Receive Signal Event Start====");
             updateItemList({ type: "signalPeer", signalObj: signalObj });
             console.log("====Receive Signal Event End====");
         });
-       
+        meeting.on("updatePeerNameEvent",peer=>{
+            updateItemList({ type: "updatePeerName", peer: peer });
+        });
         updateItemList({ type: "initMeeting", "meeting": meeting });
     }, []);
     let genPeer = (newPeer, meeting) => {
@@ -175,12 +189,15 @@ export function useMeeting() {
         }
     }
     let sendGlobalMessage = (msg) => {
-        let msgObj={from:itemList.localPeer.getPeerId(),message:msg}
+        let msgObj = { from: itemList.localPeer.getPeerId(), message: msg }
         itemList.meeting.sendGlobalMessage(msgObj);
-        updateItemList({type:"updateGlobalMessageList",msgObj:msgObj});
+        updateItemList({ type: "updateGlobalMessageList", msgObj: msgObj });
     }
     let setLocalPeerName = (newName) => {
-        updateItemList({ "type": "setLocalPeerName", "newName": newName })
+        if (newName !== ''){
+            itemList.meeting.updateLocalPeerName({peerId:itemList.localPeer.getPeerId(),peerName:newName});
+        }
+        updateItemList({ "type": "setLocalPeerName", "newName": newName });
     }
     let updateShareAudioState = (newState) => { }
     let updateShareVideoState = (newState) => { }

@@ -1,27 +1,38 @@
 import io from 'socket.io-client';
 
 export default class Meeting {
-    constructor(){
+    constructor() {
+        let globalMessageHandler;
         let initPeerListHandler;
         let newPeerEventHandler;
         let removePeerIdListEventHandler;
-
-        let isDebug = false;        
+        let updatePeerNameEventHandler;
+        let isDebug = false;
         let socket = null;
         let signalEventHandler;
         console.log("Meeting Object constructor is called.");
-        this.join=(path,localPeer)=>{
+        this.join = (path, localPeer) => {
             socket = io(path, {
                 transports: ["websocket"],
+            });
+            socket.emit("hi", localPeer.getPeerName(), response => {
+                msgLogger("====Receive Say Hi response start=========")
+                initPeerListHandler(response);
+                msgLogger("======Receive Say Hi response end=========")
             });
             socket.on("askConnect", newPeer => {
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " start=========")
                 newPeerEventHandler(newPeer);
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " end=========")
             });
+            socket.on("globalMessage", msgObj => {
+                msgLogger("====Receive Global Message start=========");
+                globalMessageHandler(msgObj);
+                msgLogger("====Receive Global Message start=========");
+            })
             socket.on("removePeerIdList", list => {
                 msgLogger("====Receive Remove Peer List Start====");
-                msgLogger("list="+list);
+                msgLogger("list=" + list);
                 removePeerIdListEventHandler(list);
                 msgLogger("====Receive Remove Peer List End====");
             });
@@ -29,14 +40,14 @@ export default class Meeting {
                 msgLogger("====Receive Signal Event Start====");
                 signalEventHandler(signalObj);
                 msgLogger("====Receive Signal Event End====");
-            })    
-            socket.emit("hi", localPeer.getPeerName(), response => {
-                msgLogger("====Receive Say Hi response start=========")
-                initPeerListHandler(response);
-                msgLogger("======Receive Say Hi response end=========")                
+            });
+            socket.on("updatePeerName", peer => {
+                msgLogger("====Receive Up Date Peer Name Event Start====");
+                updatePeerNameEventHandler(peer);
+                msgLogger("====Receive Up Date Peer Name Event End====");
             });
         }
-        this.leave=()=>{
+        this.leave = () => {
             if (socket) {
                 socket.disconnect();
                 socket = null;
@@ -47,25 +58,34 @@ export default class Meeting {
         /*=====================================================================*/
         this.on = (eventType, param) => {
             switch (eventType) {
+                case "globalMessage":
+                    globalMessageHandler = param;
+                    break
                 case "initPeerList":
                     initPeerListHandler = param;
                     break;
-                case "newPeerEvent":    
-                    newPeerEventHandler =param;
+                case "newPeerEvent":
+                    newPeerEventHandler = param;
                     break;
                 case "removePeerIdList":
-                    removePeerIdListEventHandler=param;
+                    removePeerIdListEventHandler = param;
                     break;
                 case "signalEvent":
-                    signalEventHandler=param;
+                    signalEventHandler = param;
+                    break;
+                case "updatePeerNameEvent":
+                    updatePeerNameEventHandler = param;
                     break;
                 default: break;
             }
         }
-        this.sendSignalData=signalData=>{
-            let result=0;
+        this.sendGlobalMessage = msgObj => {
+            socket.emit("sendGlobalMessage", msgObj);
+        }
+        this.sendSignalData = signalData => {
+            let result = 0;
             socket.emit("signal", signalData, response => {
-                result=response.status;
+                result = response.status;
             });
             return result;
         }
@@ -74,6 +94,12 @@ export default class Meeting {
         /*=====================================================================*/
         this.setDebug = (debug) => {
             isDebug = debug;
+        }
+        this.updateLocalPeerName = (peer) => {
+            console.log(peer.peerName);
+            if (socket !== null) {
+                socket.emit("updatePeerName", peer);
+            }
         }
         /*=====================================================================*/
         /*        Message Logger                                               */
