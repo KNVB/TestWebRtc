@@ -1,4 +1,4 @@
-import { useEffect,useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
@@ -56,19 +56,39 @@ let webRtcConfig = {
 let reducer = (state, action) => {
     let result = { ...state };
     let temp;
+    console.log(action);
     switch (action.type) {
         case "initMeeting":
-            result.meeting=action.meeting;
+            result.meeting = action.meeting;
             break;
         case "initPeerList":
             result.localPeer.setPeerId(action.localPeerId);
-            result.peerList=action.peerList;
-            break
+            result.peerList = { ...action.peerList };
+            break;
+        case "leaveMeeting":
+            result = action.obj;
+            break;
         case "newPeer":
-            result.peerList[action.newPeer.getPeerId()]=action.newPeer;
-            break;    
+            result.peerList[action.newPeer.getPeerId()] = action.newPeer;
+            break;
+        case "removePeerId":
+            action.removePeerIdList.forEach(peerId=>{
+                if (result.peerList[peerId]){
+                    result.peerList[peerId].hangUp();
+                    delete result.peerList[peerId];
+                }
+            })
+            break;
+        case "signalPeer":
+            result.peerList[action.signalObj.from].signal(action.signalObj);
+            break;
         case "setLocalPeerName":
             result.localPeer.setPeerName(action.newName);
+            break;
+        case "updateGlobalMessageList":           
+            temp=[action.msgObj];
+            temp=temp.concat(result.globalMessageList);
+            result.globalMessageList = temp;
             break;
         default:
             break;
@@ -77,44 +97,90 @@ let reducer = (state, action) => {
 }
 export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
-    useEffect(()=>{
-        let meeting=new Meeting();
+    useEffect(() => {
+        let meeting = new Meeting();
         meeting.setDebug(true);
-        meeting.on("initPeerList",obj=>{
-            let peerList={}
-            for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)){
-                let peer=new Peer();
-                peer.setPeerName(tempPeer.peerName);
-                peer.setPeerId(newPeerId);
-                peerList[newPeerId]=peer;
+        meeting.on("initPeerList", obj => {
+            let peerList = {}
+            for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)) {
+                let peer = genPeer(tempPeer, meeting);
+                peerList[newPeerId] = peer;
             }
-            updateItemList({type:"initPeerList",localPeerId:obj.peerId,"peerList":peerList});        
+            updateItemList({ type: "initPeerList", localPeerId: obj.peerId, "peerList": peerList });
         });
-        meeting.on("newPeerEvent",newPeer=>{
-            let peer=new Peer();
-            peer.setPeerName(newPeer.peerName);
-            peer.setPeerId(newPeer.peerId);
+        meeting.on("newPeerEvent", newPeer => {
+            let peer = genPeer(newPeer, meeting);
             peer.isCall = true;
             peer.call();
-            updateItemList({type:"newPeer", "newPeer":peer});
+            updateItemList({ type: "newPeer", "newPeer": peer });
         })
-        updateItemList({type:"initMeeting","meeting":meeting});
-    },[])
-    let leaveMeeting = () => {
+        meeting.on("removePeerIdList",list=>{
+            updateItemList({ type: "removePeerId",removePeerIdList:list});
+        });
+        meeting.on("signalEvent", signalObj => {
+            console.log("====Receive Signal Event Start====");
+            updateItemList({ type: "signalPeer", signalObj: signalObj });
+            console.log("====Receive Signal Event End====");
+        });
+       
+        updateItemList({ type: "initMeeting", "meeting": meeting });
+    }, []);
+    let genPeer = (newPeer, meeting) => {
+        let peer = new Peer();
+        peer.setStream(itemList.localStream);
+        peer.setPeerName(newPeer.peerName);
+        peer.setPeerId(newPeer.peerId);
+        peer.setConfig(webRtcConfig);
+        peer.setDebug(true);
+        peer.init();
 
+        peer.on("signal", signalData => {
+            let temp = { from: itemList.localPeer.getPeerId(), to: newPeer.peerId, signalData };
+            let sendSignalDataResult = meeting.sendSignalData(temp);
+
+            switch (sendSignalDataResult) {
+                case 1:
+                    //connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                    console.log("Connection time out, please connect the meeting again.");
+                    break;
+                case 2:
+                    console.log("The destination peer does not exist.");
+                    break;
+                default:
+                    break;
+            }
+        });
+        peer.on("dataChannelMessage", msgObj => {
+            //updateItemList({type:"updateGlobalMessageList",msgObj:JSON.parse(msgObj)});           
+        });
+        return peer;
+    }
+    let leaveMeeting = async () => {
+        Object.values(itemList.peerList).forEach(peer => {
+            peer.hangUp();
+        });
+        if (itemList.localStream) {
+            await itemList.localStreamManager.closeStream(itemList.localStream);
+        }
+        itemList.meeting.leave();
+        let temp = { ...obj };
+        temp.meeting = itemList.meeting;
+        updateItemList({ type: "leaveMeeting", "obj": temp });
     }
     let joinMeeting = (path) => {
-        if (itemList.localPeer.getPeerName() === ''){
+        if (itemList.localPeer.getPeerName() === '') {
             throw new Error("Please enter your alias first.")
-        }else{
-            itemList.meeting.join(path,itemList.localPeer);
+        } else {
+            itemList.meeting.join(path, itemList.localPeer);
         }
     }
-    let sendGlobalMessage = () => {
-
+    let sendGlobalMessage = (msg) => {
+        let msgObj={from:itemList.localPeer.getPeerId(),message:msg}
+        itemList.meeting.sendGlobalMessage(msgObj);
+        updateItemList({type:"updateGlobalMessageList",msgObj:msgObj});
     }
-    let setLocalPeerName = (newName) => { 
-        updateItemList({"type":"setLocalPeerName","newName":newName})
+    let setLocalPeerName = (newName) => {
+        updateItemList({ "type": "setLocalPeerName", "newName": newName })
     }
     let updateShareAudioState = (newState) => { }
     let updateShareVideoState = (newState) => { }
