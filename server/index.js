@@ -1,13 +1,14 @@
 import dotenv from 'dotenv-flow';
 import express from 'express';
 import http from 'http';
+import {fileURLToPath} from 'url';
 import { Server } from "socket.io";
 //import B from './b/B.js';
 import C from './c/C.js';
 import T from './t/T.js';
 import TestPureWebRTC from './testPureWebRTC/TestPureWebRTC.js';
 import TestSimplePeer from './testSimplePeer/TestSimplePeer.js';
-
+import path from "path";
 const app = express();
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
@@ -15,7 +16,8 @@ const io = new Server(httpServer);
 dotenv.config();
 
 if (process.env.NODE_ENV === "production") {
-  const path = require('path');
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
   app.use(express.static(path.resolve(__dirname, '../build')));
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
