@@ -6,11 +6,13 @@ export default class Meeting {
         let globalMessageHandler;
         let initPeerListHandler;
         let newPeerEventHandler;
+        let reJoinEventHandler;
         let removePeerIdListEventHandler;
+        let signalEventHandler;
         let updatePeerNameEventHandler;
         let isDebug = false;
         let socket = null;
-        let signalEventHandler;
+       
         console.log("Meeting Object constructor is called.");
         this.join = (path, localPeer) => {
             socket = io(path, {
@@ -25,6 +27,11 @@ export default class Meeting {
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " start=========")
                 newPeerEventHandler(newPeer);
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " end===========")
+            });
+            socket.on("askReconnect", peer => {
+                msgLogger("====Receive rejoin event from "+peer.peerName + " start========");
+
+                msgLogger("====Receive rejoin event from "+peer.peerName + " end==========");
             });
             socket.on("globalMessage", msgObj => {
                 msgLogger("====Receive Global Message start=========");
@@ -77,6 +84,9 @@ export default class Meeting {
                     break;
                 case "newPeerEvent":
                     newPeerEventHandler = param;
+                    break;
+                case "reJoinEvent":
+                    reJoinEventHandler=param;                    
                     break;
                 case "removePeerIdList":
                     removePeerIdListEventHandler = param;

@@ -95,6 +95,9 @@ let reducer = (state, action) => {
             action.newPeer.call();
             result.peerList[action.newPeer.getPeerId()] = action.newPeer;
             break;
+        case "reJoin":
+            result.peerList[action.peerId].restartICE();
+            break;
         case "removePeerId":
             action.removePeerIdList.forEach(peerId => {
                 if (result.peerList[peerId]) {
@@ -157,6 +160,9 @@ export function useMeeting() {
                 peerList[newPeerId] = peer;
             }
             updateItemList({ type: "initPeerList", localPeerId: obj.peerId, "peerList": peerList });
+        });
+        meeting.on("reJoinEvent",peer=>{
+            updateItemList({ type: "reJoin", peerId:peer.peerId});
         });
         meeting.on("newPeerEvent", newPeer => {
             let peer = genPeer(newPeer, meeting);

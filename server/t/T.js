@@ -73,7 +73,7 @@ export default class T {
                     peerList[peer.peerId].disconnectTime = null;
                     console.log("==================peer list===============");
                     console.log(peerList);
-                    socket.broadcast.emit("askReconnect", peer.peerId);
+                    socket.broadcast.emit("askReconnect", peer);
                     calllBack({ status: 0 });
                 } else {
                     console.log("Peer " + peer.peerName + " is not an authenticated user.");
