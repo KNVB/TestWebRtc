@@ -99,7 +99,7 @@ export default function TestHook() {
                         </Col>
                     </Row>
                     {
-                        data.localStream && 
+                        (data.shareVideo) && 
                         <LocalMedia localStream={data.localStream} />
                     }
                 </>

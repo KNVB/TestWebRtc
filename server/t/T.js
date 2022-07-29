@@ -137,6 +137,7 @@ export default class T {
                 console.log("Peer (" + peerList[peerId].peerName + ") leave the meeting.")
                 delete peerList[peerId];
             });
+            
             console.log("==================peer list after remove the disconnected peer===============");
             console.log(peerList);
             io.of(path).emit("removePeerIdList", removePeerIdList);
