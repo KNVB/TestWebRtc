@@ -17,16 +17,22 @@ export default function TestHook() {
         }
     }
     let sendGlobalMessage = () => {
-        let msg = "你好!";
-        action.sendGlobalMessage(msg);
+        try{
+            action.sendGlobalMessage();
+        }catch (error) {
+            alert(error.message)
+        }
+    }
+    let updateGlobalMessage=e=>{
+        action.setGlobalMessage(e.target.value);
     }
     let updateLocalPeerName = e => {
         action.setLocalPeerName(e.target.value);
     }
-    let updateShareAudioState = value =>{
+    let updateShareAudioState = value => {
         action.updateShareAudioState(value);
     }
-    let updateShareVideoState = value =>{
+    let updateShareVideoState = value => {
         action.updateShareVideoState(value);
     }
     return (
@@ -70,7 +76,7 @@ export default function TestHook() {
                                     Peer Name:{data.localPeer.getPeerName()}(You)<br />
                                 </div>
                                 {
-                                     Object.values(data.peerList).map((peer) => (
+                                    Object.values(data.peerList).map((peer) => (
                                         <PeerElement peer={peer} key={peer.getPeerId()} />
                                     ))
                                 }
@@ -79,10 +85,15 @@ export default function TestHook() {
                     </Row>
                     <Row className="border border-dark m-1 rounded-3">
                         <Col className="d-flex flex-row justify-content-center p-2">
-                            <Button onClick={sendGlobalMessage}>Send testing message to all peer</Button>
+                            <input
+                                onChange={updateGlobalMessage}
+                                placeholder="Please enter your global message"
+                                type="text"
+                                value={data.globalMessage} />
+                            <Button onClick={sendGlobalMessage}>Send message to all peer</Button>
                         </Col>
                         <Col className="d-flex flex-row justify-content-center p-2">
-                        <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
+                            <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
                                 <div className="m-1">Share Audio:</div>
                                 <DropdownButton onSelect={updateShareAudioState} title={((data.shareAudio) ? "Yes" : "No")} variant="primary">
                                     <Dropdown.Item eventKey={false}>No</Dropdown.Item>
@@ -95,11 +106,11 @@ export default function TestHook() {
                                     <Dropdown.Item eventKey={false}>No</Dropdown.Item>
                                     <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
                                 </DropdownButton>
-                            </div>                           
+                            </div>
                         </Col>
                     </Row>
                     {
-                        (data.shareVideo) && 
+                        (data.shareVideo) &&
                         <LocalMedia localStream={data.localStream} />
                     }
                 </>

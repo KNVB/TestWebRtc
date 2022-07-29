@@ -30,7 +30,7 @@ export default class Meeting {
             });
             socket.on("askReconnect", peer => {
                 msgLogger("====Receive rejoin event from "+peer.peerName + " start========");
-
+                reJoinEventHandler(peer);
                 msgLogger("====Receive rejoin event from "+peer.peerName + " end==========");
             });
             socket.on("globalMessage", msgObj => {

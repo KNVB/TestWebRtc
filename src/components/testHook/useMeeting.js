@@ -3,6 +3,7 @@ import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
 let obj = {
+    globalMessage:'',
     globalMessageList: [],
     "localPeer": new Peer(),
     "localStream": null,
@@ -109,6 +110,9 @@ let reducer = (state, action) => {
         case "signalPeer":
             result.peerList[action.signalObj.from].signal(action.signalObj);
             break;
+        case "setGlobalMessage":
+            result.globalMessage=action.message;
+            break;
         case "setLocalPeerName":
             result.localPeer.setPeerName(action.newName);
             break;
@@ -119,8 +123,8 @@ let reducer = (state, action) => {
             } else {
                 fromPeer = result.peerList[action.msgObj.from];
             }
-            temp = [{ from: fromPeer.getPeerName(), message: action.msgObj.message }];
-            temp = temp.concat(result.globalMessageList);
+            temp = [{ from: fromPeer.getPeerName(), message: action.msgObj.message }];            
+            temp = temp.concat(result.globalMessageList);            
             result.globalMessageList = temp;
             break;
         case "updatePeerName":
@@ -222,10 +226,17 @@ export function useMeeting() {
             itemList.meeting.join(path, itemList.localPeer);
         }
     }
-    let sendGlobalMessage = (msg) => {
-        let msgObj = { from: itemList.localPeer.getPeerId(), message: msg }
-        itemList.meeting.sendGlobalMessage(msgObj);
-        updateItemList({ type: "updateGlobalMessageList", msgObj: msgObj });
+    let sendGlobalMessage = () => {
+        if (itemList.globalMessage === ''){
+            throw new Error("Please enter your global message first.");
+        } else {            
+            let msgObj = { from: itemList.localPeer.getPeerId(), message: itemList.globalMessage };
+            itemList.meeting.sendGlobalMessage(msgObj);
+            updateItemList({ type: "updateGlobalMessageList",msgObj: msgObj });
+        }        
+    }
+    let setGlobalMessage=message=>{
+        updateItemList({"type":"setGlobalMessage",message:message});
     }
     let setLocalPeerName = (newName) => {
         if (newName !== '') {
@@ -274,6 +285,7 @@ export function useMeeting() {
             leaveMeeting,
             joinMeeting,
             sendGlobalMessage,
+            setGlobalMessage,
             setLocalPeerName,
             updateShareAudioState,
             updateShareVideoState
