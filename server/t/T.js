@@ -104,9 +104,13 @@ export default class T {
             });
             socket.on("updatePeerName", peer => {
                 console.log("==================Receive Peer Name Update Request Event Start===============");
-                console.log("Peer Name : " + peerList[peer.peerId].peerName + " changed to " + peer.peerName);
-                peerList[peer.peerId].peerName = peer.peerName;
-                socket.broadcast.emit("updatePeerName", peer);
+                if (isAuthenticated(peer.peerId)) {
+                    console.log("Peer Name : " + peerList[peer.peerId].peerName + " changed to " + peer.peerName);
+                    peerList[peer.peerId].peerName = peer.peerName;
+                    socket.broadcast.emit("updatePeerName", peer);
+                }else {
+                    console.log("Peer " + peer.peerName + " is not an authenticated user.");
+                }
                 console.log("===================Receive Peer Name Update Request Event End===============");
             });
         });
@@ -139,4 +143,3 @@ export default class T {
         }
     }
 }
-//module.exports = C;

@@ -1,5 +1,6 @@
 class LocalStreamManager{
     constructor(){
+		
 		const templateConstraint={
 					"audio":{
 								channelCount: 2,
@@ -29,12 +30,12 @@ class LocalStreamManager{
 			}
         }
         this.getShareDesktopStream=async(shareVideo,shareAudio)=>{
-            if ((shareVideo===false) && (shareAudio===false)){
-               return null;     
-            } else {
+			let localStream=null;
+            if (shareVideo|| shareAudio){
 			    let constraints={"audio":shareAudio,"video":shareVideo};
-                return navigator.mediaDevices.getDisplayMedia(constraints);
+                localStream=await navigator.mediaDevices.getDisplayMedia(constraints);
             }
+			return localStream;
 		}
 		this.closeStream=async(stream)=>{
 			console.log("LocalStreamManager.closeStream is called.");

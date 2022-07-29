@@ -2,6 +2,7 @@ import io from 'socket.io-client';
 
 export default class Meeting {
     constructor() {
+        let connectionTimeoutHandler;
         let globalMessageHandler;
         let initPeerListHandler;
         let newPeerEventHandler;
@@ -23,13 +24,20 @@ export default class Meeting {
             socket.on("askConnect", newPeer => {
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " start=========")
                 newPeerEventHandler(newPeer);
-                msgLogger("====Receive Say Hi from " + newPeer.peerName + " end=========")
+                msgLogger("====Receive Say Hi from " + newPeer.peerName + " end===========")
             });
             socket.on("globalMessage", msgObj => {
                 msgLogger("====Receive Global Message start=========");
                 globalMessageHandler(msgObj);
                 msgLogger("====Receive Global Message start=========");
             })
+            socket.io.on("reconnect", () => {
+                msgLogger("====Reconnect to the meeting server start=========");
+                socket.emit("reconnectRequest", localPeer, response => {
+                    connectionTimeoutHandler(response);
+                })
+                msgLogger("====Reconnect to the meeting server end===========");
+            });
             socket.on("removePeerIdList", list => {
                 msgLogger("====Receive Remove Peer List Start====");
                 msgLogger("list=" + list);
@@ -44,7 +52,7 @@ export default class Meeting {
             socket.on("updatePeerName", peer => {
                 msgLogger("====Receive Up Date Peer Name Event Start====");
                 updatePeerNameEventHandler(peer);
-                msgLogger("====Receive Up Date Peer Name Event End====");
+                msgLogger("====Receive Up Date Peer Name Event End======");
             });
         }
         this.leave = () => {
@@ -58,6 +66,9 @@ export default class Meeting {
         /*=====================================================================*/
         this.on = (eventType, param) => {
             switch (eventType) {
+                case "connectionTimeout":
+                    connectionTimeoutHandler=param;
+                    break;
                 case "globalMessage":
                     globalMessageHandler = param;
                     break

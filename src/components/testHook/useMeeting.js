@@ -52,7 +52,14 @@ let webRtcConfig = {
     ],
     */
 };
-
+/*=====================================================================*/
+/* It is because the await function cannot be used in the reducer      */
+/* function, so an independent function is created for closing the     */
+/* local stream.                                                       */
+/*=====================================================================*/
+let closeLocalStream = async (localStreamManager, stream) => {
+    await localStreamManager.closeStream(stream);
+}
 let reducer = (state, action) => {
     let result = { ...state };
     let temp;
@@ -66,7 +73,21 @@ let reducer = (state, action) => {
             result.peerList = { ...action.peerList };
             break;
         case "leaveMeeting":
-            result = action.obj;
+            Object.values(result.peerList).forEach(peer => {
+                peer.hangUp();
+            });
+            //=====================================================================//
+            // It is because the await function cannot be used in the reducer      //
+            // function, so an independent function is created for closing the     //
+            // local stream.                                                       //
+            //=====================================================================//
+            closeLocalStream(result.localStreamManager, result.localStream);
+            result.meeting.leave();
+            temp = { ...obj };
+            temp.localPeer = new Peer();
+            temp.meeting = result.meeting;
+            result.meeting.leave();
+            result = temp;
             break;
         case "newPeer":
             action.newPeer.setStream(result.localStream);
@@ -117,6 +138,15 @@ export function useMeeting() {
     useEffect(() => {
         let meeting = new Meeting();
         meeting.setDebug(true);
+        meeting.on("connectionTimeout", response => {
+            switch (response.status) {
+                case 1:
+                    connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                    break;
+                default:
+                    break;
+            }
+        });
         meeting.on("globalMessage", msgObj => {
             updateItemList({ type: "updateGlobalMessageList", "msgObj": msgObj });
         });
@@ -129,7 +159,7 @@ export function useMeeting() {
             updateItemList({ type: "initPeerList", localPeerId: obj.peerId, "peerList": peerList });
         });
         meeting.on("newPeerEvent", newPeer => {
-            let peer = genPeer(newPeer, meeting);            
+            let peer = genPeer(newPeer, meeting);
             updateItemList({ type: "newPeer", "newPeer": peer });
         })
         meeting.on("removePeerIdList", list => {
@@ -147,10 +177,10 @@ export function useMeeting() {
     }, []);
     let connectionTimeoutHandler = message => {
         alert(message);
-        console.log(itemList);
+        updateItemList({ type: "leaveMeeting" });
     }
     let genPeer = (newPeer, meeting) => {
-        let peer = new Peer();        
+        let peer = new Peer();
         peer.setPeerName(newPeer.peerName);
         peer.setPeerId(newPeer.peerId);
         peer.setConfig(webRtcConfig);
@@ -177,16 +207,7 @@ export function useMeeting() {
         return peer;
     }
     let leaveMeeting = async () => {
-        Object.values(itemList.peerList).forEach(peer => {
-            peer.hangUp();
-        });
-        if (itemList.localStream) {
-            await itemList.localStreamManager.closeStream(itemList.localStream);
-        }
-        itemList.meeting.leave();
-        let temp = { ...obj };
-        temp.meeting = itemList.meeting;
-        updateItemList({ type: "leaveMeeting", "obj": temp });
+        updateItemList({ type: "leaveMeeting" });
     }
     let joinMeeting = (path) => {
         if (itemList.localPeer.getPeerName() === '') {
@@ -222,10 +243,10 @@ export function useMeeting() {
             console.log("Get Media Stream failure:" + error.message);
             localStream = null;
         } finally {
-            if (itemList.localStream){
+            if (itemList.localStream) {
                 await itemList.localStreamManager.closeStream(itemList.localStream);
             }
-            
+
             if (localStream) {
                 Object.values(itemList.peerList).forEach(peer => {
                     peer.setStream(localStream);
