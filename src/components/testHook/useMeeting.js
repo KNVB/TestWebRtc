@@ -53,6 +53,10 @@ let webRtcConfig = {
     ],
     */
 };
+let closeMedia=async(localStreamManager,localStream)=>{
+    await localStreamManager.closeStream(localStream);
+}
+
 let reducer = (state, action) => {
     let result = { ...state };
     let temp;
@@ -64,9 +68,13 @@ let reducer = (state, action) => {
         case "initPeerList":
             result.localPeer.peerId = action.localPeerId;
             result.peerList = { ...action.peerList };
-            console.log(result.localPeer);
             break;
         case "leaveMeeting":
+            Object.values(result.peerList).forEach(peer => {
+                peer.hangUp();
+            });
+            closeMedia(result.localStreamManager,result.localStream);           
+            result.meeting.leave();
             result = {
                 globalMessage: '',
                 globalMessageList: [],
@@ -83,6 +91,9 @@ let reducer = (state, action) => {
             action.newPeer.isCall = true;
             action.newPeer.call();
             result.peerList[action.newPeer.peerId] = action.newPeer;
+            break;
+        case "reconnect":
+            result.peerList[action.peerId].restartICE();
             break;
         case "removePeerId":
             action.removePeerIdList.forEach(peerId => {
@@ -126,13 +137,7 @@ let reducer = (state, action) => {
 export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
 
-    let leaveMeeting = async () => {
-        Object.values(itemList.peerList).forEach(peer => {
-            peer.hangUp();
-        });
-        await itemList.localStreamManager.closeStream(itemList.localStream);
-        await itemList.meeting.leave();
-
+    let leaveMeeting = () => {
         updateItemList({ type: "leaveMeeting" });
     }
     let joinMeeting = (path) => {
@@ -141,6 +146,9 @@ export function useMeeting() {
         } else {
             let meeting = new Meeting(itemList.peerName);
             meeting.setDebug(true);
+            meeting.on("connectionTimeout",msg=>{
+                connectionTimeoutHandler(msg);
+            })
             meeting.on("initPeerList", obj => {
                 let peerList = {}
                 for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)) {
@@ -155,6 +163,9 @@ export function useMeeting() {
             meeting.on("newPeerEvent", newPeer => {
                 let peer = genPeer(newPeer, meeting);
                 updateItemList({ type: "newPeer", "newPeer": peer });
+            });
+            meeting.on("reconnectEvent",peer=>{
+                updateItemList({"type":"reconnect","peerId":peer.peerId});
             });
             meeting.on("removePeerIdList", list => {
                 updateItemList({ type: "removePeerId", removePeerIdList: list });
@@ -214,6 +225,7 @@ export function useMeeting() {
     //=================================================================================================    
     let connectionTimeoutHandler = (msg) => {
         alert(msg);
+        updateItemList({ type: "leaveMeeting" });
     }
     let genPeer = (newPeer, meeting) => {
         let peer = new Peer();

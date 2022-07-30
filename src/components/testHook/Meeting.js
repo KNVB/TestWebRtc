@@ -5,7 +5,7 @@ export default class Meeting {
         let globalMessageHandler;
         let initPeerListHandler;
         let newPeerEventHandler;
-        let reJoinEventHandler;
+        let reconnectEventHandler;
         let removePeerIdListEventHandler;
         let signalEventHandler;
         let updatePeerNameEventHandler;
@@ -19,7 +19,7 @@ export default class Meeting {
             });
             socket.io.on("reconnect", () => {
                 console.log("Reconnect successed.");
-                socket.emit("reconnectRequest", localPeer, response => {
+                socket.emit("reJoinRequest", localPeer, response => {
                     switch (response.status) {
                         case 1:
                             connectionTimeoutHandler("Connection time out, please connect the meeting again.");
@@ -38,6 +38,11 @@ export default class Meeting {
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " start=========")
                 newPeerEventHandler(newPeer);
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " end===========")
+            });
+            socket.on("askReconnect", peer=>{
+                msgLogger("====Receive reconnect event from "+peer.peerName + " start========");
+                reconnectEventHandler(peer);
+                msgLogger("====Receive reconnect event from "+peer.peerName + " end==========");
             });
             socket.on("globalMessage", msgObj => {
                 msgLogger("====Receive Global Message start=========");
@@ -79,8 +84,8 @@ export default class Meeting {
                 case "newPeerEvent":
                     newPeerEventHandler = param;
                     break;
-                case "reJoinEvent":
-                    reJoinEventHandler = param;
+                case "reconnectEvent":
+                    reconnectEventHandler = param;
                     break;
                 case "removePeerIdList":
                     removePeerIdListEventHandler = param;
