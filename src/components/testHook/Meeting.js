@@ -1,5 +1,4 @@
 import io from 'socket.io-client';
-
 export default class Meeting {
     constructor() {
         let connectionTimeoutHandler;
@@ -10,15 +9,15 @@ export default class Meeting {
         let removePeerIdListEventHandler;
         let signalEventHandler;
         let updatePeerNameEventHandler;
+
         let isDebug = false;
         let socket = null;
-       
         console.log("Meeting Object constructor is called.");
         this.join = (path, localPeer) => {
             socket = io(path, {
                 transports: ["websocket"],
             });
-            socket.emit("hi", localPeer.getPeerName(), response => {
+            socket.emit("hi", localPeer.peerName, response => {
                 msgLogger("====Receive Say Hi response start=========")
                 initPeerListHandler(response);
                 msgLogger("======Receive Say Hi response end=========")
@@ -27,23 +26,6 @@ export default class Meeting {
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " start=========")
                 newPeerEventHandler(newPeer);
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " end===========")
-            });
-            socket.on("askReconnect", peer => {
-                msgLogger("====Receive rejoin event from "+peer.peerName + " start========");
-                reJoinEventHandler(peer);
-                msgLogger("====Receive rejoin event from "+peer.peerName + " end==========");
-            });
-            socket.on("globalMessage", msgObj => {
-                msgLogger("====Receive Global Message start=========");
-                globalMessageHandler(msgObj);
-                msgLogger("====Receive Global Message start=========");
-            })
-            socket.io.on("reconnect", () => {
-                msgLogger("====Reconnect to the meeting server start=========");
-                socket.emit("reconnectRequest", localPeer, response => {
-                    connectionTimeoutHandler(response);
-                })
-                msgLogger("====Reconnect to the meeting server end===========");
             });
             socket.on("removePeerIdList", list => {
                 msgLogger("====Receive Remove Peer List Start====");
@@ -55,11 +37,6 @@ export default class Meeting {
                 msgLogger("====Receive Signal Event Start====");
                 signalEventHandler(signalObj);
                 msgLogger("====Receive Signal Event End====");
-            });
-            socket.on("updatePeerName", peer => {
-                msgLogger("====Receive Up Date Peer Name Event Start====");
-                updatePeerNameEventHandler(peer);
-                msgLogger("====Receive Up Date Peer Name Event End======");
             });
         }
         this.leave = () => {
@@ -74,7 +51,7 @@ export default class Meeting {
         this.on = (eventType, param) => {
             switch (eventType) {
                 case "connectionTimeout":
-                    connectionTimeoutHandler=param;
+                    connectionTimeoutHandler = param;
                     break;
                 case "globalMessage":
                     globalMessageHandler = param;
@@ -86,7 +63,7 @@ export default class Meeting {
                     newPeerEventHandler = param;
                     break;
                 case "reJoinEvent":
-                    reJoinEventHandler=param;                    
+                    reJoinEventHandler = param;
                     break;
                 case "removePeerIdList":
                     removePeerIdListEventHandler = param;
@@ -100,27 +77,28 @@ export default class Meeting {
                 default: break;
             }
         }
-        this.sendGlobalMessage = msgObj => {
-            socket.emit("sendGlobalMessage", msgObj);
-        }
-        this.sendSignalData = signalData => {
-            let result = 0;
-            socket.emit("signal", signalData, response => {
-                result = response.status;
-            });
-            return result;
-        }
         /*=====================================================================*/
         /*        To control if message error is shown                         */
         /*=====================================================================*/
         this.setDebug = (debug) => {
             isDebug = debug;
         }
-        this.updateLocalPeerName = (peer) => {
-            console.log(peer.peerName);
-            if (socket !== null) {
-                socket.emit("updatePeerName", peer);
-            }
+        /*========================================================================================*/
+        /*  To send a signal data to remote peer                                                  */
+        /*========================================================================================*/
+        this.sendSignalData = (signalData) => {
+            socket.emit("signal", signalData, response => {
+                switch (response.status) {
+                    case 1:
+                        connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                        break;
+                    case 2:
+                        console.log("The destination peer does not exist.");
+                        break;
+                    default:
+                        break;
+                }
+            });
         }
         /*=====================================================================*/
         /*        Message Logger                                               */

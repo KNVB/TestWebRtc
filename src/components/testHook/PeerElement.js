@@ -9,7 +9,7 @@ export default function PeerElement({ peer }) {
             setPeerConnectionState(connectionState);
         });
         peer.on("stream", stream => {
-            console.log("Received stream event from:" + peer.getPeerName());
+            console.log("Received stream event from:" + peer.peerName);
             media.current.srcObject = stream;
         });
     }, [peer]);
@@ -19,7 +19,7 @@ export default function PeerElement({ peer }) {
                 <video autoPlay muted controls ref={media} />
             </div>
             <div>
-                Peer Name:{peer.getPeerName()}<br />
+                Peer Name:{peer.peerName}<br />
                 Status:{peerConnectionState}
             </div>
         </div>

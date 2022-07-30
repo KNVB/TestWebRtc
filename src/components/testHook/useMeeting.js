@@ -1,9 +1,9 @@
-import { useEffect, useReducer } from "react";
+import { useReducer } from "react";
 import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
 let obj = {
-    globalMessage:'',
+    globalMessage: '',
     globalMessageList: [],
     "localPeer": new Peer(),
     "localStream": null,
@@ -53,14 +53,6 @@ let webRtcConfig = {
     ],
     */
 };
-/*=====================================================================*/
-/* It is because the await function cannot be used in the reducer      */
-/* function, so an independent function is created for closing the     */
-/* local stream.                                                       */
-/*=====================================================================*/
-let closeLocalStream = async (localStreamManager, stream) => {
-    await localStreamManager.closeStream(stream);
-}
 let reducer = (state, action) => {
     let result = { ...state };
     let temp;
@@ -70,34 +62,27 @@ let reducer = (state, action) => {
             result.meeting = action.meeting;
             break;
         case "initPeerList":
-            result.localPeer.setPeerId(action.localPeerId);
+            result.localPeer.peerId = action.localPeerId;
             result.peerList = { ...action.peerList };
+            console.log(result.localPeer);
             break;
         case "leaveMeeting":
-            Object.values(result.peerList).forEach(peer => {
-                peer.hangUp();
-            });
-            //=====================================================================//
-            // It is because the await function cannot be used in the reducer      //
-            // function, so an independent function is created for closing the     //
-            // local stream.                                                       //
-            //=====================================================================//
-            closeLocalStream(result.localStreamManager, result.localStream);
-            result.meeting.leave();
-            temp = { ...obj };
-            temp.localPeer = new Peer();
-            temp.meeting = result.meeting;
-            result.meeting.leave();
-            result = temp;
+            result = {  
+                globalMessage: '',
+                globalMessageList: [],
+                "localPeer": new Peer(),
+                "localStream": null,
+                "localStreamManager": new LocalStreamManager(),
+                "peerList": null,
+                "shareAudio": false,
+                "shareVideo": false,
+            };
             break;
         case "newPeer":
             action.newPeer.setStream(result.localStream);
             action.newPeer.isCall = true;
             action.newPeer.call();
-            result.peerList[action.newPeer.getPeerId()] = action.newPeer;
-            break;
-        case "reJoin":
-            result.peerList[action.peerId].restartICE();
+            result.peerList[action.newPeer.peerId] = action.newPeer;
             break;
         case "removePeerId":
             action.removePeerIdList.forEach(peerId => {
@@ -107,29 +92,12 @@ let reducer = (state, action) => {
                 }
             })
             break;
-        case "signalPeer":
+        case "setLocalPeerName":
+            result.localPeer.peerName = action.newName;
+            break;
+        case "signalEvent":
             result.peerList[action.signalObj.from].signal(action.signalObj);
             break;
-        case "setGlobalMessage":
-            result.globalMessage=action.message;
-            break;
-        case "setLocalPeerName":
-            result.localPeer.setPeerName(action.newName);
-            break;
-        case "updateGlobalMessageList":
-            let fromPeer;
-            if (result.localPeer.getPeerId() === action.msgObj.from) {
-                fromPeer = result.localPeer;
-            } else {
-                fromPeer = result.peerList[action.msgObj.from];
-            }
-            temp = [{ from: fromPeer.getPeerName(), message: action.msgObj.message }];            
-            temp = temp.concat(result.globalMessageList);            
-            result.globalMessageList = temp;
-            break;
-        case "updatePeerName":
-            result.peerList[action.peer.peerId].setPeerName(action.peer.peerName);
-            break
         case "updateShareMediaState":
             result.shareAudio = action.isShareAudio;
             result.shareVideo = action.isShareVideo;
@@ -142,113 +110,56 @@ let reducer = (state, action) => {
 }
 export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
-    useEffect(() => {
-        let meeting = new Meeting();
-        meeting.setDebug(true);
-        meeting.on("connectionTimeout", response => {
-            switch (response.status) {
-                case 1:
-                    connectionTimeoutHandler("Connection time out, please connect the meeting again.");
-                    break;
-                default:
-                    break;
-            }
-        });
-        meeting.on("globalMessage", msgObj => {
-            updateItemList({ type: "updateGlobalMessageList", "msgObj": msgObj });
-        });
-        meeting.on("initPeerList", obj => {
-            let peerList = {}
-            for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)) {
-                let peer = genPeer(tempPeer, meeting);
-                peerList[newPeerId] = peer;
-            }
-            updateItemList({ type: "initPeerList", localPeerId: obj.peerId, "peerList": peerList });
-        });
-        meeting.on("reJoinEvent",peer=>{
-            updateItemList({ type: "reJoin", peerId:peer.peerId});
-        });
-        meeting.on("newPeerEvent", newPeer => {
-            let peer = genPeer(newPeer, meeting);
-            updateItemList({ type: "newPeer", "newPeer": peer });
-        })
-        meeting.on("removePeerIdList", list => {
-            updateItemList({ type: "removePeerId", removePeerIdList: list });
-        });
-        meeting.on("signalEvent", signalObj => {
-            console.log("====Receive Signal Event Start====");
-            updateItemList({ type: "signalPeer", signalObj: signalObj });
-            console.log("====Receive Signal Event End====");
-        });
-        meeting.on("updatePeerNameEvent", peer => {
-            updateItemList({ type: "updatePeerName", peer: peer });
-        });
-        updateItemList({ type: "initMeeting", "meeting": meeting });
-    }, []);
-    let connectionTimeoutHandler = message => {
-        alert(message);
-        updateItemList({ type: "leaveMeeting" });
-    }
-    let genPeer = (newPeer, meeting) => {
-        let peer = new Peer();
-        peer.setPeerName(newPeer.peerName);
-        peer.setPeerId(newPeer.peerId);
-        peer.setConfig(webRtcConfig);
-        peer.setDebug(true);
-        peer.init();
-        peer.on("signal", signalData => {
-            let temp = { from: itemList.localPeer.getPeerId(), to: newPeer.peerId, signalData };
-            let sendSignalDataResult = meeting.sendSignalData(temp);
 
-            switch (sendSignalDataResult) {
-                case 1:
-                    connectionTimeoutHandler("Connection time out, please connect the meeting again.");
-                    break;
-                case 2:
-                    console.log("The destination peer does not exist.");
-                    break;
-                default:
-                    break;
-            }
-        });
-        peer.on("dataChannelMessage", msgObj => {
-            //updateItemList({type:"updateGlobalMessageList",msgObj:JSON.parse(msgObj)});           
-        });
-        return peer;
-    }
     let leaveMeeting = async () => {
+        Object.values(itemList.peerList).forEach(peer => {
+            peer.hangUp();
+        });
+        await itemList.localStreamManager.closeStream(itemList.localStream);
+        await itemList.meeting.leave();
+
         updateItemList({ type: "leaveMeeting" });
     }
     let joinMeeting = (path) => {
-        if (itemList.localPeer.getPeerName() === '') {
-            throw new Error("Please enter your alias first.")
+        if (itemList.localPeer.peerName === '') {
+            alert("Please enter your alias before joining a meeting.");
         } else {
-            itemList.meeting.join(path, itemList.localPeer);
+            let meeting = new Meeting(itemList.peerName);
+            meeting.setDebug(true);
+            meeting.on("initPeerList", obj => {
+                let peerList = {}
+                for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)) {
+                    let peer = genPeer(tempPeer, meeting);
+                    peerList[newPeerId] = peer;
+                }
+                updateItemList({ type: "initPeerList", localPeerId: obj.peerId, "peerList": peerList });
+            });
+            meeting.on("newPeerEvent", newPeer => {
+                let peer = genPeer(newPeer, meeting);               
+                updateItemList({ type: "newPeer", "newPeer": peer });
+            });
+            meeting.on("removePeerIdList", list => {
+                updateItemList({ type: "removePeerId", removePeerIdList: list });
+            });
+            meeting.on("signalEvent", signalObj => {
+                console.log("====Receive Signal Event Start====");
+                updateItemList({ type: "signalEvent", signalObj: signalObj });
+                console.log("====Receive Signal Event End====");
+            });
+            meeting.join(path, itemList.localPeer);
+            updateItemList({ type: "initMeeting", "meeting": meeting });
         }
     }
-    let sendGlobalMessage = () => {
-        if (itemList.globalMessage === ''){
-            throw new Error("Please enter your global message first.");
-        } else {            
-            let msgObj = { from: itemList.localPeer.getPeerId(), message: itemList.globalMessage };
-            itemList.meeting.sendGlobalMessage(msgObj);
-            updateItemList({ type: "updateGlobalMessageList",msgObj: msgObj });
-        }        
-    }
-    let setGlobalMessage=message=>{
-        updateItemList({"type":"setGlobalMessage",message:message});
-    }
+    let sendGlobalMessage = (message) => { }
+    let setGlobalMessage = (message) => { }
     let setLocalPeerName = (newName) => {
-        if (newName !== '') {
-            itemList.meeting.updateLocalPeerName({ peerId: itemList.localPeer.getPeerId(), peerName: newName });
-        }
         updateItemList({ "type": "setLocalPeerName", "newName": newName });
     }
     let updateShareAudioState = (newState) => {
         let isShareAudio = (newState === "true");
         updateShareMedia(itemList.shareVideo, isShareAudio);
     }
-    let updateShareVideoState = async (newState) => {
+    let updateShareVideoState = (newState) => {
         let isShareVideo = (newState === "true");
         updateShareMedia(isShareVideo, itemList.shareAudio);
     }
@@ -271,6 +182,37 @@ export function useMeeting() {
             }
             updateItemList({ type: "updateShareMediaState", isShareAudio: isShareAudio, isShareVideo: isShareVideo, localStream: localStream });
         }
+    }
+    //=================================================================================================    
+    let connectionTimeoutHandler = (msg) => {
+        alert(msg);
+    }
+    let genPeer = (newPeer, meeting) => {
+        let peer = new Peer();
+        peer.peerName = newPeer.peerName;
+        peer.peerId = newPeer.peerId;
+        peer.setConfig(webRtcConfig);
+        peer.setDebug(true);
+        peer.init();
+        peer.on("signal", signalData => {
+            let temp = { from: itemList.localPeer.peerId, to: newPeer.peerId, signalData };
+            let sendSignalDataResult = meeting.sendSignalData(temp);
+
+            switch (sendSignalDataResult) {
+                case 1:
+                    connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                    break;
+                case 2:
+                    console.log("The destination peer does not exist.");
+                    break;
+                default:
+                    break;
+            }
+        });
+        peer.on("dataChannelMessage", msgObj => {
+            //updateItemList({type:"updateGlobalMessageList",msgObj:JSON.parse(msgObj)});           
+        });
+        return peer;
     }
     return [
         {

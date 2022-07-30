@@ -63,7 +63,7 @@ export default class T {
                 console.log(peerList);
                 console.log("==================Receive Hi Event End===============");
             });
-            socket.on("reconnectRequest", (peer, calllBack) => {
+            socket.on("reJoinRequest", (peer, calllBack) => {
                 console.log("==================Receive reconnectRequest Event Start===============");
                 console.log("Receive reconnect Event from " + peer.peerName);
                 console.log("peerid=" + peer.peerId);

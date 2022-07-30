@@ -158,7 +158,7 @@ export default class WebRTC {
         /*        Hang Up                                                      */
         /*=====================================================================*/
         let hangUp = () => {
-            if (peerConnection && (peerConnection.signalingState !== 'closed')) {
+            if (peerConnection) {
                 peerConnection.getSenders().forEach(sender => {
                     peerConnection.removeTrack(sender);
                 });
@@ -220,7 +220,7 @@ export default class WebRTC {
             peerConnection.ontrack = event => {
                 trackEventHandler(event.streams[0]);
             }
-            if (localStream) {
+            if (localStream){
                 for (const track of localStream.getTracks()) {
                     peerConnection.addTrack(track, localStream);
                 }

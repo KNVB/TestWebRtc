@@ -11,19 +11,19 @@ export default function TestHook() {
     }
     let joinMeeting = () => {
         try {
-            action.joinMeeting(process.env.REACT_APP_SOCKET_URL + "t", data.localPeer);
+            action.joinMeeting(process.env.REACT_APP_SOCKET_URL + "t");
         } catch (error) {
             alert(error.message)
         }
     }
     let sendGlobalMessage = () => {
-        try{
+        try {
             action.sendGlobalMessage();
-        }catch (error) {
+        } catch (error) {
             alert(error.message)
         }
     }
-    let updateGlobalMessage=e=>{
+    let updateGlobalMessage = e => {
         action.setGlobalMessage(e.target.value);
     }
     let updateLocalPeerName = e => {
@@ -43,7 +43,7 @@ export default function TestHook() {
                         onChange={updateLocalPeerName}
                         placeholder="Please enter your alias"
                         type="text"
-                        value={data.localPeer.getPeerName()} />
+                        value={data.localPeer.peerName} />
                 </Col>
             </Row>
             <Row className="border border-dark m-1 rounded-3">
@@ -73,11 +73,11 @@ export default function TestHook() {
                             </div>
                             <div className="mt-2 rounded-3">
                                 <div className="border border-dark m-1 p-1 rounded-3">
-                                    Peer Name:{data.localPeer.getPeerName()}(You)<br />
+                                    Peer Name:{data.localPeer.peerName}(You)<br />
                                 </div>
                                 {
                                     Object.values(data.peerList).map((peer) => (
-                                        <PeerElement peer={peer} key={peer.getPeerId()} />
+                                        <PeerElement peer={peer} key={peer.peerId} />
                                     ))
                                 }
                             </div>
