@@ -67,7 +67,7 @@ let reducer = (state, action) => {
             console.log(result.localPeer);
             break;
         case "leaveMeeting":
-            result = {  
+            result = {
                 globalMessage: '',
                 globalMessageList: [],
                 "localPeer": new Peer(),
@@ -92,12 +92,26 @@ let reducer = (state, action) => {
                 }
             })
             break;
+        case "setGlobalMessage":
+            result.globalMessage = action.message;
+            break;
         case "setLocalPeerName":
             result.localPeer.peerName = action.newName;
             break;
         case "signalEvent":
             result.peerList[action.signalObj.from].signal(action.signalObj);
             break;
+        case "updateGlobalMessageList":
+            let fromPeer;
+            if (result.localPeer.peerId === action.msgObj.from) {
+                fromPeer = result.localPeer;
+            } else {
+                fromPeer = result.peerList[action.msgObj.from];
+            }
+            temp = [{ from: fromPeer.peerName, message: action.msgObj.message }];
+            temp = temp.concat(result.globalMessageList);
+            result.globalMessageList = temp;
+            break
         case "updateShareMediaState":
             result.shareAudio = action.isShareAudio;
             result.shareVideo = action.isShareVideo;
@@ -134,8 +148,11 @@ export function useMeeting() {
                 }
                 updateItemList({ type: "initPeerList", localPeerId: obj.peerId, "peerList": peerList });
             });
+            meeting.on("globalMessage", msgObj => {
+                updateItemList({ type: "updateGlobalMessageList", "msgObj": msgObj });
+            });
             meeting.on("newPeerEvent", newPeer => {
-                let peer = genPeer(newPeer, meeting);               
+                let peer = genPeer(newPeer, meeting);
                 updateItemList({ type: "newPeer", "newPeer": peer });
             });
             meeting.on("removePeerIdList", list => {
@@ -150,8 +167,18 @@ export function useMeeting() {
             updateItemList({ type: "initMeeting", "meeting": meeting });
         }
     }
-    let sendGlobalMessage = (message) => { }
-    let setGlobalMessage = (message) => { }
+    let sendGlobalMessage = () => { 
+        if (itemList.globalMessage === ''){
+            throw new Error("Please enter your global message first.");
+        } else {            
+            let msgObj = { from: itemList.localPeer.peerId, message: itemList.globalMessage };
+            itemList.meeting.sendGlobalMessage(msgObj);
+            updateItemList({ type: "updateGlobalMessageList",msgObj: msgObj });
+        }
+    }
+    let setGlobalMessage = (message) => {
+        updateItemList({"type":"setGlobalMessage",message:message});
+    }
     let setLocalPeerName = (newName) => {
         updateItemList({ "type": "setLocalPeerName", "newName": newName });
     }

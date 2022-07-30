@@ -27,6 +27,11 @@ export default class Meeting {
                 newPeerEventHandler(newPeer);
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " end===========")
             });
+            socket.on("globalMessage", msgObj => {
+                msgLogger("====Receive Global Message start=========");
+                globalMessageHandler(msgObj);
+                msgLogger("====Receive Global Message start=========");
+            })
             socket.on("removePeerIdList", list => {
                 msgLogger("====Receive Remove Peer List Start====");
                 msgLogger("list=" + list);
@@ -82,6 +87,9 @@ export default class Meeting {
         /*=====================================================================*/
         this.setDebug = (debug) => {
             isDebug = debug;
+        }
+        this.sendGlobalMessage = msgObj => {
+            socket.emit("sendGlobalMessage", msgObj);
         }
         /*========================================================================================*/
         /*  To send a signal data to remote peer                                                  */
