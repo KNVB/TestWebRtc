@@ -35,6 +35,7 @@ export default function TestHook() {
     let updateShareVideoState = value => {
         action.updateShareVideoState(value);
     }
+    console.log(data.globalMessage);
     return (
         <Container fluid className="p-0">
             <Row className="border border-dark m-1 rounded-3">

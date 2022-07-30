@@ -17,6 +17,18 @@ export default class Meeting {
             socket = io(path, {
                 transports: ["websocket"],
             });
+            socket.io.on("reconnect", () => {
+                console.log("Reconnect successed.");
+                socket.emit("reconnectRequest", localPeer, response => {
+                    switch (response.status) {
+                        case 1:
+                            connectionTimeoutHandler("Connection time out, please connect the meeting again.");
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            });
             socket.emit("hi", localPeer.peerName, response => {
                 msgLogger("====Receive Say Hi response start=========")
                 initPeerListHandler(response);
