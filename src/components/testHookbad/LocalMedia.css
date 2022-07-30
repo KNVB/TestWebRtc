@@ -1,0 +1,12 @@
+.localMedia{
+    height: 200px;
+    width: 300px;
+    top: 0px;
+    right: 0px
+}
+
+.localMedia video{
+    object-fit: cover;
+    width:100%;
+    height:100%;
+}
