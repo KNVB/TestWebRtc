@@ -53,7 +53,7 @@ let webRtcConfig = {
     ],
     */
 };
-let closeMedia=async(localStreamManager,localStream)=>{
+let closeMedia = async (localStreamManager, localStream) => {
     await localStreamManager.closeStream(localStream);
 }
 
@@ -73,7 +73,12 @@ let reducer = (state, action) => {
             Object.values(result.peerList).forEach(peer => {
                 peer.hangUp();
             });
-            closeMedia(result.localStreamManager,result.localStream);           
+            //=====================================================================//
+            // It is because the await function cannot be used in the reducer      //
+            // function, so an independent function is created for closing the     //
+            // local stream.                                                       //
+            //=====================================================================//
+            closeMedia(result.localStreamManager, result.localStream);
             result.meeting.leave();
             result = {
                 globalMessage: '',
@@ -146,7 +151,7 @@ export function useMeeting() {
         } else {
             let meeting = new Meeting(itemList.peerName);
             meeting.setDebug(true);
-            meeting.on("connectionTimeout",msg=>{
+            meeting.on("connectionTimeout", msg => {
                 connectionTimeoutHandler(msg);
             })
             meeting.on("initPeerList", obj => {
@@ -164,8 +169,8 @@ export function useMeeting() {
                 let peer = genPeer(newPeer, meeting);
                 updateItemList({ type: "newPeer", "newPeer": peer });
             });
-            meeting.on("reconnectEvent",peer=>{
-                updateItemList({"type":"reconnect","peerId":peer.peerId});
+            meeting.on("reconnectEvent", peer => {
+                updateItemList({ "type": "reconnect", "peerId": peer.peerId });
             });
             meeting.on("removePeerIdList", list => {
                 updateItemList({ type: "removePeerId", removePeerIdList: list });
