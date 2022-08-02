@@ -2,6 +2,7 @@ import { useReducer } from "react";
 import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
+import WebRTC_Config from "./WebRTC-Config";
 let obj = {
     globalMessage: '',
     globalMessageList: [],
@@ -12,47 +13,6 @@ let obj = {
     "shareAudio": false,
     "shareVideo": false,
 }
-let webRtcConfig = {
-    iceServers: [
-        {
-            urls: "turn:numb.viagenie.ca",
-            credential: "turnserver",
-            username: "sj0016092@gmail.com",
-        },
-        {
-            urls: ["turn:openrelay.metered.ca:443?transport=tcp"],
-            username: "openrelayproject",
-            credential: "openrelayproject",
-        },
-        {
-            urls: "turn:numb.viagenie.ca",
-            credential: "turnserver",
-            username: "sj0016092@gmail.com",
-        },
-        {
-            urls: [
-                "stun:stun.l.google.com:19302",
-                "stun:stun1.l.google.com:19302",
-                "stun:stun2.l.google.com:19302",
-                "stun:stun3.l.google.com:19302",
-                "stun:stun4.l.google.com:19302",
-            ]
-        },
-    ]
-    /*
-    iceServers: [
-        { urls: "stun:stun.stunprotocol.org" },
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302"},
-        { urls: "stun:stun2.l.google.com:19302"},
-        {
-            urls: "turn:numb.viagenie.ca",
-            credential: "turnserver",
-            username: "sj0016092@gmail.com",
-        },
-    ],
-    */
-};
 let closeMedia = async (localStreamManager, localStream) => {
     await localStreamManager.closeStream(localStream);
 }
@@ -112,7 +72,7 @@ let reducer = (state, action) => {
             result.globalMessage = action.message;
             break;
         case "setLocalPeerName":
-            result.localPeer.peerName = action.newName;
+            result.localPeer.peerName = action.newName;           
             break;
         case "signalEvent":
             result.peerList[action.signalObj.from].signal(action.signalObj);
@@ -129,6 +89,14 @@ let reducer = (state, action) => {
             result.globalMessageList = temp;
             result.globalMessage = '';
             break
+        case "updatePeerName":
+            temp = result.peerList[action.peer.peerId]
+            if (temp) {
+                console.log("Peer :" + temp.peerName + " change the name to " + action.peer.peerName);
+                temp.peerName = action.peer.peerName;
+                result.peerList[action.peer.peerId] = temp;
+            }
+            break;
         case "updateShareMediaState":
             result.shareAudio = action.isShareAudio;
             result.shareVideo = action.isShareVideo;
@@ -180,6 +148,9 @@ export function useMeeting() {
                 updateItemList({ type: "signalEvent", signalObj: signalObj });
                 console.log("====Receive Signal Event End====");
             });
+            meeting.on("updatePeerNameEvent", peer => {
+                updateItemList({ type: "updatePeerName", "peer": peer });
+            });
             meeting.join(path, itemList.localPeer);
             updateItemList({ type: "initMeeting", "meeting": meeting });
         }
@@ -198,6 +169,9 @@ export function useMeeting() {
     }
     let setLocalPeerName = (newName) => {
         updateItemList({ "type": "setLocalPeerName", "newName": newName });
+        if (itemList.peerList) {
+            itemList.meeting.updateLocalPeerName(itemList.localPeer.peerId, newName);
+        }
     }
     let updateShareAudioState = (newState) => {
         let isShareAudio = (newState === "true");
@@ -236,7 +210,7 @@ export function useMeeting() {
         let peer = new Peer();
         peer.peerName = newPeer.peerName;
         peer.peerId = newPeer.peerId;
-        peer.setConfig(webRtcConfig);
+        peer.setConfig(WebRTC_Config);
         peer.setDebug(true);
         peer.init();
         peer.on("signal", signalData => {
@@ -263,6 +237,7 @@ export function useMeeting() {
         {
             globalMessage: itemList.globalMessage,
             globalMessageList: itemList.globalMessageList,
+            isJoined: (itemList.peerList),
             "localPeer": itemList.localPeer,
             peerList: itemList.peerList,
             "localStream": itemList.localStream,

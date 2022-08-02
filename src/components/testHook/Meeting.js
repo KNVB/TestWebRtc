@@ -60,6 +60,11 @@ export default class Meeting {
                 signalEventHandler(signalObj);
                 msgLogger("====Receive Signal Event End====");
             });
+            socket.on("updatePeerName", peer=>{
+                msgLogger("====Receive Peer Name Event Start====");
+                updatePeerNameEventHandler(peer);
+                msgLogger("====Receive Peer Name Event End====");
+            });
         }
         this.leave = () => {
             if (socket) {
@@ -124,6 +129,9 @@ export default class Meeting {
                         break;
                 }
             });
+        }
+        this.updateLocalPeerName=(peerId,newName)=>{
+            socket.emit("updatePeerName",{"peerId":peerId,"peerName":newName});
         }
         /*=====================================================================*/
         /*        Message Logger                                               */

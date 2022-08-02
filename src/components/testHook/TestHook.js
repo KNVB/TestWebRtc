@@ -34,7 +34,7 @@ export default function TestHook() {
     }
     let updateShareVideoState = value => {
         action.updateShareVideoState(value);
-    }
+    }    
     return (
         <Container fluid className="p-0">
             <Row className="border border-dark m-1 rounded-3">
@@ -53,7 +53,7 @@ export default function TestHook() {
                 </Col>
             </Row>
             {
-                data.peerList &&
+                data.isJoined &&
                 <>
                     <Row className="border-bottom-0 border-dark m-1 rounded-3">
                         <Col className="border border-dark border-end-0 p-1 rounded-3">
