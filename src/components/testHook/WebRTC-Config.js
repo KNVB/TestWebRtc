@@ -1,4 +1,4 @@
-export default {
+let config = {
     iceServers: [
         {
             urls: "turn:numb.viagenie.ca",
@@ -39,3 +39,4 @@ export default {
     ],
     */
 };
+export default config
