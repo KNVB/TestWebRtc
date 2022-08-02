@@ -158,7 +158,7 @@ export default class WebRTC {
         /*        Hang Up                                                      */
         /*=====================================================================*/
         let hangUp = () => {
-            if (peerConnection) {
+            if (peerConnection && (peerConnection.signalingState!=="closed")) {
                 peerConnection.getSenders().forEach(sender => {
                     peerConnection.removeTrack(sender);
                 });
