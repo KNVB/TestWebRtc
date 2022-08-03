@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
 import LocalStreamManager from '../../util/LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
@@ -12,9 +12,6 @@ let obj = {
     "peerList": null,
     "shareAudio": false,
     "shareVideo": false,
-}
-let closeMedia = async (localStreamManager, localStream) => {
-    await localStreamManager.closeStream(localStream);
 }
 
 let reducer = (state, action) => {
@@ -30,16 +27,6 @@ let reducer = (state, action) => {
             result.peerList = { ...action.peerList };
             break;
         case "leaveMeeting":
-            Object.values(result.peerList).forEach(peer => {
-                peer.hangUp();
-            });
-            //=====================================================================//
-            // It is because the await function cannot be used in the reducer      //
-            // function, so an independent function is created for closing the     //
-            // local stream.                                                       //
-            //=====================================================================//
-            closeMedia(result.localStreamManager, result.localStream);
-            result.meeting.leave();
             result = {
                 globalMessage: '',
                 globalMessageList: [],
@@ -72,7 +59,7 @@ let reducer = (state, action) => {
             result.globalMessage = action.message;
             break;
         case "setLocalPeerName":
-            result.localPeer.peerName = action.newName;           
+            result.localPeer.peerName = action.newName;
             break;
         case "signalEvent":
             result.peerList[action.signalObj.from].signal(action.signalObj);
@@ -109,8 +96,14 @@ let reducer = (state, action) => {
 }
 export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
-
-    let leaveMeeting = () => {
+    const itemListRef = useRef(itemList);
+    itemListRef.current = itemList;
+    let leaveMeeting = async () => {
+        await itemListRef.current.localStreamManager.closeStream(itemListRef.current.localStream);
+        Object.values(itemListRef.current.peerList).forEach(peer => {
+            peer.hangUp();
+        });
+        itemListRef.current.meeting.leave();
         updateItemList({ type: "leaveMeeting" });
     }
     let joinMeeting = (path) => {
@@ -204,7 +197,7 @@ export function useMeeting() {
     //=================================================================================================    
     let connectionTimeoutHandler = (msg) => {
         alert(msg);
-        updateItemList({ type: "leaveMeeting" });
+        leaveMeeting();
     }
     let genPeer = (newPeer, meeting) => {
         let peer = new Peer();
