@@ -17,17 +17,17 @@ export default function Layout() {
                     <Button className="m-1">Leave the meeting</Button>
                 </div>
             </Card.Header>
-            <Card.Body className='border border-dark m-1 p-0 rounded'>
-                <div className="h-100 d-flex flex-row flex-grow-1">
-                    <Card className="m-1 w-50 rounded">
+            <Card.Body className='border border-dark d-flex m-1 p-0 rounded'>
+                <div className="d-flex flex-row flex-grow-1">
+                    <Card className="d-flex flex-grow-1 m-1 rounded">
                         <Card.Header className="m-1 rounded">A</Card.Header>
                         <Card.Body className="m-0 p-0 position-relative rounded">
                             <div className='h-100 m-0 p-0 position-absolute w-100 overflow-auto'>
                                 {a}
                             </div>
-                        </Card.Body>
+                        </Card.Body>    
                     </Card>
-                    <Card className="m-1 w-50 rounded">
+                    <Card className="d-flex flex-grow-1 m-1 rounded">
                         <Card.Header className='m-1 rounded'>B</Card.Header>
                         <Card.Body className="m-0 p-0 position-relative rounded">
                             <div className='h-100 m-0 p-0 position-absolute w-100 overflow-auto'>
