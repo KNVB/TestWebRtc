@@ -38,15 +38,15 @@ export default function Layout() {
                 </div>
             </Card.Body>
             <Card.Footer className='border border-dark m-1 p-0 rounded text-center'>
-                <div className="d-flex flex-row flex-grow-1 justify-content-around p-2">
-                    <div className='d-flex flex-row'>
+               
+                    <div className="d-flex flex-row flex-grow-1 justify-content-center p-1">
                         <input
                             placeholder="Please enter your global message"
                             type="text" />
                         &nbsp;
                         <Button>Send message to all peer</Button>
                     </div>
-                    <div className='d-flex flex-row'>
+                    <div className='d-flex flex-row flex-grow-1 justify-content-center p-1'>
                         <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
                             <div className="m-1">Share Audio:</div>
                             <DropdownButton title="No" variant="primary">
@@ -62,7 +62,7 @@ export default function Layout() {
                             </DropdownButton>
                         </div>
                     </div>
-                </div>
+                
             </Card.Footer>
         </Card>
     )
