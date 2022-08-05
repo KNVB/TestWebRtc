@@ -2,10 +2,11 @@ import { Button, Card, Dropdown, DropdownButton } from 'react-bootstrap';
 export default function Layout() {
     let a = [];
     for (let i = 0; i < 40; i++) {
-      a.push(<div key={i}>sdd{i}</div>);
-    }
+        a.push(<div key={i}>sdd{i}</div>);
+    }    
+    
     return (
-        <Card className="h-100 p-1 position-fixed w-100" variant="dark">
+        <Card className="vh-100 p-1 w-100" variant="dark">
             <Card.Header className='border border-dark m-1 p-0 rounded text-center'>
                 <input
                     className="mt-1"
@@ -25,7 +26,7 @@ export default function Layout() {
                             <div className='h-100 m-0 p-0 position-absolute w-100 overflow-auto'>
                                 {a}
                             </div>
-                        </Card.Body>    
+                        </Card.Body>
                     </Card>
                     <Card className="d-flex flex-grow-1 m-1 rounded">
                         <Card.Header className='m-1 rounded'>B</Card.Header>
@@ -38,31 +39,29 @@ export default function Layout() {
                 </div>
             </Card.Body>
             <Card.Footer className='border border-dark m-1 p-0 rounded text-center'>
-               
-                    <div className="d-flex flex-row flex-grow-1 justify-content-center p-1">
-                        <input
-                            placeholder="Please enter your global message"
-                            type="text" />
-                        &nbsp;
-                        <Button>Send message to all peer</Button>
+                <div className="d-flex flex-row flex-grow-1 justify-content-center p-1">
+                    <input                   
+                        placeholder="Please enter your global message"
+                        type="text" />
+                    &nbsp;
+                    <Button>Send message to all peer</Button>
+                </div>
+                <div className='d-flex flex-row flex-grow-1 justify-content-center p-1'>
+                    <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
+                        <div className="m-1">Share Audio:</div>
+                        <DropdownButton title="No" variant="primary">
+                            <Dropdown.Item eventKey={false}>No</Dropdown.Item>
+                            <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
+                        </DropdownButton>
+                    </div> &nbsp;
+                    <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
+                        <div className="m-1">Share Video:</div>
+                        <DropdownButton title="No" variant="primary">
+                            <Dropdown.Item eventKey={false}>No</Dropdown.Item>
+                            <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
+                        </DropdownButton>
                     </div>
-                    <div className='d-flex flex-row flex-grow-1 justify-content-center p-1'>
-                        <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
-                            <div className="m-1">Share Audio:</div>
-                            <DropdownButton title="No" variant="primary">
-                                <Dropdown.Item eventKey={false}>No</Dropdown.Item>
-                                <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
-                            </DropdownButton>
-                        </div> &nbsp;
-                        <div className="align-items-center bg-primary d-flex flex-row p-1 rounded-3 text-white">
-                            <div className="m-1">Share Video:</div>
-                            <DropdownButton title="No" variant="primary">
-                                <Dropdown.Item eventKey={false}>No</Dropdown.Item>
-                                <Dropdown.Item eventKey={true}>Yes</Dropdown.Item>
-                            </DropdownButton>
-                        </div>
-                    </div>
-                
+                </div>
             </Card.Footer>
         </Card>
     )

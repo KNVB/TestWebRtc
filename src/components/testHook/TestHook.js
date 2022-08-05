@@ -36,7 +36,7 @@ export default function TestHook() {
         action.updateShareVideoState(value);
     }
     return (
-        <Card className="h-100 p-1 position-fixed w-100" variant="dark">
+        <Card className="vh-100 p-1 w-100" variant="dark">
             <Card.Header className='border border-dark m-1 p-0 rounded text-center'>
                 <input
                     className="mt-1"
