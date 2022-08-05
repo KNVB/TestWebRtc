@@ -5,8 +5,8 @@
     right: 0px
 }
 
-.localMedia video{
-    object-fit: contain;
+.video{
+    object-fit: cover;
     width:100%;
     height:100%;
 }

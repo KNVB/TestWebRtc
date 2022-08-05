@@ -76,7 +76,7 @@ export default function TestHook() {
                                 Peer Name:{data.localPeer.peerName}(You)<br />
                             </div>
                             <div className="d-flex flex-column flex-grow-1 position-relative">
-                                <div className='h-100 m-0 p-0 position-absolute w-100 overflow-auto'>
+                                <div className='d-flex flex-column h-100 m-0 p-0 position-absolute w-100 overflow-auto'>
                                     {
                                         Object.values(data.peerList).map((peer) => (
                                             <PeerElement peer={peer} key={peer.peerId} />

@@ -14,11 +14,11 @@ export default function PeerElement({ peer }) {
         });
     }, [peer]);
     return (
-        <div className="border border-dark d-flex flex-row m-1 p-1 rounded-3">
-            <div className="m-0 peer p-0 flex-grow-1">
-                <video autoPlay muted className="video" controls ref={media} />
+        <div className="border border-info d-flex flex-grow-1 flex-row m-0 p-0 rounded-3">
+            <div className="border border-dark m-1 p-0 rounded-3 position-relative w-50">
+                <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3 video' ref={media}/>
             </div>
-            <div className="flex-grow-1">
+            <div className="border border-dark m-1 p-1 rounded-3 w-50">
                 Peer Name:{peer.peerName}<br />
                 Status:{peerConnectionState}
             </div>

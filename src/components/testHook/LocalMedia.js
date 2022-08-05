@@ -13,7 +13,7 @@ export default function LocalMedia({ localStream }) {
                 ref={nodeRef}>
                 <video
                     autoPlay={true}
-                    className="rounded-3"
+                    className="video rounded-3"
                     muted
                     ref={media} />
             </div>
