@@ -1,10 +1,24 @@
 import { Button, Card, Dropdown, DropdownButton } from 'react-bootstrap';
 export default function Layout() {
-    let a = [];
+    let a = [], b = [];
     for (let i = 0; i < 40; i++) {
         a.push(<div key={i}>sdd{i}</div>);
     }
-
+    for (let i = 0; i < 40; i++) {
+        b.push(
+            <div className="d-flex flex-row border border-info m-0 p-0 rounded-3" style={{ "height": "150px" }}>
+                <div className="border border-dark m-1 p-0 rounded-3 position-relative w-50">
+                    <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3' style={{ "objectFit": "cover" }}>
+                        <source src="/VIDEO0101.mp4"></source>
+                    </video>
+                </div>
+                <div className="border border-dark m-1 p-1 rounded-3 w-50">
+                    Peer Name:<br />
+                    Status:
+                </div>
+            </div>
+        )
+    }
     return (
         <Card className="vh-100 p-1 w-100" variant="dark">
             <Card.Header className='border border-dark m-1 p-0 rounded text-center'>
@@ -34,34 +48,8 @@ export default function Layout() {
                         Peer Name:
                     </div>
                     <div className="d-flex flex-column flex-grow-1 m-1 position-relative">
-                        <div className='d-flex flex-column h-100 m-0 p-0 position-absolute w-100 overflow-auto'>
-                            
-                            
-                            <div className="border border-info d-flex flex-grow-1 flex-row m-0 p-0 rounded-3">
-                                <div className="border border-dark m-1 p-0 rounded-3 position-relative w-50">
-                                    <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3' style={{"objectFit":"cover"}}>
-                                        <source src="/VIDEO0101.mp4"></source>
-                                    </video>    
-                                </div>
-                                <div className="border border-dark m-1 p-1 rounded-3 w-50">
-                                    Peer Name:<br />
-                                    Status:
-                                </div>
-                            </div>
-
-                            <div className="border border-info d-flex flex-grow-1 flex-row m-0 p-0 rounded-3">
-                                <div className="border border-dark m-1 p-0 rounded-3 position-relative w-50">
-                                    <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3' style={{"objectFit":"cover"}}>
-                                        <source src="/VIDEO0101.mp4"></source>
-                                    </video>    
-                                </div>
-                                <div className="border border-dark m-1 p-1 rounded-3 w-50">
-                                    Peer Name:<br />
-                                    Status:
-                                </div>
-                            </div>
-
-
+                        <div className='h-100 m-0 overflow-auto p-0 position-absolute w-100'>
+                            {b}
                         </div>
                     </div>
                 </div>

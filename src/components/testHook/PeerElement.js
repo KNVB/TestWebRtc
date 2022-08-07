@@ -14,9 +14,9 @@ export default function PeerElement({ peer }) {
         });
     }, [peer]);
     return (
-        <div className="border border-info d-flex flex-grow-1 flex-row m-0 p-0 rounded-3">
+        <div className="d-flex flex-row border border-info m-0 p-0 rounded-3" style={{ "height": "150px" }}>
             <div className="border border-dark m-1 p-0 rounded-3 position-relative w-50">
-                <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3 video' ref={media}/>
+                <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3 video' ref={media} />
             </div>
             <div className="border border-dark m-1 p-1 rounded-3 w-50">
                 Peer Name:{peer.peerName}<br />
