@@ -158,7 +158,7 @@ export default class WebRTC {
         /*        Hang Up                                                      */
         /*=====================================================================*/
         let hangUp = () => {
-            if (peerConnection && (peerConnection.signalingState!=="closed")) {
+            if (peerConnection && (peerConnection.signalingState !== "closed")) {
                 peerConnection.getSenders().forEach(sender => {
                     peerConnection.removeTrack(sender);
                 });
@@ -174,7 +174,7 @@ export default class WebRTC {
             }
         }
         /*=====================================================================*/
-        /*        Initialize the data channel                                  */
+        /*        Initialize the data channel and its event handler            */
         /*=====================================================================*/
         let initDataChannel = (channel) => {
             dataChannel = channel;
@@ -192,7 +192,7 @@ export default class WebRTC {
             };
         }
         /*=====================================================================*/
-        /*        Initialize the peer connection object                        */
+        /*        Initialize the peer connection object and its event handler  */
         /*=====================================================================*/
         let initPeerConnection = () => {
             peerConnection = new RTCPeerConnection(configuration);
@@ -220,14 +220,14 @@ export default class WebRTC {
             peerConnection.ontrack = event => {
                 trackEventHandler(event.streams[0]);
             }
-            if (localStream){
+            if (localStream) {
                 for (const track of localStream.getTracks()) {
                     peerConnection.addTrack(track, localStream);
                 }
             }
         }
         /*=====================================================================*/
-        /*        Set a stream to a RTCPeerConnection                          */
+        /*        Set a stream to the RTCPeerConnection object                 */
         /*=====================================================================*/
         let setStream = (stream) => {
             if (peerConnection) {
