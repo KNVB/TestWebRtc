@@ -1,7 +1,15 @@
 .peer {
     height: 200px;
 }
-
+.peer-nameCell{
+    max-width: 50%;
+}
+.peer-videoCell{
+    max-width: 50%;
+    min-width: 50%;
+}
 .video {
+    left:0;
     object-fit: cover;
+    top: 0;
 }

@@ -7,12 +7,12 @@ export default function Layout() {
     for (let i = 0; i < 40; i++) {
         b.push(
             <div className="d-flex flex-row border border-info m-0 p-0 rounded-3" style={{ "height": "150px" }}>
-                <div className="border border-dark m-1 p-0 rounded-3 position-relative flex-grow-1">
-                    <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3' style={{ "objectFit": "cover" }}>
+                <div className="border border-dark m-1 p-0 rounded-3 flex-grow-1 position-relative" style={{"maxWidth":"50%","minWidth":"50%"}}>
+                    <video autoPlay muted controls className='h-100 w-100 position-absolute rounded-3' style={{ "objectFit": "cover" ,"left":"0","top": "0"}}>
                         <source src="/VIDEO0101.mp4"></source>
                     </video>
                 </div>
-                <div className="border border-dark m-1 p-1 rounded-3 flex-grow-1">
+                <div className="border border-dark m-1 p-1 rounded-3 flex-grow-1" style={{"maxWidth":"50%"}}>
                     Peer Name:<br />
                     Status:
                 </div>
