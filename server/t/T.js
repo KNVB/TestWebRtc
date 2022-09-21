@@ -90,7 +90,7 @@ export default class T {
 
                 console.log("==================Receive Signal Event Start===============");
                 if (sourcePeer && destPeer) {
-                    console.log(sourcePeer.peerName + " sent " + signalObj.signalData.type + "data to " + destPeer.peerName);
+                    console.log(sourcePeer.peerName + " sent " + signalObj.signalData.type + " data to " + destPeer.peerName);
                     socket.broadcast.to(destPeer.socketId).emit('signalData', { from: signalObj.from, ...signalObj.signalData });
                     calllBack({ status: 0 });
                 } else {

@@ -11,8 +11,8 @@ export default class WebRTC {
         /*=====================================================================*/
         /*        Add ICE Candidate to Peer Connection                         */
         /*=====================================================================*/
-        this.addICECandidate = (iceCandidate) => {
-            peerConnection.addIceCandidate(iceCandidate);
+        this.addICECandidate = async(iceCandidate) => {
+           await peerConnection.addIceCandidate(iceCandidate);
         }
         /*=====================================================================*/
         /*        To set up a connection                                       */
