@@ -8,6 +8,7 @@ import Q from "./components/testHook/QK";
 import TestHook from './components/testHook/TestHook';
 import TestPureWebRTC from './components/testPureWebRTC/TestPureWebRTC';
 import TestSimplePeer from './components/testSimplePeer/TestSimplePeer';
+import TestU from './components/u/TestU';
 import Panel from "./components/share/panel/Panel";
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route exact path='/l' component={L}/>
           <Route exact path='/q' component={Q}/>
           <Route exact path='/t' component={TestHook}/>
+          <Route exact path='/u' component={TestU}/>
           <Route exact path='/testSimplePeer' component={TestSimplePeer}/>
           <Route exact path='/testPureWebRTC' component={TestPureWebRTC}/>
         </Switch>
