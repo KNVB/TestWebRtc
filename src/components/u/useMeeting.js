@@ -37,6 +37,9 @@ let reducer = (state, action) => {
             action.newPeer.call();
             result.peerList[action.newPeer.peerId] = action.newPeer;
             break;
+        case "reconnect":
+            result.peerList[action.peerId].restartICE();
+            break;
         case "removePeerId":
             action.removePeerIdList.forEach(peerId => {
                 if (result.peerList[peerId]) {
@@ -144,17 +147,22 @@ export function useMeeting(isDebug) {
                 addNewPeer(newPeer);
                 msgLogger("====Receive Say Hi from " + newPeer.peerName + " end===========")
             });
+            socket.on("askReconnect", peer => {
+                msgLogger("====Receive reconnect event from " + peer.peerName + " start========");
+                reconnectEventHandler(peer);
+                msgLogger("====Receive reconnect event from " + peer.peerName + " end==========");
+            });
+            socket.on("globalMessage", msgObj => {
+                msgLogger("====Receive Global Message start=========");
+                globalMessageHandler(msgObj);
+                msgLogger("====Receive Global Message start=========");
+            });
             socket.on("removePeerIdList", list => {
                 msgLogger("====Receive Remove Peer List Start====");
                 msgLogger("list=" + list);
                 removePeerIdListEventHandler(list);
                 msgLogger("====Receive Remove Peer List End====");
             });
-            socket.on("globalMessage", msgObj => {
-                msgLogger("====Receive Global Message start=========");
-                globalMessageHandler(msgObj);
-                msgLogger("====Receive Global Message start=========");
-            })
             socket.on("signalData", signalObj => {
                 msgLogger("====Receive Signal Event Start====");
                 signalEventHandler(signalObj);
@@ -217,6 +225,9 @@ export function useMeeting(isDebug) {
         if (itemList.isDebug) {
             console.log(msg);
         }
+    }
+    let reconnectEventHandler = peer => {
+        updateItemList({ "type": "reconnect", "peerId": peer.peerId });
     }
     let removePeerIdListEventHandler = list => {
         updateItemList({ removePeerIdList: list, type: "removePeerId" });
