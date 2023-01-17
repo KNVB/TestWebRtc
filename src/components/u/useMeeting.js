@@ -108,15 +108,18 @@ export function useMeeting(isDebug) {
         let peer = genPeer(newPeer);
         updateItemList({ "newPeer": peer, type: "newPeer" });
     }
-    let leave = async () => {
-        await itemList.localStreamManager.closeStream(itemList.localStream);
-        if (itemList.socket) {
-            Object.values(itemList.peerList).forEach(peer => {
-                peer.hangUp();
-            });
-            itemList.socket.disconnect();
+    let connectionTimeoutHandler = msg => {
+        alert(msg);
+        leave();
+    }
+    let initPeerList = obj => {
+        //console.log(obj);
+        let peerList = {}
+        for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)) {
+            let peer = genPeer(tempPeer);
+            peerList[newPeerId] = peer;
         }
-        updateItemList({ type: "leave" });
+        updateItemList({ localPeerId: obj.peerId, "peerList": peerList, type: "initPeerList" });
     }
     let join = (path) => {
         if (itemList.localPeer.peerName === '') {
@@ -176,9 +179,15 @@ export function useMeeting(isDebug) {
             updateItemList({ "socket": socket, type: "initSocket" });
         }
     }
-    let connectionTimeoutHandler = msg => {
-        alert(msg);
-        leave();
+    let leave = async () => {
+        await itemList.localStreamManager.closeStream(itemList.localStream);
+        if (itemList.socket) {
+            Object.values(itemList.peerList).forEach(peer => {
+                peer.hangUp();
+            });
+            itemList.socket.disconnect();
+        }
+        updateItemList({ type: "leave" });
     }
     let genPeer = (newPeer) => {
         let peer = new Peer();
@@ -208,16 +217,7 @@ export function useMeeting(isDebug) {
     }
     let globalMessageHandler = msgObj => {
         updateItemList({ "msgObj": msgObj, type: "updateGlobalMessageList" });
-    }
-    let initPeerList = obj => {
-        //console.log(obj);
-        let peerList = {}
-        for (const [newPeerId, tempPeer] of Object.entries(obj.peerList)) {
-            let peer = genPeer(tempPeer);
-            peerList[newPeerId] = peer;
-        }
-        updateItemList({ localPeerId: obj.peerId, "peerList": peerList, type: "initPeerList" });
-    }
+    }   
     /*=====================================================================*/
     /*        Message Logger                                               */
     /*=====================================================================*/
