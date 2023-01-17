@@ -9,7 +9,7 @@ export default class Peer {
         let signalEventHandler, streamHandler;
         let webRTC = new WebRTC();
 
-        this.isCall = false;
+        //this.isCall = false;
         this.isLocalPeer = false;
         this.peerName = '';
         this.peerId = '';

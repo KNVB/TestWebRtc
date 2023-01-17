@@ -33,7 +33,7 @@ let reducer = (state, action) => {
             break;
         case "newPeer":
             action.newPeer.setStream(result.localStream);
-            action.newPeer.isCall = true;
+            //action.newPeer.isCall = true;
             action.newPeer.call();
             result.peerList[action.newPeer.peerId] = action.newPeer;
             break;
