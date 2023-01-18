@@ -15,7 +15,7 @@ export default function TestU() {
         localStream,
         peerList,
         meeting,
-    ] = useMeeting(true);
+    ] = useMeeting(false);
     let leave = () => {
         meeting.leave();
     }

@@ -95,6 +95,12 @@ export default class WebRTC {
             }
         }
         /*=====================================================================*/
+        /*       Remove all tracks from the peer connection object             */
+        /*=====================================================================*/
+        this.removeAllTracks=()=>{
+            removeAllTracks();
+        }
+        /*=====================================================================*/
         /*       Send data across the data channel to the remote peer.         */
         /*=====================================================================*/
         this.send = (data) => {
@@ -182,9 +188,7 @@ export default class WebRTC {
         /*=====================================================================*/
         let hangUp = () => {
             if (peerConnection && (peerConnection.signalingState !== "closed")) {
-                peerConnection.getSenders().forEach(sender => {
-                    peerConnection.removeTrack(sender);
-                });
+                removeAllTracks();
                 peerConnection.close();
             }
         }
@@ -215,7 +219,7 @@ export default class WebRTC {
             };
         }
         /*=====================================================================*/
-        /*        Initialize the peer connection object and its event handler  */
+        /*       Initialize the peer connection object and its event handler  */
         /*=====================================================================*/
         let initPeerConnection = () => {
             peerConnection = new RTCPeerConnection(configuration);
@@ -250,14 +254,19 @@ export default class WebRTC {
             }
         }
         /*=====================================================================*/
+        /*       Remove all tracks from the peer connection object             */
+        /*=====================================================================*/
+        let removeAllTracks = () =>{
+            peerConnection.getSenders().forEach(sender => {
+                peerConnection.removeTrack(sender);
+            });
+        }
+        /*=====================================================================*/
         /*        Set a stream to the RTCPeerConnection object                 */
         /*=====================================================================*/
         let setStream = (stream) => {
             if (peerConnection) {
-                let senders = peerConnection.getSenders();
-                senders.forEach(sender => {
-                    peerConnection.removeTrack(sender);
-                })
+                removeAllTracks();
                 if (stream) {
                     for (const track of stream.getTracks()) {
                         peerConnection.addTrack(track, stream);
