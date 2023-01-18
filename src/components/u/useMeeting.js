@@ -288,11 +288,12 @@ export function useMeeting(isDebug) {
                 Object.values(itemList.peerList).forEach(peer => {
                     peer.setStream(localStream);
                 });
-            }else {
+            }
+            /*else {
                 Object.values(itemList.peerList).forEach(peer => {
                     peer.removeAllTracks();
                 });    
-            }
+            }*/
             updateItemList({
                 isShareAudio: isShareAudio,
                 isShareVideo: isShareVideo,
