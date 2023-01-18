@@ -33,7 +33,6 @@ let reducer = (state, action) => {
             break;
         case "newPeer":
             action.newPeer.setStream(result.localStream);
-            //action.newPeer.isCall = true;
             action.newPeer.call();
             result.peerList[action.newPeer.peerId] = action.newPeer;
             break;
@@ -288,8 +287,7 @@ export function useMeeting(isDebug) {
                 Object.values(itemList.peerList).forEach(peer => {
                     peer.setStream(localStream);
                 });
-            }
-            /*else {
+            }/*else {
                 Object.values(itemList.peerList).forEach(peer => {
                     peer.removeAllTracks();
                 });    

@@ -17,7 +17,7 @@ let obj = {
 let reducer = (state, action) => {
     let result = { ...state };
     let temp;
-    console.log(action);
+    //console.log(action);
     switch (action.type) {
         case "initMeeting":
             result.meeting = action.meeting;
