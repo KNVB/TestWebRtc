@@ -194,7 +194,7 @@ export function useMeeting(isDebug) {
         peer.peerName = newPeer.peerName;
         peer.peerId = newPeer.peerId;
         peer.setConfig(WebRTC_Config);
-        peer.setDebug(true);
+        peer.setDebug(false);
         peer.init();
         peer.on("signal", signalData => {
             let temp = { from: itemList.localPeer.peerId, to: newPeer.peerId, signalData };
@@ -283,11 +283,15 @@ export function useMeeting(isDebug) {
             if (itemList.localStream) {
                 await itemList.localStreamManager.closeStream(itemList.localStream);
             }
-
+            
             if (localStream) {
                 Object.values(itemList.peerList).forEach(peer => {
                     peer.setStream(localStream);
                 });
+            }else {
+                Object.values(itemList.peerList).forEach(peer => {
+                    peer.removeAllTracks();
+                });    
             }
             updateItemList({
                 isShareAudio: isShareAudio,

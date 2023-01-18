@@ -1,30 +1,18 @@
-import { useEffect, useRef } from "react";
-import { usePeer } from "./usePeer";
+import { useEffect, useRef, useState } from "react";
 import './PeerElement.css';
 export default function PeerElement({ peer }) {
-    const [connectionState, peerName, remoteStream] = usePeer(peer);
     let media = useRef();
+    const [peerConnectionState, setPeerConnectionState] = useState("N.A.");
     useEffect(() => {
-        media.current.srcObject = remoteStream;
-    }, [remoteStream])
-    useEffect(()=>{
-        media.current.onabort = function() {
-            console.log("Video load aborted");
-        };
-        media.current.onerror = function() {
-            alert("Error! Something went wrong");
-        };
-        media.current.onwaiting = function() {
-            alert("Wait! I need to buffer the next frame");
-        };
-        media.current.onstalled = function() {
-            console.log("Media data is not available");
-        };
-        media.current.onwaiting = (event) => {
-            console.log('Video is waiting for more data.');
-        };
-    },[])
-    
+        peer.on("connectionStateChange", connectionState => {
+            console.log(peer.peerName + "," + peer.getConnectionState() + "," + connectionState);
+            setPeerConnectionState(connectionState);
+        });
+        peer.on("stream", stream => {
+            console.log("Received stream event from:" + peer.peerName);
+            media.current.srcObject = stream;
+        });
+    }, [peer]);
     return (
         <div className="d-flex flex-row border border-info m-0 p-0 peer rounded-3 w-100">
             <div className="border border-dark m-1 p-0 rounded-3 peer-cell">
@@ -32,9 +20,9 @@ export default function PeerElement({ peer }) {
             </div>
             <div className="border border-dark m-1 p-1 rounded-3 peer-cell text-break">
                 Peer Name:<br />
-                {peerName}<br />
+                {peer.peerName}<br />
                 Status:<br />
-                {connectionState}
+                {peerConnectionState}
             </div>
         </div>
     )

@@ -94,7 +94,7 @@ export default class Peer {
             }
         });
 
-        webRTC.setDebug(true);
+        webRTC.setDebug(false);
         /*=====================================================================*/
         /*        Make a call to this peer                                     */
         /*=====================================================================*/
@@ -138,6 +138,12 @@ export default class Peer {
                     break;
                 default: break;
             }
+        }
+        /*=====================================================================*/
+        /*       Remove all tracks from the peer connection object             */
+        /*=====================================================================*/
+        this.removeAllTracks=()=>{
+            webRTC.removeAllTracks();
         }
         /*=====================================================================*/
         /*        Restart ICE                                                  */
