@@ -93,7 +93,7 @@ export default class Peer {
             }
         });
 
-        webRTC.setDebug(false);
+        webRTC.setDebug(true);
         /*=====================================================================*/
         /*        Make a call to this peer                                     */
         /*=====================================================================*/

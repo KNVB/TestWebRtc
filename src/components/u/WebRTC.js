@@ -97,7 +97,7 @@ export default class WebRTC {
         /*=====================================================================*/
         /*       Remove all tracks from the peer connection object             */
         /*=====================================================================*/
-        this.removeAllTracks=()=>{
+        this.removeAllTracks = () => {
             removeAllTracks();
         }
         /*=====================================================================*/
@@ -155,7 +155,7 @@ export default class WebRTC {
                 console.log("signalingState=" + peerConnection.signalingState);
                 console.log("=====================================================================");
                 */
-                await peerConnection.setRemoteDescription(remoteDescription); 
+                await peerConnection.setRemoteDescription(remoteDescription);
             } catch (error) {
                 console.log(error);
                 /*
@@ -256,7 +256,7 @@ export default class WebRTC {
         /*=====================================================================*/
         /*       Remove all tracks from the peer connection object             */
         /*=====================================================================*/
-        let removeAllTracks = () =>{
+        let removeAllTracks = () => {
             peerConnection.getSenders().forEach(sender => {
                 peerConnection.removeTrack(sender);
             });

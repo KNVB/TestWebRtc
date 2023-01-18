@@ -193,7 +193,7 @@ export function useMeeting(isDebug) {
         peer.peerName = newPeer.peerName;
         peer.peerId = newPeer.peerId;
         peer.setConfig(WebRTC_Config);
-        peer.setDebug(false);
+        peer.setDebug(true);
         peer.init();
         peer.on("signal", signalData => {
             let temp = { from: itemList.localPeer.peerId, to: newPeer.peerId, signalData };
