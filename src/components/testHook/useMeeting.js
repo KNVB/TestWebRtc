@@ -99,11 +99,18 @@ export function useMeeting() {
     const itemListRef = useRef(itemList);
     itemListRef.current = itemList;
     let leaveMeeting = async () => {
+        await itemList.localStreamManager.closeStream(itemList.localStream);
+        Object.values(itemList.peerList).forEach(peer => {
+            peer.hangUp();
+        });
+        itemList.meeting.leave();
+        /*
         await itemListRef.current.localStreamManager.closeStream(itemListRef.current.localStream);
         Object.values(itemListRef.current.peerList).forEach(peer => {
             peer.hangUp();
         });
         itemListRef.current.meeting.leave();
+        */
         updateItemList({ type: "leaveMeeting" });
     }
     let joinMeeting = (path) => {

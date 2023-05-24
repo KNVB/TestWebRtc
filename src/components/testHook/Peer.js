@@ -219,11 +219,24 @@ export default class Peer {
                 return;
             }
             
-            await webRTC.setRemoteDescription(signalData);            
+            try{
+                await webRTC.setRemoteDescription(signalData);
+            }catch (error){
+                msgLogger("Signaling State="+webRTC.getSignalingState());
+                msgLogger("An error occur when setting remote description.");
+                msgLogger(error);
+            }    
+
             if (signalData.type === "offer") {
-                await webRTC.setLocalDescription();
-                signalEventHandler({ "type": "remoteDescription", "value": webRTC.getLocalDescription() });
-                msgLogger("Sent local Description to " + this.peerName);
+                try{
+                    await webRTC.setLocalDescription();
+                    signalEventHandler({ "type": "remoteDescription", "value": webRTC.getLocalDescription() });
+                    msgLogger("Sent local Description to " + this.peerName);
+                }catch (error){
+                    msgLogger("Signaling State="+webRTC.getSignalingState());
+                    msgLogger("An error occur when setting local description.");
+                    msgLogger(error);
+                }                
             }
             msgLogger("====processRemoteDescription End====");
         }
