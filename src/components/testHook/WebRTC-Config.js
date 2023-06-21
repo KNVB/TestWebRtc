@@ -24,6 +24,11 @@ let config = {
                 "stun:stun4.l.google.com:19302",
             ]
         },
+        {
+            urls: "turn:relay1.expressturn.com:3478",
+            credential: "oHQxqIXXX63eZpaK",
+            username: "efVTRNEFUYDNDWD9WP",
+        },
     ]
     /*
     iceServers: [
