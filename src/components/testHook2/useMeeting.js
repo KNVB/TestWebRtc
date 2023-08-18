@@ -1,4 +1,4 @@
-import { useReducer, useRef } from "react";
+import { useReducer } from "react";
 import LocalStreamManager from './LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
@@ -8,7 +8,6 @@ let obj = {
     globalMessageList: [],
     "localPeer": new Peer(),
     "localStream": null,
-    "localStreamManager": new LocalStreamManager(),
     "peerList": null,
     "shareAudio": false,
     "shareVideo": false,
@@ -32,7 +31,6 @@ let reducer = (state, action) => {
                 globalMessageList: [],
                 "localPeer": new Peer(),
                 "localStream": null,
-                "localStreamManager": new LocalStreamManager(),
                 "peerList": null,
                 "shareAudio": false,
                 "shareVideo": false,
@@ -96,21 +94,12 @@ let reducer = (state, action) => {
 }
 export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
-    const itemListRef = useRef(itemList);
-    //itemListRef.current = itemList;
     let leaveMeeting = async () => {
-        await itemList.localStreamManager.closeStream(itemList.localStream);
+        await LocalStreamManager.closeStream(itemList.localStream);
         Object.values(itemList.peerList).forEach(peer => {
             peer.hangUp();
         });
         itemList.meeting.leave();
-        /*
-        await itemListRef.current.localStreamManager.closeStream(itemListRef.current.localStream);
-        Object.values(itemListRef.current.peerList).forEach(peer => {
-            peer.hangUp();
-        });
-        itemListRef.current.meeting.leave();
-        */
         updateItemList({ type: "leaveMeeting" });
     }
     let joinMeeting = (path) => {
@@ -184,13 +173,13 @@ export function useMeeting() {
     let updateShareMedia = async (isShareVideo, isShareAudio) => {
         let localStream;
         try {
-            localStream = await itemList.localStreamManager.getMediaStream(isShareVideo, isShareAudio);
+            localStream = await LocalStreamManager.getMediaStream(isShareVideo, isShareAudio);
         } catch (error) {
             console.log("Get Media Stream failure:" + error.message);
             localStream = null;
         } finally {
             if (itemList.localStream) {
-                await itemList.localStreamManager.closeStream(itemList.localStream);
+                await LocalStreamManager.closeStream(itemList.localStream);
             }
 
             if (localStream) {

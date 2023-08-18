@@ -1,5 +1,10 @@
+/**
+ * Local Media Manager object
+ * @date 8/18/2023 - 4:56:01 PM
+ *
+ */
 class LocalStreamManager{
-	#templateConstraint = {
+	static #templateConstraint = {
 		"audio": {
 			channelCount: 2,
 			echoCancellation: true,
@@ -17,11 +22,10 @@ class LocalStreamManager{
 	 * @async
 	 * @param {boolean} shareVideo if true include video stream in return stream, else do not.
 	 * @param {boolean} shareAudio if true include audio stream in return stream, else do not.
-	 * @returns {MediaStream} 
+	 * @returns {MediaStream}
+	 * @static 
 	 */
-	async getMediaStream(shareVideo, shareAudio) {
-		//let constraints={"audio":shareAudio,"video":shareVideo};
-
+	static async getMediaStream(shareVideo, shareAudio) {
 		let constraints = {};
 		if (shareVideo) {
 			constraints["video"] = this.#templateConstraint.video;
@@ -42,10 +46,11 @@ class LocalStreamManager{
 	 *
 	 * @async
 	 * @param {boolean} shareVideo if true include video stream in return stream, else do not.
-	 * @param {boolean} shareAudio if true include video stream in return stream, else do not.
+	 * @param {boolean} shareAudio if true include audio stream in return stream, else do not.
 	 * @returns {MediaStream}
+	 * @static
 	 */
-	async getShareDesktopStream(shareVideo, shareAudio) {
+	static async getShareDesktopStream(shareVideo, shareAudio) {
 		let localStream = null;
 		if (shareVideo || shareAudio) {
 			let constraints = { "audio": shareAudio, "video": shareVideo };
@@ -59,9 +64,9 @@ class LocalStreamManager{
 	 *
 	 * @async
 	 * @param {MediaStream} stream
-	 * @returns {*}
+	 * @static
 	 */
-	async closeStream(stream){
+	static async closeStream(stream){
 		console.log("LocalStreamManager.closeStream is called.");
 		if (stream) {
 			stream.getTracks().forEach(async track => {
