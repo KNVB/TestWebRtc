@@ -5,7 +5,7 @@ import C from "./components/c/C";
 //import L from './components/L';
 import L from './components/testHook/Layout';
 import Q from "./components/testHook/QK";
-import TestHook from './components/testHook/TestHook';
+import TestHook from './components/testHook2/TestHook';
 import TestPureWebRTC from './components/testPureWebRTC/TestPureWebRTC';
 import TestSimplePeer from './components/testSimplePeer/TestSimplePeer';
 import TestU from './components/u/TestU';
