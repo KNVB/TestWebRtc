@@ -1,0 +1,8 @@
+.container {
+    border: 1px solid rosybrown;    
+    margin: 4px;
+    position: absolute;
+    height: calc(100% - 10px);
+    width: calc(100% - 10px);
+    
+}
