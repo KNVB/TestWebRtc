@@ -1,8 +1,28 @@
 .container {
-    border: 1px solid rosybrown;    
+    border: 1px solid rosybrown;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;    
     margin: 4px;
     position: absolute;
     height: calc(100% - 10px);
-    width: calc(100% - 10px);
-    
+    width: calc(100% - 10px);    
+}
+.row{
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    flex-basis: 0;
+    justify-content:space-evenly;
+    gap: 10px;
+}
+button{
+    align-items:center;
+    display: flex;
+    flex-grow: 1;
+    justify-content:center;
+}
+textarea{
+    display: flex;
+    flex-grow: 1;
 }
