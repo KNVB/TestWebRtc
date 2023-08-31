@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<style>
+			.bottom{
+				border-bottom: 1px solid red;
+			}
+			.cell,
+			.videoCell{
+			  border-left: 1px solid red;
+			  border-top: 1px solid red;
+			  display: flex;
+			  flex-basis: 0;
+			  flex-direction: column;
+			  flex-grow: 1;			  
+			  margin: 0px;
+			  padding: 3px;
+			}
+
+			.container {
+			  display: flex;
+			  flex-direction: column;
+			  height: 100%;
+			  margin: 0px;
+			}
+			.end {
+				border-right: 1px solid red;
+			}
+			.panel{
+				align-items:center;
+				display:flex;
+				flex-basis:0;
+				flex-direction: row;
+				flex-grow: 1;
+				margin: 0px;
+			    padding: 0px;				
+			}
+			.panel div{
+				display:flex;
+				flex-basis:0;				
+				flex-grow: 1;
+			}
+			.panelRow{
+				flex-grow: 2;
+			}
+			.row{
+				flex-grow: 0.5;	
+			}
+			.statusCell{
+				align-items:center;
+				display: flex;
+				flex-basis:0;
+				flex-direction: row;
+				flex-grow: 1;
+			}
+			.statusLabel{
+				flex-grow:1;
+			}			
+			.statusText{
+				flex-grow:9;
+				height:100%;
+				position:relative;
+			}
+			.statusLabel,
+			.statusText{
+				display: flex;
+				flex-basis:0;
+			}
+			.statusRow{
+				flex-grow:2;
+			}
+			.panelRow,
+			.row,
+			.statusRow,
+			.videoRow{
+			  display: flex;
+			  flex-basis: 0;
+			  flex-direction: row;			  
+			  margin: 0px;
+			}
+			.videoCell{
+				margin: 0px;
+				padding:0px;
+				position:relative;				
+			}
+			.videoRow{
+				flex-grow: 3;
+			}
+			html {
+			  height: 100%;
+			  margin: 0px;
+			  padding: 0px;
+			}
+
+			body {
+			  /*border:1px solid black;*/
+			  height: calc(100% - 20px);
+			  margin: 10px;
+			  padding: 0px;
+			}
+			textarea{
+				display:flex;
+				flex-basis:0;				
+				flex-grow: 1;
+			}
+			video{
+				height:calc(100% - 6px);
+				margin:3px;
+				position:absolute;
+				width:calc(100% - 6px);
+			}
+		</style>
+		<script>
+			function LocalMedia(){
+				const constraint = {
+					"audio":true,
+					"video":true
+				};
+				this.close = async (stream) => {
+					if (stream) {
+						stream.getTracks().forEach(async track => {
+							await track.stop();
+						});
+					}
+				}
+				this.get=async()=>{
+					try{
+						return await navigator.mediaDevices.getUserMedia(constraint);
+					}catch (error){
+						console.log(error);
+						return null;
+					}
+				}
+			}
+			function WebRTCConnection(id) {
+				let config = {
+					iceServers: [
+						{
+							urls: [
+								"stun:stun.l.google.com:19302",
+								"stun:stun1.l.google.com:19302",
+								"stun:stun2.l.google.com:19302",
+								"stun:stun3.l.google.com:19302",
+								"stun:stun4.l.google.com:19302",
+							]
+						},
+						{
+							urls: "turn:relay1.expressturn.com:3478",
+							credential: "oHQxqIXXX63eZpaK",
+							username: "efVTRNEFUYDNDWD9WP",
+						},
+						{
+							urls: 'turn:openrelay.metered.ca:80?transport=tcp',
+							username: 'openrelayproject',
+							credential: 'openrelayproject'
+						}
+					]
+				}
+				let dataChannel = null,peerConnection=null,stream=null;
+				let ignoreOffer = false,makingOffer = false, polite = false;
+				let iceCandidateHandler, negotiationHandler,trackHandler;
+				let localMedia=new LocalMedia();
+				this.call = () => {
+					polite = true;					
+					initDataChannel(peerConnection.createDataChannel("chat"));
+				}
+				this.addICECandidate = async(iceCandidate) => {
+					if (peerConnection.connectionState !=="closed"){
+						iceCandidate.usernameFragment = null;
+						await peerConnection.addIceCandidate(new RTCIceCandidate(iceCandidate));
+					}
+				}
+				this.hangUp=async()=>{
+					if (stream) {
+						await localMedia.close(stream);
+					}
+					if (peerConnection && (peerConnection.signalingState !== "closed")) {
+						peerConnection.getSenders().forEach(sender => {
+							peerConnection.removeTrack(sender);
+						});
+						peerConnection.close();
+					}
+				}
+				this.init=()=>{
+					peerConnection=new RTCPeerConnection(config);
+					peerConnection.ondatachannel = (event) => {
+						initDataChannel(event.channel);
+					}
+					peerConnection.onconnectionstatechange = ()=>{
+						connectionStateChangeHandler();
+					}
+					peerConnection.onicecandidate = e=>{
+						if (e.candidate) {
+							msgLogger(id+" received an ice candidate.");
+							iceCandidateHandler(e.candidate);
+						}
+					}
+					peerConnection.onnegotiationneeded =  async () => {
+						msgLogger("====Negotiation start====");
+						try {
+							makingOffer = true;
+							await peerConnection.setLocalDescription();
+							msgLogger(id+" local description is generated.");
+							negotiationHandler(peerConnection.localDescription);
+						} catch (err) {
+							msgLogger("Failed to send Local Description:" + err);
+						} finally {
+							makingOffer = false;
+							msgLogger("====Negotiation end====");
+						}
+					}
+					peerConnection.ontrack = event => {
+						msgLogger(id+" received track event");
+						trackHandler(event.streams[0]);
+					};
+					msgLogger(id+" init completed");
+				}				
+				this.on=(eventType,handler)=>{
+					switch (eventType){
+						case "iceCandidate":
+							iceCandidateHandler =handler;
+							break;
+						case "negotiation":
+							negotiationHandler = handler;
+							break;
+						case "track":
+							trackHandler = handler;
+							break;
+						default:
+							break
+					}
+				}
+				this.setRemoteDescription = async (remoteDescription) => {
+					msgLogger("====processRemoteDescription Start====");
+					const offerCollision = (remoteDescription.type === "offer") &&
+						(makingOffer || peerConnection.signalingState !== "stable");
+					ignoreOffer = !polite && offerCollision;
+					msgLogger("remoteDescription.type=" + remoteDescription.type + ",makingOffer=" + makingOffer + ", peerConnection.signalingState=" + peerConnection.signalingState);
+					msgLogger("ignoreOffer = " + ignoreOffer + ",offerCollision=" + offerCollision + ",polite=" + polite);
+					if (ignoreOffer) {
+						msgLogger("Ignore offer from " + this.peerName);
+						return;
+					}
+					try{
+						await peerConnection.setRemoteDescription(remoteDescription);
+					}catch (error){
+						msgLogger("peerConnection.signalingState="+peerConnection.signalingState);
+						msgLogger("An error occur when setting remote description.");
+						msgLogger(error);
+					}
+					if (remoteDescription.type === "offer") {
+						try{
+							await peerConnection.setLocalDescription();
+							negotiationHandler(peerConnection.localDescription);
+							msgLogger(id+" local description is generated.");
+						}catch (error){
+							msgLogger("peerConnection.signalingState="+peerConnection.signalingState);
+							msgLogger("An error occur when setting local description.");
+							msgLogger(error);
+						}                
+					}
+					msgLogger("====processRemoteDescription End====");
+				}
+				this.shareMedia=async()=>{
+					stream=await localMedia.get();					
+					if (stream !== null){
+						for (const track of stream.getTracks()) {
+							peerConnection.addTrack(track, stream);
+						}
+						document.getElementById("callerMedia").srcObject=stream;
+					}
+				}
+				this.stopShareMedia=async()=>{
+					await localMedia.close(stream);
+					peerConnection.getSenders().forEach(sender => {
+						peerConnection.removeTrack(sender);
+					});
+				}
+				//========================================================
+				//  Private function
+				//========================================================
+				let connectionStateChangeHandler=()=>{
+					msgLogger(id+" Connection state="+peerConnection.connectionState);
+				}
+				
+				/*=====================================================================*/
+				/*        Initialize the data channel and its event handler            */
+				/*=====================================================================*/
+				let initDataChannel = (channel) => {
+					dataChannel = channel;
+					dataChannel.onclose = () => {
+						msgLogger("DataChannel is closed!");
+					};
+					dataChannel.onerror = (event) => {
+						msgLogger("An error occured in DataChannel:"+JSON.stringify(event));
+					};
+					dataChannel.onmessage = (message) => {
+						msgLogger("Received Message from DataChannel");
+					};
+					dataChannel.onopen = () => {
+						msgLogger("DataChannel is opened!");
+					};
+				}
+				
+				let msgLogger = (msg) => {
+					let textArea=document.getElementById(id+"Status");
+					textArea.value+=msg+"\n";
+				}
+			};
+			let callee,caller;
+			let calleeICE=[],callerICE=[];
+			function call(){
+				caller.call();
+			}
+			async function hangUp(){
+				await caller.hangUp();
+			}
+			async function copyOffer(event){
+				await navigator.clipboard.writeText(document.getElementById("offer").value);
+				alert("Offer is copied");
+			}
+			async function copyAnswer(event){
+				await navigator.clipboard.writeText(document.getElementById("answer").value);
+				alert("Answer is copied");
+			}
+			async function processCalleeAnswer(){
+				await caller.setRemoteDescription(JSON.parse(document.getElementById("calleeAnswer").value));
+				for (let i=0;i < calleeICE.length;i++){
+					await caller.addICECandidate(callerICE[i]);
+				}
+			}
+			async function processCallerOffer(){
+				await callee.setRemoteDescription(JSON.parse(document.getElementById("callerOffer").value));
+				for (let i=0;i < callerICE.length;i++){
+					await callee.addICECandidate(callerICE[i]);
+				}
+			}
+			function init(){
+				caller=new WebRTCConnection("caller");
+				callee=new WebRTCConnection("callee");
+				callee.init();
+				caller.init();
+				caller.on("negotiation",localDescription=>{
+					document.getElementById("offer").value=JSON.stringify(localDescription);
+				});
+				callee.on("negotiation",localDescription=>{
+					document.getElementById("answer").value=JSON.stringify(localDescription);
+				});
+				caller.on("iceCandidate",iceCandidate=>{
+					//callee.addICECandidate(iceCandidate);
+					callerICE.push(iceCandidate);
+				});
+				callee.on("iceCandidate",iceCandidate=>{
+					//caller.addICECandidate(iceCandidate);
+					calleeICE.push(iceCandidate);
+				});
+				callee.on("track", stream=>{
+					document.getElementById("calleeMedia").srcObject=stream;
+				});
+			}
+			async function shareMedia(e){
+				let value=e.target.checked;				
+				if (e.target.checked){
+					await caller.shareMedia();
+				}else {
+					await caller.stopShareMedia();
+				}
+			}			
+		</script>
+	</head>
+	<body onload="init()">
+		<div class="container">
+		  <div class="row">
+			<div class="cell">Caller</div>
+			<div class="cell end">Callee</div>
+		  </div>
+		  <div class="videoRow">
+			<div class="videoCell">
+				<video autoplay controls muted id="callerMedia"></video>
+			</div>
+			<div class="videoCell end">
+				<video autoplay controls muted id="calleeMedia"></video>
+			</div>
+		  </div>
+		  <div class="panelRow">
+			<div class="cell">
+				<div class="panel">
+					<div><input type="checkbox">Share Audio</div>
+					<div><input type="checkbox">Share Video</div>
+					<div><button onclick="call()">Create Offer</button></div>
+					<div><button onclick="hangUp()">Hang Up</button></div>	
+				</div>
+				<div class="panel">
+					<div>Offer:</div>
+				</div>
+				<div class="panel">				
+					<div><textarea id="offer" readonly></textarea></div>
+				</div>
+				<div class="panel">
+					<div>&nbsp;<button onclick="copyOffer(event)">Copy offer</button></div>
+				</div>
+				<div class="panel">
+					<div>Callee answer:</div>
+				</div>
+				<div class="panel">
+					<div><textarea id="calleeAnswer"></textarea></div>
+				</div>
+				<div class="panel">
+					<div>&nbsp;<button onclick="processCalleeAnswer()">Process Callee Answer</button></div>
+				</div>
+			</div>
+			<div class="cell end">
+				<div class="panel">
+					<div>Caller Offer:</div>
+				</div>
+				<div class="panel">
+					<div><textarea id="callerOffer"></textarea></div>
+				</div>
+				<div class="panel">
+					<button onclick="processCallerOffer()">Process Caller offer</button>
+				</div>
+				<div class="panel">
+					Answer:
+				</div>
+				<div class="panel">
+					<textarea id="answer" readonly></textarea>
+				</div>
+				<div class="panel">
+					<button onclick="copyAnswer(event)">Copy answer</button>
+				</div>
+			</div>
+		  </div>		  
+		  <div class="statusRow">
+			<div class="bottom cell">
+				<div class="statusCell">
+					<div class="statusText"><textarea id="callerStatus" spellcheck="false"></textarea></div>
+				</div>
+			</div>
+			<div class="bottom cell end">
+				<div class="statusCell">					
+					<div class="statusText"><textarea id="calleeStatus"></textarea></div>
+				</div>	
+			</div>
+		  </div>
+		</div>
+	</body>
+</html>
