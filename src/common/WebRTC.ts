@@ -26,7 +26,9 @@ export default class WebRTC {
      * @param {RTCIceCandidate} iceCandidate An RTCIceCandidate object.
      */
     async addICECandidate(iceCandidate: RTCIceCandidate) {
-        await this.peerConnection.addIceCandidate(iceCandidate);
+        if (this.peerConnection.connectionState !== "closed") {
+            await this.peerConnection.addIceCandidate(iceCandidate);
+        }
     }
 
     /**
@@ -39,14 +41,14 @@ export default class WebRTC {
      * To get the local description of the local end of the connection.
      * @returns {null|RTCSessionDescription} the session description for the local end of the connection
      */
-    getLocalDescription():(null|RTCSessionDescription) {
+    getLocalDescription(): (null | RTCSessionDescription) {
         return this.peerConnection.localDescription;
     }
     /**
      * To get the RTCPeerConnection signaling state.
      * @returns {string} The RTCPeerConnection signaling state
      */
-    getSignalingState():string {
+    getSignalingState(): string {
         return this.peerConnection.signalingState;
     }
     /**

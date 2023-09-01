@@ -1,13 +1,19 @@
 import { useRef } from "react";
+import LocalStreamManager from "../common/LocslStreamManager";
 import Peer from "../common/Peer";
 import "./TestWebRTC.css";
 import config from "../common/WebRTC-Config";
 export default function TestWebRTC() {
-    let calleeStatus = useRef<HTMLTextAreaElement | null>(null);
-    let callerStatus = useRef<HTMLTextAreaElement | null>(null);
     let callee = new Peer();
     let caller = new Peer();
 
+    let calleeStatus = useRef<HTMLTextAreaElement | null>(null);
+    let callerStatus = useRef<HTMLTextAreaElement | null>(null);
+    let calleeMedia = useRef<HTMLVideoElement | null>(null);
+    let callerMedia = useRef<HTMLVideoElement | null>(null);
+    let localStream:(MediaStream|null);
+    let shareMediaAudio=false;
+    let shareMediaVideo=false;
     callee.setConfig(config);
     callee.on("connectionStateChange", (status: string) => {
         if (calleeStatus.current) {
@@ -20,6 +26,11 @@ export default function TestWebRTC() {
         }
         caller.signal(signaleObj);
     });
+    callee.on("stream",(stream:MediaStream)=>{
+        if (calleeMedia.current){
+            calleeMedia.current.srcObject=stream;
+        }        
+    })
     caller.setConfig(config);
     caller.on("connectionStateChange", (status: string) => {
         if (callerStatus.current) {
@@ -34,8 +45,38 @@ export default function TestWebRTC() {
     });
     callee.init();
     caller.init();
+
     let call = () => {
         caller.call();
+    }
+    let hangUp = () => {
+        if (localStream){
+            LocalStreamManager.closeStream(localStream);
+        }
+        caller.hangUp();
+    }
+    let manageStream=async()=>{
+        if (shareMediaAudio || shareMediaVideo) {
+            localStream = await LocalStreamManager.getMediaStream(shareMediaVideo,shareMediaAudio);
+            if (localStream){
+                caller.setStream(localStream);
+                if (callerMedia.current){
+                    callerMedia.current.srcObject=localStream;
+                }
+            }
+        }else{
+            if (localStream){
+                LocalStreamManager.closeStream(localStream);
+            }
+        }
+    }
+    let shareAudio=async(event:React.MouseEvent)=>{
+        shareMediaAudio=(event.target as HTMLInputElement).checked;
+        await manageStream();
+    }
+    let shareVideo=async (event:React.MouseEvent)=>{
+        shareMediaVideo=(event.target as HTMLInputElement).checked;
+        await manageStream();  
     }
     return (
         <div className="container">
@@ -45,19 +86,19 @@ export default function TestWebRTC() {
             </div>
             <div className="videoRow">
                 <div className="videoCell">
-                    <video autoPlay controls muted id="callerMedia"></video>
+                    <video autoPlay controls muted ref={callerMedia}></video>
                 </div>
                 <div className="videoCell end">
-                    <video autoPlay controls muted id="calleeMedia"></video>
+                    <video autoPlay controls muted ref={calleeMedia}></video>
                 </div>
             </div>
             <div className="panelRow">
                 <div className="panelCell">
                     <div className="panel">
-                        <div><input type="checkbox" />Share Audio</div>
-                        <div><input type="checkbox" />Share Video</div>
-                        <button>Create Offer</button>
-                        <button>Hang Up</button>
+                        <div><input onClick={shareAudio} type="checkbox" />Share Audio</div>
+                        <div><input onClick={shareVideo} type="checkbox" />Share Video</div>
+                        <button onClick={call}>Create Offer</button>
+                        <button onClick={hangUp}>Hang Up</button>
                     </div>
                     <div className="panel">
                         Offer:
@@ -101,19 +142,12 @@ export default function TestWebRTC() {
             </div>
             <div className="statusRow">
                 <div className="bottom cell">
-                    <textarea></textarea>
+                    <textarea ref={callerStatus}></textarea>
                 </div>
                 <div className="bottom cell end">
-                    <textarea></textarea>
+                    <textarea ref={calleeStatus}></textarea>
                 </div>
             </div>
-            {/*
-            <div className="row">
-                <textarea ref={callerStatus}></textarea>
-                <textarea ref={calleeStatus}></textarea>
-                <button onClick={call}>Call</button>
-            </div>
-            */}
         </div>
     )
 }
