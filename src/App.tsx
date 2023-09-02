@@ -1,8 +1,8 @@
 import './App.css';
-import TestWebRTC from './components/TestWebRTC';
+import TestWebRTC1 from './components/TestWebRTC1';
 export default function App() {
   
   return (
-    <TestWebRTC/>
+    <TestWebRTC1/>
   );
 }
