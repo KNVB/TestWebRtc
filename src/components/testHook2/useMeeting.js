@@ -2,6 +2,7 @@ import { useReducer } from "react";
 import LocalStreamManager from './LocalStreamManager';
 import Meeting from "./Meeting";
 import Peer from "./Peer";
+import SpeechRecognition from "./SpeechRecognition";
 import WebRTC_Config from "./WebRTC-Config";
 let obj = {
     globalMessage: '',
@@ -11,6 +12,7 @@ let obj = {
     "peerList": null,
     "shareAudio": false,
     "shareVideo": false,
+    "speechRecognition": null,
 }
 
 let reducer = (state, action) => {
@@ -20,6 +22,7 @@ let reducer = (state, action) => {
     switch (action.type) {
         case "initMeeting":
             result.meeting = action.meeting;
+            result.speechRecognition = action.speechRecognition;
             break;
         case "initPeerList":
             result.localPeer.peerId = action.localPeerId;
@@ -83,6 +86,11 @@ let reducer = (state, action) => {
             }
             break;
         case "updateShareMediaState":
+            if (action.isShareAudio === true){
+                result.speechRecognition.start();
+            } else {
+                result.speechRecognition.stop();
+            }
             result.shareAudio = action.isShareAudio;
             result.shareVideo = action.isShareVideo;
             result.localStream = action.localStream;
@@ -141,7 +149,14 @@ export function useMeeting() {
                 updateItemList({ type: "updatePeerName", "peer": peer });
             });
             meeting.join(path, itemList.localPeer);
-            updateItemList({ type: "initMeeting", "meeting": meeting });
+            let sendRecognizedText=msg=>{
+                let msgObj = { from: itemList.localPeer.peerId, message: msg };
+                meeting.sendGlobalMessage(msgObj);
+                updateItemList({ type: "updateGlobalMessageList", msgObj: msgObj });
+            }
+            let speechRecognition = new SpeechRecognition();
+            speechRecognition.onResult(sendRecognizedText)
+            updateItemList({ type: "initMeeting", "meeting": meeting, speechRecognition });
         }
     }
     let sendGlobalMessage = () => {
