@@ -9,14 +9,15 @@ export default class SpeechRecognition {
     constructor(trigger) {
         this.#speechRecognition = new (window.SpeechRecognition ||
             window.webkitSpeechRecognition)();
-        this.#speechRecognition.lang = 'zh-HK';
+        //this.#speechRecognition.lang = 'zh-HK';
+        this.#speechRecognition.lang = 'en-US';
         this.#speechRecognition.continuous = true;
         this.#speechRecognition.interimResults = false;
 
         this.#speechRecognition.onstart = () => {
             console.log('Speech recognition started');
         };
-       
+
         this.#speechRecognition.onend = () => {
             console.log('Speech recognition ended');
         };
@@ -30,25 +31,25 @@ export default class SpeechRecognition {
             console.log('No speech was recognized.');
         };
         console.log("SpeechRecognition Object constructor is called.");
-//============================================================================================================
-        this.onResult=(handler)=>{
-            this.#speechRecognition.onresult = (event) => {
-                let obj = event.results[event.results.length - 1][0];
-                const transcript = obj.transcript;
-                const confidence = obj.confidence;
-                console.log('=========================');
-                console.log(JSON.stringify(event.results));
-                console.log('transcript=' + transcript);
-                console.log('confidence=' + confidence);
-                console.log('=========================');
-                handler(transcript);                
-            };
-        }        
-        this.start=()=>{
-            this.#speechRecognition.start();
-        }
-        this.stop=()=>{
-            this.#speechRecognition.stop();
-        }
+    }
+    //============================================================================================================
+    onResult = (handler) => {
+        this.#speechRecognition.onresult = (event) => {
+            let obj = event.results[event.results.length - 1][0];
+            const transcript = obj.transcript;
+            const confidence = obj.confidence;
+            console.log('=========================');
+            console.log(JSON.stringify(event.results));
+            console.log('transcript=' + transcript);
+            console.log('confidence=' + confidence);
+            console.log('=========================');
+            handler(transcript);
+        };
+    }
+    start = () => {
+        this.#speechRecognition.start();
+    }
+    stop = () => {
+        this.#speechRecognition.stop();
     }
 }

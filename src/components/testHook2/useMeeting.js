@@ -86,11 +86,6 @@ let reducer = (state, action) => {
             }
             break;
         case "updateShareMediaState":
-            if (action.isShareAudio === true){
-                result.speechRecognition.start();
-            } else {
-                result.speechRecognition.stop();
-            }
             result.shareAudio = action.isShareAudio;
             result.shareVideo = action.isShareVideo;
             result.localStream = action.localStream;
@@ -103,11 +98,13 @@ let reducer = (state, action) => {
 export function useMeeting() {
     const [itemList, updateItemList] = useReducer(reducer, obj);
     let leaveMeeting = async () => {
-        await LocalStreamManager.closeStream(itemList.localStream);
-        Object.values(itemList.peerList).forEach(peer => {
-            peer.hangUp();
-        });
-        itemList.meeting.leave();
+        LocalStreamManager.closeStream(itemList.localStream);
+        if (itemList.peerList !== null) {
+            Object.values(itemList.peerList).forEach(peer => {
+                peer.hangUp();
+            });
+            itemList.meeting.leave();
+        }
         updateItemList({ type: "leaveMeeting" });
     }
     let joinMeeting = (path) => {
@@ -149,7 +146,7 @@ export function useMeeting() {
                 updateItemList({ type: "updatePeerName", "peer": peer });
             });
             meeting.join(path, itemList.localPeer);
-            let sendRecognizedText=msg=>{
+            let sendRecognizedText = msg => {
                 let msgObj = { from: itemList.localPeer.peerId, message: msg };
                 meeting.sendGlobalMessage(msgObj);
                 updateItemList({ type: "updateGlobalMessageList", msgObj: msgObj });
@@ -194,7 +191,7 @@ export function useMeeting() {
             localStream = null;
         } finally {
             if (itemList.localStream) {
-                await LocalStreamManager.closeStream(itemList.localStream);
+                LocalStreamManager.closeStream(itemList.localStream);
             }
 
             if (localStream) {

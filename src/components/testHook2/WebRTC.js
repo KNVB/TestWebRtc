@@ -2,7 +2,7 @@
  * A wrapper class of RTCPeerConnection
  * @date 8/18/2023 - 10:30:28 AM 
  */
-class WebRTC {
+export default class WebRTC {
     #configuration = {};
     #dataChannel = null;
     #dataChannelCloseHandler; #dataChannelErrorHandler;
@@ -275,4 +275,3 @@ class WebRTC {
         }
     }
 }
-export default WebRTC

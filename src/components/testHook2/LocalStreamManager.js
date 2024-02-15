@@ -3,7 +3,7 @@
  * @date 8/18/2023 - 4:56:01 PM
  *
  */
-class LocalStreamManager{
+export default class LocalStreamManager {
 	static #templateConstraint = {
 		"audio": {
 			channelCount: 2,
@@ -22,7 +22,7 @@ class LocalStreamManager{
 	 * @async
 	 * @param {boolean} shareVideo if true include video stream in return stream, else do not.
 	 * @param {boolean} shareAudio if true include audio stream in return stream, else do not.
-	 * @returns {MediaStream}
+	 * @returns {Promise<MediaStream?>}
 	 * @static 
 	 */
 	static async getMediaStream(shareVideo, shareAudio) {
@@ -47,7 +47,7 @@ class LocalStreamManager{
 	 * @async
 	 * @param {boolean} shareVideo if true include video stream in return stream, else do not.
 	 * @param {boolean} shareAudio if true include audio stream in return stream, else do not.
-	 * @returns {MediaStream}
+	 * @returns {Promise<MediaStream?>}
 	 * @static
 	 */
 	static async getShareDesktopStream(shareVideo, shareAudio) {
@@ -66,13 +66,14 @@ class LocalStreamManager{
 	 * @param {MediaStream} stream
 	 * @static
 	 */
-	static async closeStream(stream){
+	static closeStream(stream) {
 		console.log("LocalStreamManager.closeStream is called.");
 		if (stream) {
-			stream.getTracks().forEach(async track => {
+			let tracks = stream.getTracks();
+			for (let i = 0; i < tracks.length; i++) {
+				let track = tracks[i];
 				track.stop();
-			});
+			}
 		}
 	}
 }
-export default LocalStreamManager
