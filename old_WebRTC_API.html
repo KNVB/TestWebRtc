@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<style>
+			.normalRow{
+				height:10%
+			}
+			.statusCaption{
+				align-self:center;
+				display:flex;
+				flex-grow:1;
+				padding:0px;
+				margin:0px;
+			}
+			.statusCell{
+				display:flex;
+				flex-direction:row;
+				gap:0px;
+				height:100%;
+				margin:0px;
+				padding:0px;
+				position:relative;
+			}
+			.statusText{
+				display:flex;
+				flex-grow:9;
+				padding:0px;
+				margin:0px
+			}
+			.videoCell{
+				position:relative;
+			}
+			.videoRow{
+				height:40%
+			}
+			html{ 
+			  height:100%;
+			  margin:0px;
+			  padding:0px;
+			}
+			body{ 
+			  height:calc(100% - 20px);
+			  margin:10px;
+			  padding:0px;
+			}
+			table{
+				height:100%;
+				width:100%;
+				margin:0px;
+				padding:0px;
+			}	
+			
+			textarea{
+				left:0px;
+				margin:0px;
+				top:0px;
+				vertical-align: middle;
+				width:100%;
+			}
+			video{
+				height:calc(100% - 6px);
+				left:0px;
+				margin:3px;
+				object-fit:cover;
+				position:absolute;
+				top:0px;
+				width:calc(100% - 6px);
+			}
+		</style>
+		<script>
+			class WebRTCConnection{
+				#iceCandidateHandler;
+				#id;
+				#pc;
+				#trackHandler;
+				constructor(id){
+					let config={
+						iceServers: [
+							{
+								urls: [
+									"stun:stun.l.google.com:19302",
+									"stun:stun1.l.google.com:19302",
+									"stun:stun2.l.google.com:19302",
+									"stun:stun3.l.google.com:19302",
+									"stun:stun4.l.google.com:19302",
+								]
+							},						
+							{
+								urls: 'turn:openrelay.metered.ca:80?transport=tcp',
+								username: 'openrelayproject',
+								credential: 'openrelayproject'
+							}
+						]
+					}
+					this.#id=id;
+					this.#pc=new RTCPeerConnection(config);
+					this.#pc.onicecandidate=event=>{
+						this.#iceCandidateHandler(event);
+					}
+					this.#pc.ondatachannel = event=>{
+						this.#initDataChannel(event.channel);	
+					}
+					this.#pc.ontrack = event => {
+						this.msgLogger(id+" received track event");
+						if (this.#trackHandler !== undefined){
+							this.#trackHandler(event);
+						}
+					}
+				}
+				addICECandidate(iceCandidate){
+					this.#pc.addIceCandidate(iceCandidate);
+					this.msgLogger("Candidate is added.");
+				}
+				async call(){
+					/*
+					const constraints = { video: true, audio: true };
+					const stream = await navigator.mediaDevices.getUserMedia(constraints);
+					stream.getTracks().forEach((track) => {
+						this.#pc.addTrack(track, stream);
+					});
+					*/
+					let dataChannel=this.#pc.createDataChannel("dfd");
+					this.#initDataChannel(dataChannel);					
+					let offer = await this.#pc.createOffer();					
+					this.#pc.setLocalDescription(offer);
+					return offer;
+				}
+				hangUp(){
+					this.#pc.close();
+				}
+				#initDataChannel(channel){
+					let dataChannel = channel;
+					dataChannel.onclose = () => {
+						this.msgLogger("DataChannel is closed!");
+					};
+					dataChannel.onerror = (event) => {
+						this.msgLogger("An error occured in DataChannel:"+event.error);
+					};
+					dataChannel.onmessage = (message) => {
+						this.msgLogger("Received Message from DataChannel");
+					};
+					dataChannel.onopen = () => {
+						this.msgLogger("DataChannel is opened!");
+					};
+				}
+				on(eventType,handler){
+					switch (eventType){
+						case "iceCandidate":
+							this.#iceCandidateHandler =handler;
+							break;
+						case "track":
+							trackHandler = handler;
+							break;
+						default:
+							break	
+					}
+				}
+				
+				async setAnswer(answer){					
+					await this.#pc.setRemoteDescription(answer);
+				}
+				async setOffer(offer){
+					await this.#pc.setRemoteDescription(offer);
+					const answer = await this.#pc.createAnswer();
+					await this.#pc.setLocalDescription(answer);
+					return answer;
+				}
+				msgLogger(msg){
+					let textArea=document.getElementById(this.#id+"Status");
+					textArea.value+=msg+"\n";
+				}
+			}
+			let callee,caller;
+			async function call(e){
+				e.preventDefault();
+				caller.on("iceCandidate",event=>{
+					caller.msgLogger("Caller candidate event");
+					if (event.candidate){
+						callee.addICECandidate(event.candidate);
+					}
+				});
+				callee.on("iceCandidate",event=>{
+					callee.msgLogger("Callee candidate event");
+					if (event.candidate){
+						caller.addICECandidate(event.candidate);
+					}
+				});
+				let offer=await caller.call();
+				let answer=await callee.setOffer(offer);
+				await caller.setAnswer(answer);
+			}
+			function hangUp(e){
+				e.preventDefault();
+				caller.hangUp();
+			}
+			function init(){
+				caller=new WebRTCConnection("caller");
+				callee=new WebRTCConnection("callee");				
+			}
+			
+		</script>
+	</head>
+	<body onload="init()">
+		<table border="1">
+			<tr class="normalRow">
+				<td>&nbsp;Caller</td>
+				<td>&nbsp;Callee</td>
+			</tr>
+			<!--tr class="videoRow">
+				<td class="videoCell"><video autoplay controls muted id="callerMedia"></video></td>
+				<td class="videoCell"><video autoplay controls muted id="calleeMedia"></video></td>
+			</tr-->
+			<tr class="normalRow">
+				<td>
+					<button onclick="call(event)">Call</button>
+					<button onclick="hangUp(event)">Hang up</button>
+				</td>
+				<td></td>
+			</tr>
+			<tr class="videoRow">
+				<td style="padding:0px;margin:0px;">
+					<div class="statusCell">
+						<div class="statusCaption">status:</div>
+						<div class="statusText"><textarea id="callerStatus"></textarea></div>
+					</div>
+				</td>
+				<td style="padding:0px;margin:0px;">
+					<div class="statusCell">
+						<div class="statusCaption">status:</div>
+						<div class="statusText"><textarea id="calleeStatus"></textarea></div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>
