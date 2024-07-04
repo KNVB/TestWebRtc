@@ -142,7 +142,7 @@ export default class WebRTC {
         this.#configuration = { ...config };
     }
     /**
-     * To control if message error is shown.
+     * To control if error message is shown.
      * @param {boolean} debug If true show the error message in console, else do not.
      */
     setDebug(debug) {
@@ -234,6 +234,9 @@ export default class WebRTC {
         }
         this.#peerConnection.oniceconnectionstatechange = () => {
             this.#iceConnectionStateChangeHandler(this.#peerConnection.iceConnectionState);
+            if (this.#peerConnection.iceConnectionState === "failed") {
+                this.#peerConnection.restartIce();
+            }
         };
         this.#peerConnection.onicegatheringstatechange = () => {
             this.#iceGatheringStateChangeHandler(this.#peerConnection.iceGatheringState);

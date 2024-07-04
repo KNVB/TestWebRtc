@@ -227,32 +227,32 @@ class Peer {
         this.#msgLogger("====processRemoteDescription Start====");
         const offerCollision = (signalData.type === "offer") &&
             (this.#makingOffer || this.#webRTC.getSignalingState() !== "stable");
-            this.#ignoreOffer = !this.#polite && offerCollision;
+        this.#ignoreOffer = !this.#polite && offerCollision;
         this.#msgLogger("signalData.type=" + signalData.type + ",makingOffer=" + this.#makingOffer + ", webRTC.getSignalingState()=" + this.#webRTC.getSignalingState());
         this.#msgLogger("ignoreOffer = " + this.#ignoreOffer + ",offerCollision=" + offerCollision + ",polite=" + this.#polite);
         if (this.#ignoreOffer) {
             this.#msgLogger("Ignore offer from " + this.peerName);
             return;
         }
-        
-        try{
+
+        try {
             await this.#webRTC.setRemoteDescription(signalData);
-        }catch (error){
-            this.#msgLogger("Signaling State="+this.#webRTC.getSignalingState());
+        } catch (error) {
+            this.#msgLogger("Signaling State=" + this.#webRTC.getSignalingState());
             this.#msgLogger("An error occur when setting remote description.");
             this.#msgLogger(error);
-        }    
+        }
 
         if (signalData.type === "offer") {
-            try{
+            try {
                 await this.#webRTC.setLocalDescription();
                 this.#signalEventHandler({ "type": "remoteDescription", "value": this.#webRTC.getLocalDescription() });
                 this.#msgLogger("Sent local Description to " + this.peerName);
-            }catch (error){
-                this.#msgLogger("Signaling State="+this.#webRTC.getSignalingState());
+            } catch (error) {
+                this.#msgLogger("Signaling State=" + this.#webRTC.getSignalingState());
                 this.#msgLogger("An error occur when setting local description.");
                 this.#msgLogger(error);
-            }                
+            }
         }
         this.#msgLogger("====processRemoteDescription End====");
     }

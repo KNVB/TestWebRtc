@@ -122,6 +122,11 @@
 					*/
 					let dataChannel=this.#pc.createDataChannel("dfd");
 					this.#initDataChannel(dataChannel);					
+					const constraints = { video: true, audio: true };
+					const stream = await navigator.mediaDevices.getUserMedia(constraints);
+					stream.getTracks().forEach((track) => {
+						this.#pc.addTrack(track, stream);
+					});
 					let offer = await this.#pc.createOffer();					
 					this.#pc.setLocalDescription(offer);
 					return offer;
