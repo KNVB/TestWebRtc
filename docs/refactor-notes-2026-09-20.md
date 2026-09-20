@@ -1,116 +1,123 @@
-# 會議重構記錄（2026-09-20）
+# Meeting Refactor Notes (2026-09-20)
 
-今次 session 為 TestWebRtc POC 做嘅整合同整理記錄。
+Record of the consolidation and cleanup done to the TestWebRtc POC in this session.
 
-## 架構原則
+## Architecture principle
 
-目標：**點變 UI 都郁唔到 utility class**。
+Goal: **changing the UI must never touch the utility classes.**
 
 ```
-util/          = 純邏輯層（vanilla JS，零 React / 零 components import）
-components/    = 純 UI + useMeeting adapter
+util/          = pure logic layer (vanilla JS, zero React / zero components imports)
+components/    = pure UI + useMeeting adapter
 server/        = signaling relay
-依賴方向         = components → util（單向），util 永不指向 components/React
+Dependency rule = components → util (one-way); util never points to components/React
 ```
 
-已用 grep 驗證：`util/*` 冇任何 `react` / `components/` import。
+Verified by grep: `util/*` has no `react` / `components/` imports.
 
-## 最終目錄結構
+## Final folder structure
 
 ```
-src/util/         WebRTC.js、WebRTC-Config.js、Meeting.js、Peer.js、LocalStreamManager.js
-src/components/   testHook/Layout.jsx (/l)、testHook2/ UI (/t)、share/panel/ (/)、testSimplePeer/ (/testSimplePeer)
-server/           t/、testSimplePeer/、index.js
+src/util/         WebRTC.js, WebRTC-Config.js, Meeting.js, Peer.js, LocalStreamManager.js
+src/components/   testHook/Layout.jsx (/l), testHook2/ UI (/t), share/panel/ (/), testSimplePeer/ (/testSimplePeer)
+server/           t/, testSimplePeer/, index.js
 ```
 
-Route 只保留 `/`、`/l`、`/t`、`/testSimplePeer`。
+Only 4 routes remain: `/`, `/l`, `/t`, `/testSimplePeer`.
 
-## 做咗啲咩
+## What was done
 
-### 1. WebRTC wrapper 統一
-- 統一咗 c / testHook / testHook2 / u 四個版本 → `src/util/WebRTC.js`。
-- 用「testHook2 結構」+「u 防守邏輯」合併。特點：
-  - class + `#private` 欄位 + JSDoc，11 個事件。
-  - `setRemoteDescription` 加 try/catch + state 記錄。
-  - `hangUp` 有 `signalingState !== "closed"` 檢查。
-  - `addICECandidate` 改 async/await。
-  - public `removeAllTracks()`；`send` 有 data channel reopen 邏輯。
+### 1. Unified WebRTC wrapper
+- Merged the c / testHook / testHook2 / u variants into `src/util/WebRTC.js`.
+- "testHook2 structure" + "u defensive logic". Highlights:
+  - class + `#private` fields + JSDoc, 11 events.
+  - `setRemoteDescription` wrapped in try/catch with state logging.
+  - `hangUp` guarded by `signalingState !== "closed"`.
+  - `addICECandidate` made async/await.
+  - public `removeAllTracks()`; `send` reopens the data channel when the connection is up.
 
-### 2. LocalStreamManager 統一成 static 版
-- 原本 `util/LocalStreamManager.js` 係 instance API，testHook2 係 static API。
-- 統一做 **static**：`LocalStreamManager.getMediaStream(shareVideo, shareAudio)`、
-  `getShareDesktopStream(...)`、`closeStream(stream)`。
-- `share/panel/Panel.jsx`（`/` route）由 `new LocalStreamManager()` 改成 static 呼叫。
+### 2. LocalStreamManager unified to the static version
+- `util/LocalStreamManager.js` was instance-based, testHook2 was static.
+- Unified to **static**: `LocalStreamManager.getMediaStream(shareVideo, shareAudio)`,
+  `getShareDesktopStream(...)`, `closeStream(stream)`.
+- `share/panel/Panel.jsx` (`/` route) switched from `new LocalStreamManager()` to static calls.
 
-### 3. Logic 搬去 util
-- `testHook2` 嘅 `Meeting.js`、`Peer.js`、`LocalStreamManager.js` → 搬去 `src/util/`（canonical）。
-- `util/Peer.js` import 改 `./WebRTC`。
-- `testHook2/useMeeting.js` 三個 import 指去 `../../util/...`——**UI 只經 useMeeting 掂 util**。
+### 3. Logic moved to util
+- testHook2's `Meeting.js`, `Peer.js`, `LocalStreamManager.js` moved to `src/util/` (canonical).
+- `util/Peer.js` import changed to `./WebRTC`.
+- `testHook2/useMeeting.js` imports point to `../../util/...` — **UI reaches util only through useMeeting**.
 
-### 4. 刪除（死檔）
-- 成個 folder：`src/components/c/`、`src/components/u/`、`server/c/`、`server/b/`。
-- `testHook/` 只留 `Layout.js`，其餘死 logic / 死 UI（`Meeting.js`、`Peer.js`、
-  `useMeeting.js`、`TestHook.js`、`LocalMedia.*`、`PeerElement.*`、`QK.js`)全部刪。
-- `testHook2/` 搬走後三個原檔刪。
-- 已刪：`testMeetingBase/`、`testMeeting_2/`（含 `out/`）、`testPureWebRTC/`（client+server）、
-  `components/d/`、`components/L.js`。
-- `server/index.js` 清走 C / B namespace 同相關註解。
-- `src/util/Utility.js` 全 repo 冇人引用，暫時保留未刪。
+### 4. Deletions (dead code)
+- Entire folders: `src/components/c/`, `src/components/u/`, `server/c/`, `server/b/`.
+- `testHook/` keeps only `Layout.js`; deleted the dead logic/UI (`Meeting.js`, `Peer.js`,
+  `useMeeting.js`, `TestHook.js`, `LocalMedia.*`, `PeerElement.*`, `QK.js`).
+- testHook2 originals removed after the move.
+- Also deleted: `testMeetingBase/`, `testMeeting_2/` (incl. `out/`), `testPureWebRTC/` (client+server),
+  `components/d/`, `components/L.js`.
+- `server/index.js` cleaned up of C / B namespaces and related comments.
+- `src/util/Utility.js` is unreferenced across the repo; kept for now, not deleted.
 
-### 5. UI 組件改 `.jsx`
-- 有 JSX 嘅 9 個檔全部改名 `.js` → `.jsx`（`App.jsx`、`Layout.jsx`、`TestHook.jsx`、
-  `PeerElement.jsx`、`LocalMedia.jsx`、`Panel.jsx`、`MessageBox.jsx`、`MediaPlayer.jsx`、
-  `TestSimplePeer.jsx`）。
-- 冇 JSX 嘅 keep `.js`：`util/*`（邏輯層）、`useMeeting.js`（hook）、`SignalServer.js`、
-  `testSimplePeer/Peer.js`。
-- `index.js`（CRA entry bootstrap）、`App.test.js`（測試）照慣例 keep `.js`。
-- 全 repo 冇顯式 `.js` import（全部 extensionless），CRA webpack resolve `.jsx`，所以唔使改 import。
+### 5. UI components renamed to `.jsx`
+- The 9 files containing JSX were renamed `.js` → `.jsx` (`App.jsx`, `Layout.jsx`, `TestHook.jsx`,
+  `PeerElement.jsx`, `LocalMedia.jsx`, `Panel.jsx`, `MessageBox.jsx`, `MediaPlayer.jsx`,
+  `TestSimplePeer.jsx`).
+- Non-JSX files keep `.js`: `util/*` (logic), `useMeeting.js` (hook), `SignalServer.js`,
+  `testSimplePeer/Peer.js`.
+- `index.js` (CRA entry bootstrap) and `App.test.js` (test) stay `.js` by convention.
+- No import in the repo uses an explicit `.js` extension (all extensionless); CRA webpack resolves
+  `.jsx`, so no imports had to change.
 
-### 6. TURN / STUN 分離
-- **STUN（公開）**：留喺 `src/util/WebRTC-Config.js` 硬code（Google 5 隻 `stun[1-4].l.google.com`）。
-- **TURN**：改由 `.env` 嘅 `REACT_APP_TURN_SERVERS`（JSON array）提供。
-  - `.env.development` / `.env.production` 各有一份。
-  - 冇設 / `'[]'` / JSON 錯 → **空陣列（淨 STUN）**，唔再預設任何 TURN。
-- 新增 `.env.example` template。
-- 補充：`REACT_APP_*` 會 build 入 bundle，**唔算機密**。
-  真 TURN 保安應由 server 發 ephemeral credential（HMAC 限時），唔係放 client。
+### 6. TURN / STUN separation
+- **STUN (public)**: stays hardcoded in `src/util/WebRTC-Config.js` (5 Google `stun[1-4].l.google.com`).
+- **TURN**: now provided by `REACT_APP_TURN_SERVERS` (JSON array) in `.env`.
+  - `.env.development` / `.env.production` each carry a copy.
+  - Unset / `'[]'` / invalid JSON → **empty array (STUN only)**, no default TURN anymore.
+- Added `.env.example` template.
+- Note: `REACT_APP_*` values end up in the bundle, so they are **not secret**.
+  Real TURN security should use server-issued ephemeral credentials (HMAC time-limited), not client-side values.
 
-### 測試位置
-- `/testSimplePeer` 用自身硬code ICE config（Google STUN + numb.viagenia.ca TURN），冇共用 util config。
+### Test locations
+- `/testSimplePeer` uses its own hardcoded ICE config (Google STUN + numb.viagenia.ca TURN); it does not
+  share the util config.
 
-## 7. Git 同步：merge origin/master（整合 remote 改動）
+## 7. Git sync: merge origin/master (integrate remote changes)
 
-Local 之後先發現 remote `origin/master` 有新 commit（分岔位 `4d906d8`）。做咗一次 merge
-（commit `d334ea9`），**非睡眠式整合**——唔係淨係合返流就算：
+Local was found to be behind remote `origin/master` (diverged at `4d906d8`). A merge was made
+(commit `d334ea9`) — **not a lazy merge**, the remote changes were actually integrated:
 
-- **Remote 改善移植入 `util/`（canonical）**：
-  - `util/LocalStreamManager.js`：`closeStream` 由 async `.forEach(track=>track.stop())` 改做
-    sync for-loop（修咗 `forEach(async)` 唔 await 嘅 bug，`Promise<MediaStream?>` JSDoc 更新）。
-  - `util/WebRTC.js`：`oniceconnectionstatechange` 加咗 **ICE `"failed"` 時自動 `restartIce()`**。
-  - `util/Peer.js`：git rename-merge 自動帶入 remote 嘅 format 修正（indent / try-catch 排版），logic 不變。
-- **SpeechRecognition（remote 新功能）整合入 `/t`**：
-  - 新檔 `src/components/testHook2/SpeechRecognition.js`（Web Speech API，`lang: en-US`）。
-  - `testHook2/useMeeting.js`：`new SpeechRecognition()` + `onResult(sendRecognizedText)`
-    → 認出文字經 `meeting.sendGlobalMessage` 傳出（同場加埋 `leaveMeeting` peerList guard、
-    sync `closeStream` 呼叫）。import 行保留 `../../util/...` 路徑。
-  - 由 remote 帶入嘅 `old_WebRTC_API.html` 保留。
-- **唔搬唔動嘅嘢**：`testHook2/WebRTC.js`、`Peer.js`、`LocalStreamManager.js` 原檔照刪
-  （canonical 喺 `util/`）；`useMeeting.js` conflict 人手解決（util paths + SpeechRecognition import）；
-  `package-lock.json` 取 `--theirs`（remote 版本，package.json 冇變）。
-- 注意：SpeechRecognition 目前**未真正啟動**（冇人 call `start()`，UI 無掣），
-  且 Firefox 一直未支援 Web Speech API（2006-2026 都話「出緊未出」）。
-- Merge 後再跑 `npm run build` 通過，`util/*` 零 React / components import 未受破壞。
+- **Remote improvements ported into `util/` (canonical)**:
+  - `util/LocalStreamManager.js`: `closeStream` changed from async `.forEach(track=>track.stop())` to a
+    sync for-loop (fixing the `forEach(async)` un-awaited bug; JSDoc updated to `Promise<MediaStream?>`).
+  - `util/WebRTC.js`: added **auto `restartIce()` when ICE state is `"failed"`** in the
+    `oniceconnectionstatechange` handler.
+  - `util/Peer.js`: git rename-merge automatically brought in the remote formatting fixes
+    (indentation / try-catch spacing); logic unchanged.
+- **SpeechRecognition (new remote feature) integrated into `/t`**:
+  - New file `src/components/testHook2/SpeechRecognition.js` (Web Speech API, `lang: en-US`).
+  - `testHook2/useMeeting.js`: `new SpeechRecognition()` + `onResult(sendRecognizedText)`
+    → recognized text is sent via `meeting.sendGlobalMessage` (also pulled in the `leaveMeeting`
+    peerList guard and the sync `closeStream` calls). Imports kept on the `../../util/...` paths.
+  - `old_WebRTC_API.html` (added by remote) kept.
+- **Things left untouched / resolved**: the old `testHook2/WebRTC.js`, `Peer.js`,
+  `LocalStreamManager.js` copies stay deleted (canonical lives in `util/`); the `useMeeting.js`
+  conflict was resolved by hand (util paths + SpeechRecognition import); `package-lock.json` took
+  `--theirs` (remote version; package.json unchanged).
+- Note: SpeechRecognition is **not actually started yet** (nothing calls `start()`, no UI button),
+  and Firefox has never supported Web Speech API (as of 2026 still "coming, not shipped").
+- After merge, `npm run build` passed; the `util/*` zero-React/components invariant was intact.
 
-## 驗證方式
-- `npm run build` → Compiled successfully。
-- `node --check server/index.js` → ok。
-- 實測 dotenv `JSON.parse` `REACT_APP_TURN_SERVERS` → 3 組 TURN 全部讀到。
-- grep 確認 `util/*` 零 React / components import，冇殘留死檔引用。
-- Git：`d334ea9`（merge）已 push，`master` 同 `origin/master` 完全同步。
+## How it was verified
+- `npm run build` → Compiled successfully.
+- `node --check server/index.js` → ok.
+- Real dotenv test: `JSON.parse(REACT_APP_TURN_SERVERS)` → all 3 TURN servers parsed.
+- Grep confirms `util/*` has zero React / components imports and no dangling references to dead files.
+- Git: merge commit `d334ea9` pushed; `master` fully in sync with `origin/master`.
 
-## 技術背景（今次查到嘅嘢）
-- **Web Speech API `SpeechRecognition`**：
-  - `util` 冇翻譯功能，淨係辨識 → 要翻譯要自己接 Translation API / server。
-  - Firefox 一直未支援（Firefox 155+ 而家喺 `browser.ai.control.speechRecognition`
-    底下用 on-device Parakeet 實作緊，有 `available()/install()` 新流程，但未開出舖）。
-  - Chrome/Edge 嘅 SpeechRecognition 靠上網去 server 辨識。
+## Technical background (findings this session)
+- **Web Speech API `SpeechRecognition`**:
+  - It does **not** translate; it only transcribes. Translate by hooking up a Translation API /
+    server call separately.
+  - Firefox has never supported it (Firefox 155+ is implementing on-device recognition via Parakeet
+    under `browser.ai.control.speechRecognition`, with a new `available()/install()` flow, but not
+    broadly shipped yet).
+  - Chrome/Edge recognition runs through their server (needs network).

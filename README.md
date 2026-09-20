@@ -1,47 +1,47 @@
 # TestWebRtc
 
-WebRTC 視像會議 POC（React 17 + Socket.IO + Express）。多人會議、資料 channel 傳訊、語音辨識（實驗性）。
+WebRTC video meeting POC (React 17 + Socket.IO + Express). Multi-party meetings, data-channel messaging, speech recognition (experimental).
 
-## 架構
+## Architecture
 
 ```
-src/util/         純邏輯層（vanilla JS，零 React / 零 components import）
-src/components/   純 UI + useMeeting adapter（UI 改動唔會掂到 util）
+src/util/         Pure logic layer (vanilla JS, zero React / zero components imports)
+src/components/   Pure UI + useMeeting adapter (changing the UI never touches util)
 server/           Socket.IO signaling relay
-依賴方向           components → util（單向）；util 永不 import React / components
+Dependency rule   components → util (one-way); util never imports React / components
 ```
 
-詳細重構記錄見 [docs/refactor-notes-2026-09-20.md](docs/refactor-notes-2026-09-20.md)。
+Detailed refactor log: [docs/refactor-notes-2026-09-20.md](docs/refactor-notes-2026-09-20.md).
 
-## 目錄結構
+## Folder structure
 
 ```
 src/
-  util/                     WebRTC.js、WebRTC-Config.js、Meeting.js、Peer.js、LocalStreamManager.js
+  util/                     WebRTC.js, WebRTC-Config.js, Meeting.js, Peer.js, LocalStreamManager.js
   components/
-    share/panel/            Panel.jsx 等（/ 測試場，用 socket.io 演示）
-    testHook/               Layout.jsx（/l，純 mockup，VIDEO0101.mp4）
-    testHook2/              TestHook.jsx + useMeeting.js（/t，完整多人會議）
-                             SpeechRecognition.js（語音→文字，實驗性）
-    testSimplePeer/         TestSimplePeer.jsx（/testSimplePeer，SimplePeer P2P）
+    share/panel/            Panel.jsx etc. (/ socket.io demo)
+    testHook/               Layout.jsx (/l, pure mockup, VIDEO0101.mp4)
+    testHook2/              TestHook.jsx + useMeeting.js (/t, full multiparty meeting)
+                             SpeechRecognition.js (speech → text, experimental)
+    testSimplePeer/         TestSimplePeer.jsx (/testSimplePeer, SimplePeer P2P)
 server/
-  index.js                  入口
-  t/                        /t 會議 namespace
-  testSimplePeer/          SimplePeer signaling
+  index.js                  entry point
+  t/                        /t meeting namespace
+  testSimplePeer/           SimplePeer signaling
 ```
 
-## 路由
+## Routes
 
-| 路由 | 內容 |
+| Route | Content |
 |---|---|
-| `/` | Panel（socket.io 演示） |
+| `/` | Panel (socket.io demo) |
 | `/l` | Layout mockup |
-| `/t` | 完整多人會議（WebRTC + global message + 語音辨識） |
-| `/testSimplePeer` | SimplePeer P2P 測試 |
+| `/t` | Full multiparty meeting (WebRTC + global message + speech recognition) |
+| `/testSimplePeer` | SimplePeer P2P test |
 
-## 設定（.env）
+## Setup (.env)
 
-複製 `.env.example` 做 `.env.development` / `.env.production`：
+Copy `.env.example` to `.env.development` / `.env.production`:
 
 ```
 REACT_APP_Mode=Development
@@ -50,25 +50,25 @@ REACT_APP_SOCKET_URL=http://localhost:8080/
 REACT_APP_TURN_SERVERS='[{"urls":"turn:...","username":"...","credential":"..."}]'
 ```
 
-- `REACT_APP_SOCKET_URL` 要指去 Socket.IO server。開發時 client（:3000）同 server（:8080）唔同 port，要開 CORS/ proxy。
-- `REACT_APP_TURN_SERVERS` 係 JSON array 嘅 ICE TURN entries；冇設／`'[]'` → 只行 Google STUN，唔用任何 TURN。
-- `REACT_APP_*` 會 build 入 client bundle，**唔算機密**；真 TURN 密鑰請用 server 端 ephemeral credential（TURN REST API）。
-- STUN（公開）硬code喺 `src/util/WebRTC-Config.js`。
+- `REACT_APP_SOCKET_URL` must point to the Socket.IO server. In dev the client (:3000) and server (:8080) run on different ports; make sure the proxy/CORS is in place.
+- `REACT_APP_TURN_SERVERS` is a JSON array of ICE TURN entries; if unset / `'[]'`, only Google STUN is used (no TURN).
+- `REACT_APP_*` values are bundled into the client build, so they are **not secrets**; for a real TURN server, use server-issued ephemeral credentials (TURN REST API).
+- STUN (public) is hardcoded in `src/util/WebRTC-Config.js`.
 
-## 開發
+## Development
 
 ```bash
-npm run dev      # 同時起 React（:3000）同 Socket.IO server（:8080）
-npm run server   # 只起 server
-npm run build    # production build（output 落 build/）
+npm run dev      # starts React (:3000) and the Socket.IO server (:8080) together
+npm run server   # server only
+npm run build    # production build (output in build/)
 ```
 
-Production（`npm run prod`）會由 `server/index.js` serve `build/`。
+In production (`npm run prod`) `server/index.js` serves the `build/` folder.
 
-## 已知問題 / 注意
+## Known issues / notes
 
-- **語音辨識（`/t`）目前未啟動**：`SpeechRecognition.js` 只係接好咗 `onResult`，冇任何地方 call `start()`，UI 亦冇掣。
-- **Web Speech API 只支援 Chrome/Edge/Safari**；Firefox 一直未支援（2026 仲係實驗性，on-device 實作排緊）。Firefox 而家開 `/t` 會喺 join 時 `new SpeechRecognition()` throw error。
-- SpeechRecognition 只做辨識，冇翻譯；要翻譯要另外接 Translation API / server。
-- `/testSimplePeer` 用自己硬code嘅 ICE config，冇共用 `util/WebRTC-Config.js`。
-- `src/util/Utility.js` 暫時冇人引用（未刪）。
+- **Speech recognition (`/t`) is not started yet**: `SpeechRecognition.js` only wires up `onResult`, nothing calls `start()`, and the UI has no button.
+- **Web Speech API is Chrome/Edge/Safari only**: Firefox has never supported it (still experimental in 2026, on-device implementation in progress). Opening `/t` in Firefox throws in `new SpeechRecognition()` while joining.
+- SpeechRecognition only transcribes; it does not translate. To translate, add the Translation API / a server call separately.
+- `/testSimplePeer` uses its own hardcoded ICE config; it does not share `util/WebRTC-Config.js`.
+- `src/util/Utility.js` is currently unreferenced (not deleted yet).
