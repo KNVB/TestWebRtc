@@ -1,248 +1,294 @@
-export default class WebRTC {
-    constructor() {
-        let configuration = {};
-        let dataChannel = null;
-        let dataChannelCloseHandler, dataChannelErrorHandler;
-        let dataChannelMessageHandler, dataChannelOpenHandler;
-        let iceCandidateEventHandler, iceConnectionStateChangeHandler, iceGatheringStateChangeHandler;
-        let isDebug = false, localStream = null;
-        let negotiationHandler, peerConnection = null, peerConnectionStateChangeHandler;
-        let signalingStateChangeHandler, trackEventHandler;
-        /*=====================================================================*/
-        /*        Add ICE Candidate to Peer Connection                         */
-        /*=====================================================================*/
-        this.addICECandidate = (iceCandidate) => {
-            peerConnection.addIceCandidate(iceCandidate);
+/**
+ * A wrapper class of RTCPeerConnection
+ */
+class WebRTC {
+    #configuration = {};
+    #dataChannel = null;
+    #dataChannelCloseHandler; #dataChannelErrorHandler;
+    #dataChannelMessageHandler; #dataChannelOpenHandler;
+    #iceCandidateEventHandler; #iceConnectionStateChangeHandler; #iceGatheringStateChangeHandler;
+    #isDebug = false; #localStream = null;
+    #negotiationHandler; #peerConnection = null; #peerConnectionStateChangeHandler;
+    #signalingStateChangeHandler; #trackEventHandler;
+    /**
+     * Add ICE Candidate to the Peer Connection object
+     * @async
+     * @param {RTCIceCandidate} iceCandidate An RTCIceCandidate object.
+     */
+    async addICECandidate(iceCandidate) {
+        await this.#peerConnection.addIceCandidate(iceCandidate);
+    }
+
+    /**
+     *  To set up a connection
+     */
+    call() {
+        this.#initDataChannel(this.#peerConnection.createDataChannel("chat"));
+    }
+    /**
+     * To get the local description of the local end of the connection.
+     * @returns {RTCSessionDescription}
+     */
+    getLocalDescription() {
+        return this.#peerConnection.localDescription;
+    }
+    /**
+     * To get the RTCPeerConnection signaling state.
+     * @returns {string} The RTCPeerConnection signaling state
+     */
+    getSignalingState() {
+        return this.#peerConnection.signalingState;
+    }
+    /**
+     *  To hangup the connection
+     */
+    hangUp() {
+        this.#hangUp();
+    }
+    /**
+     * To initialize the RTCPeerConnection object
+     */
+    init() {
+        this.#initPeerConnection();
+    }
+    /**
+     * To configure handler for various WebRTC events
+     *
+     * @param {string} eventType Event Type
+     * @param {function} handler Event handler
+     */
+    on(eventType, handler) {
+        switch (eventType) {
+            case "dataChannelClose":
+                this.#dataChannelCloseHandler = handler;
+                break;
+            case "dataChannelError":
+                this.#dataChannelErrorHandler = handler;
+                break;
+            case "dataChannelMessage":
+                this.#dataChannelMessageHandler = handler;
+                break;
+            case "dataChannelOpen":
+                this.#dataChannelOpenHandler = handler;
+                break;
+            case "iceCandidate":
+                this.#iceCandidateEventHandler = handler;
+                break;
+            case "iceConnectionStateChange":
+                this.#iceConnectionStateChangeHandler = handler;
+                break;
+            case "iceGatheringStateChange":
+                this.#iceGatheringStateChangeHandler = handler;
+                break;
+            case "negotiation":
+                this.#negotiationHandler = handler;
+                break;
+            case "peerConnectionStateChange":
+                this.#peerConnectionStateChangeHandler = handler;
+                break
+            case "signalingStateChange":
+                this.#signalingStateChangeHandler = handler;
+                break;
+            case "stream":
+                this.#trackEventHandler = handler;
+                break;
+            default: break;
         }
-        /*=====================================================================*/
-        /*        To set up a connection                                       */
-        /*=====================================================================*/
-        this.call = () => {
-            initDataChannel(peerConnection.createDataChannel("chat"));
+    }
+    /**
+     * Remove all tracks from the peer connection object
+     */
+    removeAllTracks() {
+        this.#removeAllTracks();
+    }
+    /**
+     * Trigger the peer connection to restart ICE
+     */
+    restartICE() {
+        if (this.#peerConnection) {
+            this.#msgLogger("WebRTC:restart ice.");
+            this.#peerConnection.restartIce();
         }
-        /*=====================================================================*/
-        /*        To hangup the connection                                     */
-        /*=====================================================================*/
-        this.hangUp = () => {
-            hangUp();
-        }
-        /*=====================================================================*/
-        /*        To get the local description                                 */
-        /*=====================================================================*/
-        this.getLocalDescription = () => {
-            return peerConnection.localDescription;
-        }
-        /*=====================================================================*/
-        /*        To get the RTCPeerConnection signal state                    */
-        /*=====================================================================*/
-        this.getSignalingState = () => {
-            return peerConnection.signalingState;
-        }
-        /*=====================================================================*/
-        /*        To initialize the RTCPeerConnection object                   */
-        /*=====================================================================*/
-        this.init = () => {
-            initPeerConnection();
-        }
-        /*=====================================================================*/
-        /*        To configure handler for varies event                        */
-        /*=====================================================================*/
-        this.on = (eventType, param) => {
-            switch (eventType) {
-                case "dataChannelClose":
-                    dataChannelCloseHandler = param;
+    }
+    /**
+     * Sending data to the remote peer via the WebRTC connection.
+     *
+     * @param {object} data The data that to be sent remote peer.
+     */
+    send(data) {
+        if (this.#dataChannel) {
+            switch (this.#dataChannel.readyState) {
+                case "open":
+                    this.#dataChannel.send(data);
                     break;
-                case "dataChannelError":
-                    dataChannelErrorHandler = param;
-                    break;
-                case "dataChannelMessage":
-                    dataChannelMessageHandler = param;
-                    break;
-                case "dataChannelOpen":
-                    dataChannelOpenHandler = param;
-                    break;
-                case "iceCandidate":
-                    iceCandidateEventHandler = param;
-                    break;
-                case "iceConnectionStateChange":
-                    iceConnectionStateChangeHandler = param;
-                    break;
-                case "iceGatheringStateChange":
-                    iceGatheringStateChangeHandler = param;
-                    break;
-                case "negotiation":
-                    negotiationHandler = param;
-                    break;
-                case "peerConnectionStateChange":
-                    peerConnectionStateChangeHandler = param;
-                    break
-                case "signalingStateChange":
-                    signalingStateChangeHandler = param;
-                    break;
-                case "stream":
-                    trackEventHandler = param;
-                    break;
-                default: break;
-            }
-        }
-        /*=====================================================================*/
-        /*        Restart ICE                                                  */
-        /*=====================================================================*/
-        this.restartICE = () => {
-            if (peerConnection) {
-                msgLogger("WebRTC:restart ice.")
-                peerConnection.restartIce();
-            }
-        }
-        /*=====================================================================*/
-        /*       Send data across the data channel to the remote peer.         */
-        /*=====================================================================*/
-        this.send = (data) => {
-            if (dataChannel) {
-                switch (dataChannel.readyState) {
-                    case "open":
-                        dataChannel.send(data);
-                        break;
-                    case "closed":
-                    case "closing":
-                        if (peerConnection.iceConnectionState === "connected") {
-                            initDataChannel(peerConnection.createDataChannel("chat"));
-                            dataChannel.send(data);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            } else {
-                throw new Error("The Data Channel is not available.");
-            }
-        }
-        /*=====================================================================*/
-        /*        Set the Configuration                                        */
-        /*=====================================================================*/
-        this.setConfig = (config) => {
-            configuration = { ...config };
-        }
-        /*=====================================================================*/
-        /*        To control if message error is shown                         */
-        /*=====================================================================*/
-        this.setDebug = (debug) => {
-            isDebug = debug;
-        }
-        /*=====================================================================*/
-        /*        To set the local description                                 */
-        /*=====================================================================*/
-        this.setLocalDescription = async () => {
-            await peerConnection.setLocalDescription();
-        }
-        /*=====================================================================*/
-        /*        To set the remote description                                 */
-        /*=====================================================================*/
-        this.setRemoteDescription = async (remoteDescription) => {
-            await peerConnection.setRemoteDescription(remoteDescription);
-        }
-        /*=====================================================================*/
-        /*       The local stream setter                                       */
-        /*=====================================================================*/
-        this.setStream = (stream) => {
-            if (peerConnection) {
-                setStream(stream);
-            } else {
-                localStream = stream;
-            }
-        }
-        /*========================================================================================*/
-        /*      Private Method                                                                    */
-        /*========================================================================================*/
-        /*=====================================================================*/
-        /*        Hang Up                                                      */
-        /*=====================================================================*/
-        let hangUp = () => {
-            if (peerConnection) {
-                peerConnection.getSenders().forEach(sender => {
-                    peerConnection.removeTrack(sender);
-                });
-                peerConnection.close();
-            }
-        }
-        /*=====================================================================*/
-        /*        Message Logger                                               */
-        /*=====================================================================*/
-        let msgLogger = (msg) => {
-            if (isDebug) {
-                console.log(msg);
-            }
-        }
-        /*=====================================================================*/
-        /*        Initialize the data channel                                  */
-        /*=====================================================================*/
-        let initDataChannel = (channel) => {
-            dataChannel = channel;
-            dataChannel.onclose = () => {
-                dataChannelCloseHandler();
-            };
-            dataChannel.onerror = (event) => {
-                dataChannelErrorHandler(event);
-            };
-            dataChannel.onmessage = (message) => {
-                dataChannelMessageHandler(message);
-            };
-            dataChannel.onopen = () => {
-                dataChannelOpenHandler();
-            };
-        }
-        /*=====================================================================*/
-        /*        Initialize the peer connection object                        */
-        /*=====================================================================*/
-        let initPeerConnection = () => {
-            peerConnection = new RTCPeerConnection(configuration);
-            peerConnection.ondatachannel = (event) => {
-                initDataChannel(event.channel);
-            }
-            peerConnection.onicecandidate = (event) => {
-                iceCandidateEventHandler(event.candidate);
-            };
-            peerConnection.onconnectionstatechange = () => {
-                peerConnectionStateChangeHandler(peerConnection.connectionState);
-            }
-            peerConnection.oniceconnectionstatechange = () => {
-                iceConnectionStateChangeHandler(peerConnection.iceConnectionState);
-            };
-            peerConnection.onicegatheringstatechange = () => {
-                iceGatheringStateChangeHandler(peerConnection.iceGatheringState);
-            };
-            peerConnection.onnegotiationneeded = async () => {
-                await negotiationHandler();
-            };
-            peerConnection.onsignalingstatechange = () => {
-                signalingStateChangeHandler(peerConnection.signalingState);
-            };
-            peerConnection.ontrack = event => {
-                trackEventHandler(event.streams[0]);
-            }
-            if (localStream){
-                for (const track of localStream.getTracks()) {
-                    peerConnection.addTrack(track, localStream);
-                }
-            }
-        }
-        /*=====================================================================*/
-        /*        Set a stream to a RTCPeerConnection                          */
-        /*=====================================================================*/
-        let setStream = (stream) => {
-            if (peerConnection) {
-                let senders = peerConnection.getSenders();
-                senders.forEach(sender => {
-                    peerConnection.removeTrack(sender);
-                })
-                if (stream) {
-                    for (const track of stream.getTracks()) {
-                        peerConnection.addTrack(track, stream);
+                case "closed":
+                case "closing":
+                    if (this.#peerConnection.iceConnectionState === "connected") {
+                        this.#initDataChannel(this.#peerConnection.createDataChannel("chat"));
+                        this.#dataChannel.send(data);
                     }
-                }
-            } else {
-                localStream = stream;
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            throw new Error("The Data Channel is not available.");
+        }
+    }
+    /**
+     * The Peer Configuration setter
+     *
+     * @param {object} config
+     */
+    setConfig(config) {
+        this.#configuration = { ...config };
+    }
+    /**
+     * To control if message error is shown.
+     * @param {boolean} debug If true show the error message in console, else do not.
+     */
+    setDebug(debug) {
+        this.#isDebug = debug;
+    }
+    /**
+     *  To set the local description to the local peer connection object
+     * @async
+     */
+    async setLocalDescription() {
+        await this.#peerConnection.setLocalDescription();
+    }
+    /**
+     * To set the remote description to the local peer connection object
+     * @param {RTCSessionDescription} remoteDescription
+     * @async
+     */
+    async setRemoteDescription(remoteDescription) {
+        try {
+            await this.#peerConnection.setRemoteDescription(remoteDescription);
+        } catch (error) {
+            this.#msgLogger("======================================================================");
+            this.#msgLogger("An error occur when setting remote description.");
+            this.#msgLogger(error);
+            this.#msgLogger("connectionState=" + this.#peerConnection.connectionState);
+            this.#msgLogger("iceConnectionState=" + this.#peerConnection.iceConnectionState);
+            this.#msgLogger("iceGatheringState=" + this.#peerConnection.iceGatheringState);
+            this.#msgLogger("signalingState=" + this.#peerConnection.signalingState);
+            this.#msgLogger("=====================================================================");
+        }
+    }
+    /**
+     * The local stream setter
+     * @param {MediaStream} stream
+     */
+    setStream(stream) {
+        if (this.#peerConnection) {
+            this.#setStream(stream);
+        } else {
+            this.#localStream = stream;
+        }
+    }
+    /*========================================================================================*/
+    /*      Private Method                                                                    */
+    /*========================================================================================*/
+    /**
+     *  private method hangup
+     */
+    #hangUp = () => {
+        if (this.#peerConnection && (this.#peerConnection.signalingState !== "closed")) {
+            this.#removeAllTracks();
+            this.#peerConnection.close();
+        }
+    }
+    /**
+     * Message Logger
+     * @param {string} msg
+     */
+    #msgLogger = (msg) => {
+        if (this.#isDebug) {
+            console.log(msg);
+        }
+    }
+    /**
+     * Initialize the data channel and its event handler
+     *
+     * @param {RTCDataChannel} channel
+     */
+    #initDataChannel = (channel) => {
+        this.#dataChannel = channel;
+        this.#dataChannel.onclose = () => {
+            this.#dataChannelCloseHandler();
+        };
+        this.#dataChannel.onerror = (event) => {
+            this.#dataChannelErrorHandler(event);
+        };
+        this.#dataChannel.onmessage = (message) => {
+            this.#dataChannelMessageHandler(message);
+        };
+        this.#dataChannel.onopen = () => {
+            this.#dataChannelOpenHandler();
+        };
+    }
+    /**
+     * Initialize the peer connection object and its event handler
+     */
+    #initPeerConnection = () => {
+        this.#peerConnection = new RTCPeerConnection(this.#configuration);
+        this.#peerConnection.ondatachannel = (event) => {
+            this.#initDataChannel(event.channel);
+        }
+        this.#peerConnection.onicecandidate = (event) => {
+            this.#iceCandidateEventHandler(event.candidate);
+        };
+        this.#peerConnection.onconnectionstatechange = () => {
+            this.#peerConnectionStateChangeHandler(this.#peerConnection.connectionState);
+        }
+        this.#peerConnection.oniceconnectionstatechange = () => {
+            this.#iceConnectionStateChangeHandler(this.#peerConnection.iceConnectionState);
+        };
+        this.#peerConnection.onicegatheringstatechange = () => {
+            this.#iceGatheringStateChangeHandler(this.#peerConnection.iceGatheringState);
+        };
+        this.#peerConnection.onnegotiationneeded = async () => {
+            await this.#negotiationHandler();
+        };
+        this.#peerConnection.onsignalingstatechange = () => {
+            this.#signalingStateChangeHandler(this.#peerConnection.signalingState);
+        };
+        this.#peerConnection.ontrack = event => {
+            this.#trackEventHandler(event.streams[0]);
+        }
+        if (this.#localStream) {
+            for (const track of this.#localStream.getTracks()) {
+                this.#peerConnection.addTrack(track, this.#localStream);
             }
         }
     }
+    /**
+     * Remove all tracks from the peer connection object
+     */
+    #removeAllTracks = () => {
+        if (this.#peerConnection) {
+            this.#peerConnection.getSenders().forEach(sender => {
+                this.#peerConnection.removeTrack(sender);
+            });
+        }
+    }
+    /**
+     * Set a stream to the RTCPeerConnection object
+     *
+     * @param {MediaStream} stream
+     */
+    #setStream = (stream) => {
+        if (this.#peerConnection) {
+            this.#removeAllTracks();
+            if (stream) {
+                for (const track of stream.getTracks()) {
+                    this.#peerConnection.addTrack(track, stream);
+                }
+            }
+        } else {
+            this.#localStream = stream;
+        }
+    }
 }
+export default WebRTC

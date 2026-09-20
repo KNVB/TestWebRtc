@@ -6,7 +6,6 @@ import MessageBox from "./MessageBox";
 import MediaPlayer from "./MediaPlayer";
 const Panel = forwardRef((props, ref) => {
   let controls = props.controls;
-  let localStreamManager=new LocalStreamManager();
   let [connectionState,setConnectionState]= useState("Close");
   let [connectionStatusCSS,setConnectionStatusCSS]=useState("danger");
   const localMedia = useRef(), messageBox = useRef(), remoteMedia = useRef();
@@ -44,13 +43,13 @@ const Panel = forwardRef((props, ref) => {
     temp[param.type]=param.value;
     shareMedia={...temp};
     try{
-      localStream =await localStreamManager.getMediaStream(shareMedia.isShareVideo,shareMedia.isShareAudio);
+      localStream =await LocalStreamManager.getMediaStream(shareMedia.isShareVideo,shareMedia.isShareAudio);
     }catch (error){
       messageBox.current.addMsg("Get Media Stream failure:"+error.message);
       localStream =null;
     }finally{
       if ( localStream === null) {
-        await localStreamManager.closeStream(localMedia.current.getStream());
+        await LocalStreamManager.closeStream(localMedia.current.getStream());
       }  
       localMedia.current.setStream(localStream);
       controls.getLocalStream(localStream);   

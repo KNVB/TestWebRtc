@@ -1,8 +1,8 @@
 import { useReducer } from "react";
-import LocalStreamManager from './LocalStreamManager';
-import Meeting from "./Meeting";
-import Peer from "./Peer";
-import WebRTC_Config from "./WebRTC-Config";
+import LocalStreamManager from '../../util/LocalStreamManager';
+import Meeting from "../../util/Meeting";
+import Peer from "../../util/Peer";
+import WebRTC_Config from "../../util/WebRTC-Config";
 let obj = {
     globalMessage: '',
     globalMessageList: [],
