@@ -78,8 +78,39 @@ Route 只保留 `/`、`/l`、`/t`、`/testSimplePeer`。
 ### 測試位置
 - `/testSimplePeer` 用自身硬code ICE config（Google STUN + numb.viagenia.ca TURN），冇共用 util config。
 
+## 7. Git 同步：merge origin/master（整合 remote 改動）
+
+Local 之後先發現 remote `origin/master` 有新 commit（分岔位 `4d906d8`）。做咗一次 merge
+（commit `d334ea9`），**非睡眠式整合**——唔係淨係合返流就算：
+
+- **Remote 改善移植入 `util/`（canonical）**：
+  - `util/LocalStreamManager.js`：`closeStream` 由 async `.forEach(track=>track.stop())` 改做
+    sync for-loop（修咗 `forEach(async)` 唔 await 嘅 bug，`Promise<MediaStream?>` JSDoc 更新）。
+  - `util/WebRTC.js`：`oniceconnectionstatechange` 加咗 **ICE `"failed"` 時自動 `restartIce()`**。
+  - `util/Peer.js`：git rename-merge 自動帶入 remote 嘅 format 修正（indent / try-catch 排版），logic 不變。
+- **SpeechRecognition（remote 新功能）整合入 `/t`**：
+  - 新檔 `src/components/testHook2/SpeechRecognition.js`（Web Speech API，`lang: en-US`）。
+  - `testHook2/useMeeting.js`：`new SpeechRecognition()` + `onResult(sendRecognizedText)`
+    → 認出文字經 `meeting.sendGlobalMessage` 傳出（同場加埋 `leaveMeeting` peerList guard、
+    sync `closeStream` 呼叫）。import 行保留 `../../util/...` 路徑。
+  - 由 remote 帶入嘅 `old_WebRTC_API.html` 保留。
+- **唔搬唔動嘅嘢**：`testHook2/WebRTC.js`、`Peer.js`、`LocalStreamManager.js` 原檔照刪
+  （canonical 喺 `util/`）；`useMeeting.js` conflict 人手解決（util paths + SpeechRecognition import）；
+  `package-lock.json` 取 `--theirs`（remote 版本，package.json 冇變）。
+- 注意：SpeechRecognition 目前**未真正啟動**（冇人 call `start()`，UI 無掣），
+  且 Firefox 一直未支援 Web Speech API（2006-2026 都話「出緊未出」）。
+- Merge 後再跑 `npm run build` 通過，`util/*` 零 React / components import 未受破壞。
+
 ## 驗證方式
 - `npm run build` → Compiled successfully。
 - `node --check server/index.js` → ok。
 - 實測 dotenv `JSON.parse` `REACT_APP_TURN_SERVERS` → 3 組 TURN 全部讀到。
 - grep 確認 `util/*` 零 React / components import，冇殘留死檔引用。
+- Git：`d334ea9`（merge）已 push，`master` 同 `origin/master` 完全同步。
+
+## 技術背景（今次查到嘅嘢）
+- **Web Speech API `SpeechRecognition`**：
+  - `util` 冇翻譯功能，淨係辨識 → 要翻譯要自己接 Translation API / server。
+  - Firefox 一直未支援（Firefox 155+ 而家喺 `browser.ai.control.speechRecognition`
+    底下用 on-device Parakeet 實作緊，有 `available()/install()` 新流程，但未開出舖）。
+  - Chrome/Edge 嘅 SpeechRecognition 靠上網去 server 辨識。

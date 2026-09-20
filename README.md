@@ -1,70 +1,74 @@
-# Getting Started with Create React App
+# TestWebRtc
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+WebRTC 視像會議 POC（React 17 + Socket.IO + Express）。多人會議、資料 channel 傳訊、語音辨識（實驗性）。
 
-## Available Scripts
+## 架構
 
-In the project directory, you can run:
+```
+src/util/         純邏輯層（vanilla JS，零 React / 零 components import）
+src/components/   純 UI + useMeeting adapter（UI 改動唔會掂到 util）
+server/           Socket.IO signaling relay
+依賴方向           components → util（單向）；util 永不 import React / components
+```
 
-### `npm start`
+詳細重構記錄見 [docs/refactor-notes-2026-09-20.md](docs/refactor-notes-2026-09-20.md)。
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## 目錄結構
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```
+src/
+  util/                     WebRTC.js、WebRTC-Config.js、Meeting.js、Peer.js、LocalStreamManager.js
+  components/
+    share/panel/            Panel.jsx 等（/ 測試場，用 socket.io 演示）
+    testHook/               Layout.jsx（/l，純 mockup，VIDEO0101.mp4）
+    testHook2/              TestHook.jsx + useMeeting.js（/t，完整多人會議）
+                             SpeechRecognition.js（語音→文字，實驗性）
+    testSimplePeer/         TestSimplePeer.jsx（/testSimplePeer，SimplePeer P2P）
+server/
+  index.js                  入口
+  t/                        /t 會議 namespace
+  testSimplePeer/          SimplePeer signaling
+```
 
-### `npm test`
+## 路由
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| 路由 | 內容 |
+|---|---|
+| `/` | Panel（socket.io 演示） |
+| `/l` | Layout mockup |
+| `/t` | 完整多人會議（WebRTC + global message + 語音辨識） |
+| `/testSimplePeer` | SimplePeer P2P 測試 |
 
-### `npm run build`
+## 設定（.env）
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+複製 `.env.example` 做 `.env.development` / `.env.production`：
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+REACT_APP_Mode=Development
+REACT_APP_SOCKET_PORT=8080
+REACT_APP_SOCKET_URL=http://localhost:8080/
+REACT_APP_TURN_SERVERS='[{"urls":"turn:...","username":"...","credential":"..."}]'
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- `REACT_APP_SOCKET_URL` 要指去 Socket.IO server。開發時 client（:3000）同 server（:8080）唔同 port，要開 CORS/ proxy。
+- `REACT_APP_TURN_SERVERS` 係 JSON array 嘅 ICE TURN entries；冇設／`'[]'` → 只行 Google STUN，唔用任何 TURN。
+- `REACT_APP_*` 會 build 入 client bundle，**唔算機密**；真 TURN 密鑰請用 server 端 ephemeral credential（TURN REST API）。
+- STUN（公開）硬code喺 `src/util/WebRTC-Config.js`。
 
-### `npm run eject`
+## 開發
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```bash
+npm run dev      # 同時起 React（:3000）同 Socket.IO server（:8080）
+npm run server   # 只起 server
+npm run build    # production build（output 落 build/）
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Production（`npm run prod`）會由 `server/index.js` serve `build/`。
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## 已知問題 / 注意
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **語音辨識（`/t`）目前未啟動**：`SpeechRecognition.js` 只係接好咗 `onResult`，冇任何地方 call `start()`，UI 亦冇掣。
+- **Web Speech API 只支援 Chrome/Edge/Safari**；Firefox 一直未支援（2026 仲係實驗性，on-device 實作排緊）。Firefox 而家開 `/t` 會喺 join 時 `new SpeechRecognition()` throw error。
+- SpeechRecognition 只做辨識，冇翻譯；要翻譯要另外接 Translation API / server。
+- `/testSimplePeer` 用自己硬code嘅 ICE config，冇共用 `util/WebRTC-Config.js`。
+- `src/util/Utility.js` 暫時冇人引用（未刪）。
