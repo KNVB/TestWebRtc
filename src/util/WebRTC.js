@@ -244,6 +244,9 @@ class WebRTC {
         }
         this.#peerConnection.oniceconnectionstatechange = () => {
             this.#iceConnectionStateChangeHandler(this.#peerConnection.iceConnectionState);
+            if (this.#peerConnection.iceConnectionState === "failed") {
+                this.#peerConnection.restartIce();
+            }
         };
         this.#peerConnection.onicegatheringstatechange = () => {
             this.#iceGatheringStateChangeHandler(this.#peerConnection.iceGatheringState);

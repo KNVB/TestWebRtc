@@ -1,8 +1,9 @@
 /**
  * Local Media Manager object
+ * @date 8/18/2023 - 4:56:01 PM
  *
  */
-class LocalStreamManager{
+export default class LocalStreamManager {
 	static #templateConstraint = {
 		"audio": {
 			channelCount: 2,
@@ -16,11 +17,12 @@ class LocalStreamManager{
 	};
 	/**
 	 * Get client media stream
+	 * @date 8/18/2023 - 1:45:00 PM
 	 *
 	 * @async
 	 * @param {boolean} shareVideo if true include video stream in return stream, else do not.
 	 * @param {boolean} shareAudio if true include audio stream in return stream, else do not.
-	 * @returns {MediaStream}
+	 * @returns {Promise<MediaStream?>}
 	 * @static 
 	 */
 	static async getMediaStream(shareVideo, shareAudio) {
@@ -40,11 +42,12 @@ class LocalStreamManager{
 	}
 	/**
 	 * Share desktop
+	 * @date 8/18/2023 - 1:47:49 PM
 	 *
 	 * @async
 	 * @param {boolean} shareVideo if true include video stream in return stream, else do not.
 	 * @param {boolean} shareAudio if true include audio stream in return stream, else do not.
-	 * @returns {MediaStream}
+	 * @returns {Promise<MediaStream?>}
 	 * @static
 	 */
 	static async getShareDesktopStream(shareVideo, shareAudio) {
@@ -57,18 +60,19 @@ class LocalStreamManager{
 	}
 	/**
 	 * Close a media stream
+	 * @date 8/18/2023 - 1:49:09 PM
 	 *
-	 * @async
 	 * @param {MediaStream} stream
 	 * @static
 	 */
-	static async closeStream(stream){
+	static closeStream(stream) {
 		console.log("LocalStreamManager.closeStream is called.");
 		if (stream) {
-			stream.getTracks().forEach(async track => {
+			let tracks = stream.getTracks();
+			for (let i = 0; i < tracks.length; i++) {
+				let track = tracks[i];
 				track.stop();
-			});
+			}
 		}
 	}
 }
-export default LocalStreamManager
